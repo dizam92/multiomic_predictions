@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=8
+#SBATCH --mem=24000M
+#SBATCH --account=rrg-corbeilj-ac
+#SBATCH --mail-user=mazid-abiodoun.osseni.1@ulaval.ca
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
+#SBATCH --time=02:00:00
+#SBATCH --output=/home/maoss2/PycharmProjects/multiomic_predictions/data/data_dispatch.out
+
+python build_data.py

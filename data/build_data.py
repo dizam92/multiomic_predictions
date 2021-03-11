@@ -5,8 +5,8 @@ import pickle
 import h5py
 from collections import defaultdict
 local_file_path_origin='/Volumes/Second Part/TCGA Pan-Cancer (PANCAN)/'
-graham_file_path_origin=''
-LOCAL = True
+graham_file_path_origin='/home/maoss2/project/maoss2/tcga_pan_cancer_dataset/'
+LOCAL = False
 def read_chunk_file(fichier_path, saving_file_name, chunk_size=100000):
     """
     Read the CSV file with th chunk_size to fit in memory.
@@ -50,4 +50,9 @@ else:
 
 
 if __name__ == '__main__':
-    print('ok')
+    # TODO: Si la liste fichiers_path change, il faut update la liste saving_files_names car chaque nom a été écrit pour le fichier correspondant
+    fichiers_path = [exon_path, cnv_path, methyl_27_path, methyl_450_path, rna_path, rna_isoforms_path, mirna_path, protein_path]
+    saving_files_names = ['exon_pancan_tcga.h5', 'cnv_pancan_tcga.h5', 'methyl_27_pancan_tcga.h5', 'methyl_450_pancan_tcga.h5', 'rna_pancan_tcga.h5', 'rna_isoforms_pancan_tcga.h5', 'mirna_pancan_tcga.h5', 'protein_pancan_tcga.h5']
+    for idx, fichier in enumerate(fichiers_path):
+        read_chunk_file(fichier_path=fichier, saving_file_name=f'/home/maoss2/PycharmProjects/multiomic_predictions/data/{saving_files_names[idx]}', chunk_size=100000)
+        
