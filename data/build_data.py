@@ -5,7 +5,7 @@ import pickle
 import h5py
 from collections import defaultdict
 local_file_path_origin='/Volumes/Second Part/TCGA Pan-Cancer (PANCAN)/'
-graham_file_path_origin='/home/maoss2/project/maoss2/tcga_pan_cancer_dataset/'
+graham_file_path_origin='/home/maoss2/project/maoss2/tcga_pan_cancer_dataset'
 LOCAL = False
 def read_chunk_file(fichier_path, saving_file_name, chunk_size=100000):
     """
@@ -17,12 +17,14 @@ def read_chunk_file(fichier_path, saving_file_name, chunk_size=100000):
     features_names = []
     patients_names = []
     for idx, chunk in enumerate(fichier_read_chunk):
-        chunk.index = chunk['Sample']
+        try:
+            chunk.index = chunk['Sample']
+        except KeyError:
+            chunk.index = chunk['sample'] 
         patients_names = chunk.columns.values
         features_names.extend(list(chunk.index.values))
         chunk.drop('Sample', axis=1, inplace=True)
         hf.create_dataset(f'dataset_{idx}', data=chunk)
-    #patients_ids = np.asarray(df_temp.index.values, dtype='str')
     features_names = [str(x).encode('utf-8') for x in features_names]
     patients_names = [str(x).encode('utf-8') for x in patients_names]
     hf.create_dataset('features_names', data=features_names)
@@ -54,5 +56,5 @@ if __name__ == '__main__':
     fichiers_path = [exon_path, cnv_path, methyl_27_path, methyl_450_path, rna_path, rna_isoforms_path, mirna_path, protein_path]
     saving_files_names = ['exon_pancan_tcga.h5', 'cnv_pancan_tcga.h5', 'methyl_27_pancan_tcga.h5', 'methyl_450_pancan_tcga.h5', 'rna_pancan_tcga.h5', 'rna_isoforms_pancan_tcga.h5', 'mirna_pancan_tcga.h5', 'protein_pancan_tcga.h5']
     for idx, fichier in enumerate(fichiers_path):
-        read_chunk_file(fichier_path=fichier, saving_file_name=f'{graham_file_path_origin}{saving_files_names[idx]}', chunk_size=100000)
+        read_chunk_file(fichier_path=fichier, saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names[idx]}', chunk_size=100000)
         
