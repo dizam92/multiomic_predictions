@@ -19,11 +19,13 @@ def read_chunk_file(fichier_path, saving_file_name, chunk_size=100000):
     for idx, chunk in enumerate(fichier_read_chunk):
         try:
             chunk.index = chunk['Sample']
+            chunk.drop('Sample', axis=1, inplace=True)
         except KeyError:
             chunk.index = chunk['sample'] 
+            chunk.drop('sample', axis=1, inplace=True)
         patients_names = chunk.columns.values
         features_names.extend(list(chunk.index.values))
-        chunk.drop('Sample', axis=1, inplace=True)
+        
         hf.create_dataset(f'dataset_{idx}', data=chunk)
     features_names = [str(x).encode('utf-8') for x in features_names]
     patients_names = [str(x).encode('utf-8') for x in patients_names]
