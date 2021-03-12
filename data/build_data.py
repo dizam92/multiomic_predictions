@@ -54,5 +54,5 @@ if __name__ == '__main__':
     fichiers_path = [exon_path, cnv_path, methyl_27_path, methyl_450_path, rna_path, rna_isoforms_path, mirna_path, protein_path]
     saving_files_names = ['exon_pancan_tcga.h5', 'cnv_pancan_tcga.h5', 'methyl_27_pancan_tcga.h5', 'methyl_450_pancan_tcga.h5', 'rna_pancan_tcga.h5', 'rna_isoforms_pancan_tcga.h5', 'mirna_pancan_tcga.h5', 'protein_pancan_tcga.h5']
     for idx, fichier in enumerate(fichiers_path):
-        read_chunk_file(fichier_path=fichier, saving_file_name=f'/home/maoss2/PycharmProjects/multiomic_predictions/data/{saving_files_names[idx]}', chunk_size=100000)
+        read_chunk_file(fichier_path=fichier, saving_file_name=f'{graham_file_path_origin}{saving_files_names[idx]}', chunk_size=100000)
         
