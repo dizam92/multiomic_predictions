@@ -4,6 +4,7 @@ import os
 import pickle
 import h5py
 from collections import defaultdict
+from scipy.stats import median_abs_deviation
 local_file_path_origin='/Volumes/Second Part/TCGA Pan-Cancer (PANCAN)/'
 graham_file_path_origin='/home/maoss2/project/maoss2/tcga_pan_cancer_dataset'
 LOCAL = False
@@ -25,7 +26,6 @@ def read_chunk_file(fichier_path, saving_file_name, chunk_size=100000):
             chunk.drop('sample', axis=1, inplace=True)
         patients_names = chunk.columns.values
         features_names.extend(list(chunk.index.values))
-        
         hf.create_dataset(f'dataset_{idx}', data=chunk)
     features_names = [str(x).encode('utf-8') for x in features_names]
     patients_names = [str(x).encode('utf-8') for x in patients_names]
@@ -33,6 +33,47 @@ def read_chunk_file(fichier_path, saving_file_name, chunk_size=100000):
     hf.create_dataset('patients_names', data=patients_names)
     hf.close()
 
+def select_features_based_on_mad(x, axe=0, nb_features=5000):
+    """
+    Utility function to help build the mad. Compute the mad for each features
+    and make a sort on the features to take the n best features
+    Args:
+        x, numpy array, data of each view
+        axe, int, 0 or 1: if 0 run on the columns, if 1 run on the row (Unconventional cause i'm using a stats library)
+        nb_features, int, default number of feature to be selected
+    Return:
+        indices_features, the indices in the array of the features to be selected
+    """
+    assert axe in [0, 1], f'Can not do on axe {axe}'
+    mad_all_features = median_abs_deviation(x, axis=axe) #, scale='normal'
+    indices_features = np.argsort(mad_all_features)[::-1]
+    return indices_features[:nb_features]
+
+def build_file_with_dimentionality_reduction(fichier_path, saving_file_name):
+    hf = h5py.File(f'{saving_file_name}', 'w')
+    data = pd.read_csv(fichier_path, sep='\t')
+    if 'Sample' in data.columns.values:
+        data.index = data['Sample']
+        data.drop('Sample', axis=1, inplace=True)
+    if 'sample' in data.columns.values:
+        data.index = data['sample']
+        data.drop('sample', axis=1, inplace=True)
+    if 'SampleID' in data.columns.values:
+        data.index = data['SampleID']
+        data.drop('SampleID', axis=1, inplace=True) 
+    patients_names = data.columns.values
+    features_names = data.index.values
+    data = data.values
+    indices_mad_selected = select_features_based_on_mad(x=data, axe=1, nb_features=2000)
+    data = data[indices_mad_selected]
+    features_names = features_names[indices_mad_selected]
+    features_names = [str(x).encode('utf-8') for x in features_names]
+    patients_names = [str(x).encode('utf-8') for x in patients_names]
+    hf.create_dataset(f'dataset', data=data.T)
+    hf.create_dataset('features_names', data=features_names)
+    hf.create_dataset('patients_names', data=patients_names)
+    hf.close()
+        
 if LOCAL:
     exon_path = f'{local_file_path_origin}/HiSeqV2_exon'
     cnv_path = f'{local_file_path_origin}/Gistic2_CopyNumber_Gistic2_all_thresholded.by_genes'
@@ -57,6 +98,7 @@ if __name__ == '__main__':
     # TODO: Si la liste fichiers_path change, il faut update la liste saving_files_names car chaque nom a été écrit pour le fichier correspondant
     fichiers_path = [exon_path, cnv_path, methyl_27_path, methyl_450_path, rna_path, rna_isoforms_path, mirna_path, protein_path]
     saving_files_names = ['exon_pancan_tcga.h5', 'cnv_pancan_tcga.h5', 'methyl_27_pancan_tcga.h5', 'methyl_450_pancan_tcga.h5', 'rna_pancan_tcga.h5', 'rna_isoforms_pancan_tcga.h5', 'mirna_pancan_tcga.h5', 'protein_pancan_tcga.h5']
+    saving_files_names_reduced = ['exon_pancan_tcga_reduced.h5', 'cnv_pancan_tcga_reduced.h5', 'methyl_27_pancan_tcga_reduced.h5', 'methyl_450_pancan_tcga_reduced.h5', 'rna_pancan_tcga_reduced.h5', 'rna_isoforms_pancan_tcga_reduced.h5', 'mirna_pancan_tcga_reduced.h5', 'protein_pancan_tcga_reduced.h5']
     for idx, fichier in enumerate(fichiers_path):
-        read_chunk_file(fichier_path=fichier, saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names[idx]}', chunk_size=100000)
-        
+        # read_chunk_file(fichier_path=fichier, saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names[idx]}', chunk_size=100000)
+        build_file_with_dimentionality_reduction(fichier_path=fichier, saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}')
