@@ -5,7 +5,6 @@ from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
 from scipy.stats import median_absolute_deviation
 from torch.utils.data import Dataset, random_split, Subset, DataLoader, SubsetRandomSampler
 from torch.nn.utils.rnn import pad_sequence
-torch.manual_seed(42)
 
 files_path_on_graham = '/home/maoss2/project/maoss2/tcga_pan_cancer_dataset/data_hdf5'
 
