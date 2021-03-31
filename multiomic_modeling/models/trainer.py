@@ -11,12 +11,15 @@ from multiomic_modeling.models.base import BaseTrainer
 from multiomic_modeling.data.data_loader import MultiomicDataset, SubsetRandomSampler, multiomic_dataset_builder
 from multiomic_modeling.models.models import MultiomicPredictionModel
 from multiomic_modeling.models.utils import expt_params_formatter, c_collate
+from multiomic_modeling.loss_and_metrics import ClfMetrics
 from multiomic_modeling.utilities import params_to_hash
 from multiomic_modeling.torch_utils import to_numpy, get_optimizer
 from multiomic_modeling import logging
 from torch.utils.data import DataLoader
 from pytorch_lightning.core.step_result import EvalResult, TrainResult
-
+from transformers.optimization import Adafactor, AdamW, \
+    get_cosine_schedule_with_warmup, get_cosine_with_hard_restarts_schedule_with_warmup
+    
 logger = logging.create_logger(__name__)
 
 class MultiomicTrainer(BaseTrainer):
@@ -31,22 +34,18 @@ class MultiomicTrainer(BaseTrainer):
             return self.network.configure_optimizers()
         opt = get_optimizer(self.opt, filter(lambda p: p.requires_grad, self.network.parameters()),
                             lr=self.lr, weight_decay=self.weight_decay)
-        if self.lr_scheduler == "reduce_lr_on_plateau":
-            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=opt, mode='min', factor=0.1, patience=10, 
-                                                                   threshold=0.0001, threshold_mode='rel', 
-                                                                   cooldown=0, min_lr=0, eps=1e-08, verbose=False)
+        if self.lr_scheduler == "cosine_with_restarts":
+            scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(
+                opt, num_warmup_steps=8000, num_training_steps=int(1e6), num_cycles=self.n_epochs)
+        elif self.lr_scheduler == "cosine_with_warmup":
+            scheduler = get_cosine_schedule_with_warmup(opt, num_warmup_steps=8000, num_training_steps=int(1e6))
         else:
             raise Exception("Unexpected lr_scheduler")
+        
         return {'optimizer': opt, 'lr_scheduler': scheduler, "monitor": "train_loss"}
     
     def init_network(self, hparams):
-        model_name = hparams.pop('model_name')
-        if model_name not in self.name_map:
-            raise Exception(f'Unhandled model "{model_name}". The name of '
-                            f'the model should be one of those: {list(self.name_map.keys())}')
-        modelclass = self.name_map[model_name.lower()]
-        self.network = modelclass(**hparams).float()
-        self.model_name = model_name
+        self.network = MultiomicPredictionModel(**hparams).float()
 
     def init_metrics(self):
         self.metrics = ()
@@ -57,9 +56,12 @@ class MultiomicTrainer(BaseTrainer):
         loss_metrics = self.network.compute_loss_metrics(ys_pred, ys)
 
         prefix = 'train_' if train else 'val_'
-        for key, value in loss_metrics.items():
-            self.log(prefix+key, value, prog_bar=True)
-        return loss_metrics.get('loss')
+        key = 'ce'
+        self.log(prefix+key, value, prog_bar=True)
+        return loss_metrics
+        # for key, value in loss_metrics.items():
+        #     self.log(prefix+key, value, prog_bar=True)
+        # return loss_metrics.get('loss')
     
     def train_dataloader(self):
         bs = self.hparams.batch_size
@@ -90,7 +92,7 @@ class MultiomicTrainer(BaseTrainer):
         
     # Je comprends pas ta fonction score! Et c'est tu nécessaire? Yeah c'est nécessaire mais je comprends que dalle. 
     # Je odis debug this pone
-    def score(self, dataset: MultiomicDataset, artifact_dir=None, nb_ckpts=10, preds_fname=None, scores_fname=None):
+    def score(self, dataset: MultiomicDataset, artifact_dir=None, nb_ckpts=1, scores_fname=None):
         ckpt_path = os.path.join(artifact_dir, 'checkpoints')
         ckpt_fnames = natsort.natsorted([os.path.join(ckpt_path, x) for x in os.listdir(ckpt_path)
                                          if x.endswith('.ckpt')])
@@ -100,32 +102,21 @@ class MultiomicTrainer(BaseTrainer):
 
         batch_size = self.hparams.batch_size  
         ploader = DataLoader(dataset, collate_fn=c_collate, batch_size=batch_size, shuffle=False)
-        res = [(data, mask, patient_label, *self.network.predict(inputs=data))
-                for i, (data, mask, patient_label) in tqdm(enumerate(ploader))]
-
-        input_data, mask_data, target_data, preds = map(list, zip(*res))
-        acc = (preds == target_data)
-
-        res = [{k: to_numpy(v) for k, v in self.network.compute_loss_metrics(pred, y).items()}
-               for pred, y in zip(preds, ys)]
-        scores = {k: np.mean([el.get(k) for el in res]).item() for k in res[0].keys()}
-        scores.update(vals)
-        scores.update(accs)
-
-        save_smis = np.concatenate((input_smis, target_smis, pred_smis), axis=1)
-        if preds_fname is not None:
-            np.savetxt(preds_fname, save_smis, fmt='%s')
-
+        res = [(patient_label, *self.network.predict(inputs=x))
+                for i, (x, patient_label) in tqdm(enumerate(ploader))]
+        
+        target_data, preds = map(list, zip(*res))
+        target_data = to_numpy(target_data)
+        preds = to_numpy(preds)
+        scores = ClfMetrics.score(y_pred=preds, y_true=target_data)
         if scores_fname is not None:
             print(scores)
             with open(scores_fname, 'w') as fd:
                 json.dump(scores, fd)
-
-        dataset.dataset.return_smiles_on_iteration = False
         return scores
     
     @staticmethod
-    def run_experiment(model_params, dataset_params, fit_params, predict_params,
+    def run_experiment(model_params, fit_params, predict_params,
                        seed, output_path, outfmt_keys=None, **kwargs):
         all_params = locals()
 
@@ -155,7 +146,6 @@ class MultiomicTrainer(BaseTrainer):
         logger.info("Naive decoding....")
         preds_fname = os.path.join(out_prefix, "naive_predictions.txt")
         scores_fname = os.path.join(out_prefix, "naive_scores.txt")
-        scores = model.score(dataset=test, artifact_dir=out_prefix, nb_ckpts=predict_params.get('nb_ckpts', 1),
-                             beam_size=None, preds_fname=preds_fname, scores_fname=scores_fname)
+        scores = model.score(dataset=test, artifact_dir=out_prefix, nb_ckpts=predict_params.get('nb_ckpts', 1), scores_fname=scores_fname)
 
 

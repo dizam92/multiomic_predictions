@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
-
+from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score
 
 def _adjust_shapes(pred, real, pad_token):
     if real.shape[1] > pred.shape[1]:
@@ -110,3 +110,12 @@ class SeqLabelSmoothingLoss(SequenceLoss):
         super().__init__(
             pad_token, LabelSmoothLoss(smoothing, pad_token),
         )
+        
+class ClfMetrics(object):
+    def score(y_pred, y_true):
+        return {
+            'acc': accuracy_score(y_pred, y_true),
+            'pred': precision_score(y_pred, y_true),
+            'rec': recall_score(y_pred, y_true),
+            'f1_score': f1_score(y_pred, y_true)
+        }

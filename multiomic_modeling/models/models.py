@@ -1,22 +1,25 @@
 from multiomic_modeling.models.base import Model, CustomModelCheckpoint
 
 class MultiomicPredictionModel(Model):
-    def __init__(self, encoder, decoder, loss: str = 'ce'):
-        self.encoder = encoder
-        self.decoder = decoder
+    def __init__(self, d_input_enc, nb_classes_dec, d_model_enc=1024, d_ff_enc=1024, n_heads_enc=16, n_layers_enc=2,
+                 d_model_dec=1024, d_ff_dec=1024, n_heads_dec=16, n_layers_dec=2, dropout=0.1, 
+                 activation="relu", dropout=0.1, activation="relu", loss: str = 'ce'):
+        self.encoder = TorchSeqTransformerEncoder(d_input=d_input_enc, d_model=d_model_enc, d_ff=d_ff_enc, 
+                                                  n_heads=n_heads_enc, n_layers=n_layers_enc, dropout=dropout)
+        self.decoder = TorchSeqTransformerDecoder(nb_classes=nb_classes_dec, d_model=d_model_dec, d_ff=d_ff_dec, 
+                                                  n_heads=n_heads_dec, n_layers=n_layers_dec, dropout=dropout, activation=activation)
         if loss.lower() == 'ce':
             self.__loss = torch.nn.CrossEntropyLoss()
         else:
             raise f'The error {loss} is not supported yet'
         
-    def forward(self, inputs, target) -> torch.Tensor:
+    def forward(self, inputs) -> torch.Tensor:
         enc_res = self.encoder(inputs)
-        output = self.decoder(target, enc_res)
+        output = self.decoder(enc_res)
         return output
     
-    def predict(self, inputs, targets=None):
-        # outputs = self(inputs, targets)
-        return self(inputs, targets)
+    def predict(self, inputs):
+        return self(inputs)
             
     def attention_scores(self, inputs):
         return self.encoder(inputs).attention_scores

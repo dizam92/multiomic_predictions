@@ -6,8 +6,8 @@ from scipy.stats import median_absolute_deviation
 from torch.utils.data import Dataset, random_split, Subset, DataLoader, SubsetRandomSampler
 from torch.nn.utils.rnn import pad_sequence
 
-files_path_on_graham = '/home/maoss2/project/maoss2/tcga_pan_cancer_dataset/data_hdf5'
-
+# files_path_on_graham = '/home/maoss2/project/maoss2/tcga_pan_cancer_dataset/data_hdf5'
+files_path_on_graham = '/Users/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/data/tcga_pan_cancer_dataset'
 class FichierPath:
     exon_file = f'{files_path_on_graham}/exon_pancan_tcga_reduced.h5'
     cnv_file = f'{files_path_on_graham}/cnv_pancan_tcga_reduced.h5'
@@ -17,7 +17,8 @@ class FichierPath:
     mirna_file = f'{files_path_on_graham}/mirna_pancan_tcga_reduced.h5'
     rna_file = f'{files_path_on_graham}/rna_pancan_tcga_reduced.h5'
     rna_iso_file = f'{files_path_on_graham}/rna_isoforms_pancan_tcga_reduced.h5'
-    survival_file = f'{files_path_on_graham[:-10]}/Survival_SupplementalTable_S1_20171025_xena_sp'
+    # survival_file = f'{files_path_on_graham[:-10]}/Survival_SupplementalTable_S1_20171025_xena_sp'
+    survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
     
 def read_h5py(fichier):
     d = h5py.File(fichier, 'r')
@@ -60,8 +61,8 @@ class MultiomicDataset(Dataset):
                     data[i] = view['data'][view['patient_names'].get(patient_name, 0)]
                 except ValueError:
                     data[i][:view['data'][view['patient_names'].get(patient_name, 0)].shape[0]] = view['data'][view['patient_names'].get(patient_name, 0)]
-        mask = [(patient_name in view['patient_names']) for view in self.views]
-        return data, mask, patient_label
+        mask = np.array([(patient_name in view['patient_names']) for view in self.views])
+        return (data, mask), patient_label
         
     def __len__(self):
         return len(self.all_patient_names)
