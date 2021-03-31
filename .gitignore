@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 
 # Data
-data/*.h5
+*.h5
