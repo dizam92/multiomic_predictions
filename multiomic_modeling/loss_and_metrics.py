@@ -112,7 +112,10 @@ class SeqLabelSmoothingLoss(SequenceLoss):
         )
         
 class ClfMetrics(object):
-    def score(y_pred, y_true):
+    def __init__(self):
+        pass
+    
+    def score(self, y_pred, y_true):
         return {
             'acc': accuracy_score(y_pred, y_true),
             'pred': precision_score(y_pred, y_true),

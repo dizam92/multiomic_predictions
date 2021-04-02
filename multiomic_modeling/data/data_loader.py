@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import h5py
 from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
+from sklearn.preprocessing import LabelEncoder
 from scipy.stats import median_absolute_deviation
 from torch.utils.data import Dataset, random_split, Subset, DataLoader, SubsetRandomSampler
 from torch.nn.utils.rnn import pad_sequence
@@ -50,6 +51,7 @@ class MultiomicDataset(Dataset):
         self.sample_to_labels = {self.survival_data['sample'].values[idx]: self.survival_data['cancer type abbreviation'].values[idx] for idx, _ in enumerate(self.survival_data['sample'].values)}
         self.all_patient_names = np.asarray(list(self.sample_to_labels.keys()))
         self.all_patient_labels = np.asarray(list(self.sample_to_labels.values()))
+        self.all_patient_labels = LabelEncoder().fit_transform(self.all_patient_labels)
         
     def __getitem__(self, idx):
         patient_name = self.all_patient_names[idx]
@@ -62,7 +64,7 @@ class MultiomicDataset(Dataset):
                 except ValueError:
                     data[i][:view['data'][view['patient_names'].get(patient_name, 0)].shape[0]] = view['data'][view['patient_names'].get(patient_name, 0)]
         mask = np.array([(patient_name in view['patient_names']) for view in self.views])
-        return (data, mask), patient_label
+        return (data.astype(float), mask), patient_label
         
     def __len__(self):
         return len(self.all_patient_names)

@@ -47,7 +47,7 @@ def flatten_dict(d, parent_key='', sep='.'):
 
 def params_to_hash(all_params):
     all_params = deepcopy(all_params)
-    all_params['dataset_params'].pop('nb_query_samples', 0)
+    # all_params['dataset_params'].pop('nb_query_samples', 0)
     uid = hashlib.sha1(json.dumps(all_params, sort_keys=True).encode()).hexdigest()
     return uid
 

@@ -4,7 +4,6 @@ import logging
 from logging.handlers import RotatingFileHandler
 from typing import List
 
-from rdkit import RDLogger
 
 FORMATTER = logging.Formatter("[%(levelname)s] %(message)s")
 
@@ -23,8 +22,6 @@ def initialize(file_name=None, debug=False, std=False):
     """
     global start_time
     start_time = time.time()
-    # Disable logs from RdKit
-    RDLogger.DisableLog("rdApp.*")
     if file_name is not None:
         _initialize_handler_file(file_name)
         if std:

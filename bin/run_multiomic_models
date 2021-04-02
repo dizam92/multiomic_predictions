@@ -84,8 +84,8 @@ def cli():
 @click.option('-o', '--output_path', type=str, default=None, help="""output path for training result""")
 def run_single_hp(hp_config, output_path):
     expt_folder = os.path.dirname(os.path.abspath(__file__))
-    print(f"{expt_folder}/train_rxn_models -p {hp_config} -o {output_path}")
-    process = subprocess.Popen(f"{expt_folder}/train_rxn_models -p {hp_config} -o {output_path}", shell=True)
+    print(f"{expt_folder}/train_multiomic_models -p {hp_config} -o {output_path}")
+    process = subprocess.Popen(f"{expt_folder}/train_multiomic_models -p {hp_config} -o {output_path}", shell=True)
     process.communicate()
     if process.returncode != 0:
         exit()
@@ -263,12 +263,12 @@ def dispatch(exp_name, server, config_file, output_path, duration, cpus, memory,
     if server == "local":
         dispatch_local(
             config_file=config_file,
-            exec_file=f"{expt_folder}/train_rxn_models", outpath=output_path)
+            exec_file=f"{expt_folder}/train_multiomic_models", outpath=output_path)
     else:
         dispatch_sbatch(
             exp_name=exp_name,
             config_file=config_file,
-            exec_file=f"{expt_folder}/train_rxn_models",
+            exec_file=f"{expt_folder}/train_multiomic_models",
             memory=memory, duration=duration, cpus=cpus, n_gpus=n_gpus,
             type_gpus=type_gpus, account_id=account_id, partition=partition, cluster=server)
 

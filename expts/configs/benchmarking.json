@@ -1,0 +1,33 @@
+{
+    "model_params": [{
+        "d_input_enc": 2000 , 
+        "nb_classes_dec": 33,  
+        "d_model_enc": 256, 
+        "d_ff_enc": 1024, 
+        "n_heads_enc": 8, 
+        "n_layers_enc": 2,
+        "d_model_dec": 256, 
+        "d_ff_dec": 1024, 
+        "n_heads_dec": 8, 
+        "n_layers_dec": 2,
+        "activation": "relu", 
+        "dropout": 0.1, 
+        "loss": "ce",
+        "optimizer": "Adam",
+        "lr_scheduler": "cosine_with_restarts",
+        "n_epochs": 100,
+        "batch_size": 32
+    }],
+
+    "fit_params": [{
+        "nb_ckpts":1, 
+        "verbose":1
+    }],
+
+    "predict_params": [{
+        "nb_ckpts":1, 
+        "scores_fname": "scores_saving.json"
+    }],
+
+    "seed": [42]
+}

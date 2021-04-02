@@ -10,16 +10,21 @@ logger = logging.create_logger(__name__)
 
 class TorchSeqTransformerDecoder(nn.Module):
     def __init__(self, nb_classes, d_model=1024, d_ff=1024, n_heads=16, n_layers=2, dropout=0.1, activation="relu"): #dff = 4 * dmodel
-        super().__init__()
+        super(TorchSeqTransformerDecoder, self).__init__()
         self.d_model = d_model
         self.d_ff = d_ff
         self.nb_classes = nb_classes
+        self.n_heads = n_heads
+        self.d_ff = d_ff
+        self.dropout = dropout
+        self.n_layers = n_layers
+        self.activation = activation
         
         decoder_layer = nn.TransformerDecoderLayer(
-            d_model, n_heads, d_ff, dropout, activation
+            self.d_model, self.n_heads, self.d_ff, self.dropout, self.activation
         )
         decoder_norm = nn.LayerNorm(d_model)
-        self.decoder = nn.TransformerDecoder(decoder_layer, n_layers, norm=decoder_norm)
+        self.decoder = nn.TransformerDecoder(decoder_layer, self.n_layers, norm=decoder_norm)
 
         self.output = nn.Linear(d_model, self.nb_classes)
 

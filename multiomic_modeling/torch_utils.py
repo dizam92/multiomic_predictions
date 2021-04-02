@@ -35,7 +35,7 @@ LOSSES_METRICS = {
     'l1': l1_loss,
     'rmse': mean_squared_error,
     'pearsonr': pearsonr,
-    'pearsonr_squared': pearsonr_squared,
+    #'pearsonr_squared': pearsonr_squared,
     'f1_score': f1_score,
     'accuracy': accuracy_score,
     'roc': roc_auc_score,

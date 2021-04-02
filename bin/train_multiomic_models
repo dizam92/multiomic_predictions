@@ -7,8 +7,7 @@ import json
 import traceback
 import argparse
 from sklearn.model_selection import ParameterGrid
-from rxn_modeling.models.trainer import RxnTrainer
-
+from multiomic_modeling.models.trainer import MultiomicTrainer
 
 def main(config_file, output_path):
     os.makedirs(output_path, exist_ok=True)
@@ -38,7 +37,7 @@ def main(config_file, output_path):
             training_params = training_params[0]
 
         # the function below does all the data loading, run, validate and test the algo
-        RxnTrainer.run_experiment(**training_params, output_path=output_path)
+        MultiomicTrainer.run_experiment(**training_params, output_path=output_path)
 
     except Exception as e:
         # Write out an error file. This will be returned as the failureReason in the

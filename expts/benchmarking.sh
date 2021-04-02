@@ -26,5 +26,5 @@ collections="uspto_50k"
 echo "Processing algo"
 fname=expts/configs/benchmarking.json
 mkdir -p "$(dirname $fname)"
-python expts/benchmarking.py -d "$collections" -a "$algo" -o $fname $mode --debug
-run_rxn_expts dispatch --server $server --config-file $fname --exp-name rxn_debuging --cpus 8 --partition v100
+# python expts/benchmarking.py -d "$collections" -a "$algo" -o $fname $mode --debug
+run_multiomic_models dispatch --server $server --config-file $fname --exp-name multiomic_debuging --cpus 4 --partition v100

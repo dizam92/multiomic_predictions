@@ -52,12 +52,12 @@ class MultiomicTrainer(BaseTrainer):
     
     def train_val_step(self, batch, optimizer_idx=0, train=True):
         xs, ys = batch
-        ys_pred = self.network(xs, ys)
+        ys_pred = self.network(xs)
         loss_metrics = self.network.compute_loss_metrics(ys_pred, ys)
 
         prefix = 'train_' if train else 'val_'
         key = 'ce'
-        self.log(prefix+key, value, prog_bar=True)
+        self.log(prefix+key, loss_metrics, prog_bar=True)
         return loss_metrics
         # for key, value in loss_metrics.items():
         #     self.log(prefix+key, value, prog_bar=True)
@@ -90,8 +90,6 @@ class MultiomicTrainer(BaseTrainer):
             state[key] = state[key] / num_weights
         self.load_state_dict(state)
         
-    # Je comprends pas ta fonction score! Et c'est tu nécessaire? Yeah c'est nécessaire mais je comprends que dalle. 
-    # Je odis debug this pone
     def score(self, dataset: MultiomicDataset, artifact_dir=None, nb_ckpts=1, scores_fname=None):
         ckpt_path = os.path.join(artifact_dir, 'checkpoints')
         ckpt_fnames = natsort.natsorted([os.path.join(ckpt_path, x) for x in os.listdir(ckpt_path)
@@ -102,13 +100,13 @@ class MultiomicTrainer(BaseTrainer):
 
         batch_size = self.hparams.batch_size  
         ploader = DataLoader(dataset, collate_fn=c_collate, batch_size=batch_size, shuffle=False)
-        res = [(patient_label, *self.network.predict(inputs=x))
+        res = [(patient_label, self.network.predict(inputs=x))
                 for i, (x, patient_label) in tqdm(enumerate(ploader))]
-        
         target_data, preds = map(list, zip(*res))
         target_data = to_numpy(target_data)
         preds = to_numpy(preds)
-        scores = ClfMetrics.score(y_pred=preds, y_true=target_data)
+        clf_metrics = ClfMetrics()
+        scores = clf_metrics.score(y_pred=preds, y_true=target_data)
         if scores_fname is not None:
             print(scores)
             with open(scores_fname, 'w') as fd:

@@ -1,9 +1,13 @@
 from multiomic_modeling.models.base import Model, CustomModelCheckpoint
+from multiomic_modeling.models.encoder import TorchSeqTransformerEncoder
+from multiomic_modeling.models.decoder import TorchSeqTransformerDecoder
+import torch
 
 class MultiomicPredictionModel(Model):
     def __init__(self, d_input_enc, nb_classes_dec, d_model_enc=1024, d_ff_enc=1024, n_heads_enc=16, n_layers_enc=2,
-                 d_model_dec=1024, d_ff_dec=1024, n_heads_dec=16, n_layers_dec=2, dropout=0.1, 
-                 activation="relu", dropout=0.1, activation="relu", loss: str = 'ce'):
+                 d_model_dec=1024, d_ff_dec=1024, n_heads_dec=16, n_layers_dec=2,
+                 activation="relu", dropout=0.1, loss: str = 'ce'):
+        super(MultiomicPredictionModel, self).__init__()
         self.encoder = TorchSeqTransformerEncoder(d_input=d_input_enc, d_model=d_model_enc, d_ff=d_ff_enc, 
                                                   n_heads=n_heads_enc, n_layers=n_layers_enc, dropout=dropout)
         self.decoder = TorchSeqTransformerDecoder(nb_classes=nb_classes_dec, d_model=d_model_dec, d_ff=d_ff_dec, 
