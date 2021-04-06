@@ -18,8 +18,8 @@ class FichierPath:
     mirna_file = f'{files_path_on_graham}/mirna_pancan_tcga_reduced.h5'
     rna_file = f'{files_path_on_graham}/rna_pancan_tcga_reduced.h5'
     rna_iso_file = f'{files_path_on_graham}/rna_isoforms_pancan_tcga_reduced.h5'
-    # survival_file = f'{files_path_on_graham[:-10]}/Survival_SupplementalTable_S1_20171025_xena_sp'
-    survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
+    survival_file = f'{files_path_on_graham[:-10]}/Survival_SupplementalTable_S1_20171025_xena_sp'
+    # survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
     
 def read_h5py(fichier):
     d = h5py.File(fichier, 'r')
