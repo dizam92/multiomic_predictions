@@ -12,7 +12,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, CyclicLR, CosineAnnealin
 from pytorch_lightning.tuner.tuning import Tuner
 from pytorch_lightning.loggers import TestTubeLogger
 from pytorch_lightning import Trainer, LightningModule
-from pytorch_lightning.core.step_result import EvalResult, TrainResult
+# from pytorch_lightning.core.step_result import EvalResult, TrainResult
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 
 from multiomic_modeling import logging
@@ -161,7 +161,7 @@ class BaseTrainer(LightningModule):
         result = self.train_val_step(batch, train=False)
         self.log('checkpoint_on', result)
         self.log('early_stop_on', result)
-        result = EvalResult(checkpoint_on=result, early_stop_on=result)
+        # result = EvalResult(checkpoint_on=result, early_stop_on=result)
         # print(result)
         return result
 
