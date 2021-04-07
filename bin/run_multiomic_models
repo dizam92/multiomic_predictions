@@ -23,6 +23,11 @@ def get_hash(task):
 graham_sbatch_template_multiple = r"""#!/bin/bash
 #SBATCH --cpus-per-task={cpus}
 #SBATCH --array={start_idx}-{end_idx}
+#SBATCH --account=rrg-corbeilj-ac
+#SBATCH --mail-user=mazid-abiodoun.osseni.1@ulaval.ca
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
 
 date
 SECONDS=0
@@ -35,7 +40,11 @@ date
 
 graham_sbatch_template_single = r"""#!/bin/bash
 #SBATCH --cpus-per-task={cpus}
-
+#SBATCH --account=rrg-corbeilj-ac
+#SBATCH --mail-user=mazid-abiodoun.osseni.1@ulaval.ca
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-type=END
+#SBATCH --mail-type=FAIL
 date
 SECONDS=0
 which python
