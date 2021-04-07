@@ -59,34 +59,6 @@ date
 """
 
 
-aws_sbatch_template_multiple = r"""#!/bin/bash
-#SBATCH --partition={partition}
-#SBATCH --cpus-per-task={cpus}{gpu_entry}
-#SBATCH --array={start_idx}-{end_idx}
-
-date
-SECONDS=0
-which python
-python3 {dispatcher_file} run-sbatch  --exp_name {exp_name} --hpid $SLURM_ARRAY_TASK_ID -e {exec_file}
-diff=$SECONDS
-echo "$(($diff / 60)) minutes and $(($diff % 60)) seconds elapsed."
-date
-"""
-
-aws_sbatch_template_single = r"""#!/bin/bash
-#SBATCH --partition={partition}
-#SBATCH --cpus-per-task={cpus}{gpu_entry}
-
-date
-SECONDS=0
-which python
-{exec_cmd}
-diff=$SECONDS
-echo "$(($diff / 60)) minutes and $(($diff % 60)) seconds elapsed."
-date
-"""
-
-
 @click.group()
 def cli():
     pass
@@ -196,8 +168,6 @@ def dispatch_sbatch(exp_name, config_file, exec_file, memory, duration, cpus, ty
                          dispatcher_file=dispatcher_file, account_id=account_id)
     if cluster.lower() == 'graham':
         sbatch_script = graham_sbatch_template_multiple.format(**template_args)
-    elif cluster.lower() == 'aws':
-        sbatch_script = aws_sbatch_template_multiple.format(**template_args)
     else:
         raise Exception("Unknown cluster")
     sbatch_script_location = os.path.join(exp_dir, 'submit.sh')
@@ -304,13 +274,11 @@ def dispatch(exp_name, server, config_file, output_path, duration, cpus, memory,
 @click.option('--cluster', type=str, default="graham",
               help="""Name of the cluster: aws gpc or graham""")
 def submit_sbatch(ename, cmd, duration, cpus, type_gpus, n_gpus, memory, account_id, cluster):
-    gpu_entry = f'\n#SBATCH --gres=gpu:{type_gpus}:{n_gpus}' if n_gpus > 0 else ""
+    # gpu_entry = f'\n#SBATCH --gres=gpu:{type_gpus}:{n_gpus}' if n_gpus > 0 else ""
     template_args = dict(exec_cmd=cmd, duration=duration, cpus=cpus,
-                         memory=memory, account_id=account_id, gpu_entry=gpu_entry)
+                         memory=memory, n_gpus=n_gpus, type_gpus=type_gpus, account_id=account_id, partition=partition, cluster=server)
     if cluster.lower() == 'graham':
         sbatch_script = graham_sbatch_template_single.format(**template_args)
-    elif cluster.lower() == 'aws':
-        sbatch_script = aws_sbatch_template_single.format(**template_args)
     else:
         raise Exception("Unknown cluster")
 

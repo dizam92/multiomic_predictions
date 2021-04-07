@@ -16,7 +16,7 @@ from multiomic_modeling.utilities import params_to_hash
 from multiomic_modeling.torch_utils import to_numpy, get_optimizer
 from multiomic_modeling import logging
 from torch.utils.data import DataLoader
-from pytorch_lightning.core.step_result import EvalResult, TrainResult
+# from pytorch_lightning.core.step_result import EvalResult, TrainResult
 from transformers.optimization import Adafactor, AdamW, \
     get_cosine_schedule_with_warmup, get_cosine_with_hard_restarts_schedule_with_warmup
     
