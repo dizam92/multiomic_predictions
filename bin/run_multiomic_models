@@ -34,12 +34,12 @@ graham_sbatch_template_multiple = r"""#!/bin/bash
 date
 SECONDS=0
 which python
-python3 {dispatcher_file} run-sbatch  --exp_name {exp_name} --hpid $SLURM_ARRAY_TASK_ID -e {exec_file}
+python3 {dispatcher_file} run-sbatch  --exp_name {exp_name} --hpid 0 -e {exec_file}
 diff=$SECONDS
 echo "$(($diff / 60)) minutes and $(($diff % 60)) seconds elapsed."
 date
 """
-
+# python3 {dispatcher_file} run-sbatch  --exp_name {exp_name} --hpid $SLURM_ARRAY_TASK_ID -e {exec_file}
 graham_sbatch_template_single = r"""#!/bin/bash
 #SBATCH --cpus-per-task={cpus}
 #SBATCH --mem={memory}
