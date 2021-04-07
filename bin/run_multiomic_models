@@ -22,7 +22,8 @@ def get_hash(task):
 
 graham_sbatch_template_multiple = r"""#!/bin/bash
 #SBATCH --cpus-per-task={cpus}
-#SBATCH --array={start_idx}-{end_idx}
+#SBATCH --mem={memory}
+#SBATCH --gres=gpu:{type_gpus}:{n_gpus}
 #SBATCH --account=rrg-corbeilj-ac
 #SBATCH --mail-user=mazid-abiodoun.osseni.1@ulaval.ca
 #SBATCH --mail-type=BEGIN
@@ -40,11 +41,14 @@ date
 
 graham_sbatch_template_single = r"""#!/bin/bash
 #SBATCH --cpus-per-task={cpus}
+#SBATCH --mem={memory}
+#SBATCH --gres=gpu:{type_gpus}:{n_gpus}
 #SBATCH --account=rrg-corbeilj-ac
 #SBATCH --mail-user=mazid-abiodoun.osseni.1@ulaval.ca
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
+
 date
 SECONDS=0
 which python
@@ -185,11 +189,11 @@ def dispatch_sbatch(exp_name, config_file, exec_file, memory, duration, cpus, ty
     end_idx = start_idx + len(all_filenames)
 
     dispatcher_file = os.path.abspath(__file__)
-    gpu_entry = f'\n#SBATCH --gres=gpu:{type_gpus}:{n_gpus}' if n_gpus > 0 else ""
+    # gpu_entry = f'\n#SBATCH --gres=gpu:{type_gpus}:{n_gpus}' if n_gpus > 0 else ""
     template_args = dict(start_idx=start_idx, end_idx=end_idx - 1,
                          exp_name=exp_name, exec_file=exec_file,
-                         duration=duration, cpus=cpus, memory=memory, gpu_entry=gpu_entry,
-                         dispatcher_file=dispatcher_file, account_id=account_id, partition=partition)
+                         duration=duration, cpus=cpus, memory=memory, type_gpus=type_gpus, n_gpus=n_gpus,
+                         dispatcher_file=dispatcher_file, account_id=account_id)
     if cluster.lower() == 'graham':
         sbatch_script = graham_sbatch_template_multiple.format(**template_args)
     elif cluster.lower() == 'aws':
