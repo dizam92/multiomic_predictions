@@ -8,6 +8,6 @@
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
 #SBATCH --time=02:00:00
-#SBATCH --output=/home/maoss2/PycharmProjects/multiomic_predictions/data/data_dispatch.out
+#SBATCH --output=/home/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/data/data_dispatch.out
 
 python build_data.py
