@@ -61,6 +61,7 @@ def build_file_with_dimentionality_reduction(fichier_path, saving_file_name):
     if 'SampleID' in data.columns.values:
         data.index = data['SampleID']
         data.drop('SampleID', axis=1, inplace=True) 
+    data.dropna(axis=0, inplace=True)
     patients_names = data.columns.values
     features_names = data.index.values
     data = data.values
