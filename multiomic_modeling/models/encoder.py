@@ -5,7 +5,6 @@ from multiomic_modeling.models.utils import init_params_xavier_uniform,  Encoder
 from multiomic_modeling.data.structs import Sequence
 from multiomic_modeling import logging
 
-
 logger = logging.create_logger(__name__)
 
 

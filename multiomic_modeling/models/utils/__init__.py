@@ -298,9 +298,9 @@ def c_collate(batch):
     elif isinstance(elem, Sequence):
         return Sequence.collate_fn(batch)
     elif isinstance(elem, float):
-        return torch.tensor(batch, dtype=torch.float64)
+        return torch.Tensor(batch, dtype=torch.float64)
     elif isinstance(elem, int_classes):
-        return torch.tensor(batch)
+        return torch.Tensor(batch)
     elif isinstance(elem, string_classes):
         return batch
     elif isinstance(elem, container_abcs.Mapping):

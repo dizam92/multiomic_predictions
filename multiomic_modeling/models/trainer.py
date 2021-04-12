@@ -36,9 +36,9 @@ class MultiomicTrainer(BaseTrainer):
                             lr=self.lr, weight_decay=self.weight_decay)
         if self.lr_scheduler == "cosine_with_restarts":
             scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(
-                opt, num_warmup_steps=8000, num_training_steps=int(1e6), num_cycles=self.n_epochs)
+                opt, num_warmup_steps=4000, num_training_steps=int(1e6), num_cycles=self.n_epochs)
         elif self.lr_scheduler == "cosine_with_warmup":
-            scheduler = get_cosine_schedule_with_warmup(opt, num_warmup_steps=8000, num_training_steps=int(1e6))
+            scheduler = get_cosine_schedule_with_warmup(opt, num_warmup_steps=4000, num_training_steps=int(1e6))
         else:
             raise Exception("Unexpected lr_scheduler")
         
@@ -106,6 +106,8 @@ class MultiomicTrainer(BaseTrainer):
         target_data = to_numpy(target_data)
         preds = to_numpy(preds)
         clf_metrics = ClfMetrics()
+        # print(f'preds are {preds}')
+        # print(f'target data {target_data}')
         scores = clf_metrics.score(y_pred=preds, y_true=target_data)
         if scores_fname is not None:
             print(scores)
@@ -136,7 +138,6 @@ class MultiomicTrainer(BaseTrainer):
 
         dataset = MultiomicDataset()
         train, valid, test = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
-
         logger.info("Training")
         model = MultiomicTrainer(Namespace(**model_params))
         model.fit(train_dataset=train, valid_dataset=valid, **fit_params)

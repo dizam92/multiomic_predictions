@@ -2,13 +2,14 @@ import pandas as pd
 import numpy as np
 import h5py
 from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler, MinMaxScaler, Normalizer
+from sklearn.utils import class_weight
 from scipy.stats import median_absolute_deviation
 from torch.utils.data import Dataset, random_split, Subset, DataLoader, SubsetRandomSampler
 from torch.nn.utils.rnn import pad_sequence
 
-files_path_on_graham = '/home/maoss2/project/maoss2/tcga_pan_cancer_dataset/data_hdf5'
-# files_path_on_graham = '/Users/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/data/tcga_pan_cancer_dataset'
+# files_path_on_graham = '/home/maoss2/project/maoss2/tcga_pan_cancer_dataset/data_hdf5'
+files_path_on_graham = '/Users/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/data/tcga_pan_cancer_dataset'
 class FichierPath:
     exon_file = f'{files_path_on_graham}/exon_pancan_tcga_reduced.h5'
     cnv_file = f'{files_path_on_graham}/cnv_pancan_tcga_reduced.h5'
@@ -18,12 +19,15 @@ class FichierPath:
     mirna_file = f'{files_path_on_graham}/mirna_pancan_tcga_reduced.h5'
     rna_file = f'{files_path_on_graham}/rna_pancan_tcga_reduced.h5'
     rna_iso_file = f'{files_path_on_graham}/rna_isoforms_pancan_tcga_reduced.h5'
-    survival_file = f'{files_path_on_graham[:-10]}/Survival_SupplementalTable_S1_20171025_xena_sp'
-    # survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
+    survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
+    patients_without_view_file = f'{files_path_on_graham}/patients_without_view.txt'
+    patients_with_one_view_file = f'{files_path_on_graham}/patients_with_one_view.txt'
     
-def read_h5py(fichier):
+def read_h5py(fichier, normalization=False) -> dict:
     d = h5py.File(fichier, 'r')
     data = d['dataset'][()]
+    if normalization:
+        data = StandardScaler().fit_transform(data)
     feature_names = np.asarray([el.decode("utf-8") for el in d['features_names'][()]])
     patient_names = np.asarray([el.decode("utf-8") for el in d['patients_names'][()]])
     patient_names = dict(zip(patient_names, np.arange(len(patient_names))))
@@ -33,25 +37,41 @@ def read_h5py(fichier):
 
 def read_pandas_csv(fichier):
     return pd.read_csv(fichier, sep='\t')
-    
+
+def read_file_txt(fichier) -> list:
+    with open(fichier, 'r') as f:
+        lines = [l.strip('\n') for l in f.readlines()] 
+    return lines
+
+patients_without_view = read_file_txt(FichierPath.patients_without_view_file)
+patients_with_one_view_file = read_file_txt(FichierPath.patients_with_one_view_file)
+
 class MultiomicDataset(Dataset):
     def __init__(self):
         super(MultiomicDataset, self).__init__()
         self.views = [
-            read_h5py(fichier=FichierPath.cnv_file), 
-            read_h5py(fichier=FichierPath.methyl27_file),
-            read_h5py(fichier=FichierPath.methyl450_file),
-            read_h5py(fichier=FichierPath.exon_file),
-            read_h5py(fichier=FichierPath.mirna_file),
-            read_h5py(fichier=FichierPath.rna_file),
-            # read_h5py(fichier=FichierPath.rna_iso_file),
-            read_h5py(fichier=FichierPath.protein_file)]
+            read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
+            read_h5py(fichier=FichierPath.methyl27_file, normalization=False),
+            read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
+            read_h5py(fichier=FichierPath.exon_file, normalization=True),
+            read_h5py(fichier=FichierPath.mirna_file, normalization=True),
+            read_h5py(fichier=FichierPath.rna_file, normalization=True),
+            read_h5py(fichier=FichierPath.rna_iso_file, normalization=True),
+            read_h5py(fichier=FichierPath.protein_file, normalization=True)
+            ]
         self.nb_features = np.max([view['data'].shape[1] for view in self.views])
         self.survival_data = read_pandas_csv(fichier=FichierPath.survival_file)
         self.sample_to_labels = {self.survival_data['sample'].values[idx]: self.survival_data['cancer type abbreviation'].values[idx] for idx, _ in enumerate(self.survival_data['sample'].values)}
+        for patient_name in patients_without_view:
+            self.sample_to_labels.pop(patient_name)
+        for patient_name in patients_with_one_view_file:
+            self.sample_to_labels.pop(patient_name)    
         self.all_patient_names = np.asarray(list(self.sample_to_labels.keys()))
         self.all_patient_labels = np.asarray(list(self.sample_to_labels.values()))
         self.all_patient_labels = LabelEncoder().fit_transform(self.all_patient_labels)
+        self.class_weights = class_weight.compute_class_weight('balanced',
+                                                 np.unique(self.all_patient_labels),
+                                                 self.all_patient_labels) #pylint deconne sinon pas d'erreurs
         
     def __getitem__(self, idx):
         patient_name = self.all_patient_names[idx]
