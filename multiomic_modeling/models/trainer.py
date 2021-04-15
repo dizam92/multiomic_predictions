@@ -35,10 +35,12 @@ class MultiomicTrainer(BaseTrainer):
         opt = get_optimizer(self.opt, filter(lambda p: p.requires_grad, self.network.parameters()),
                             lr=self.lr, weight_decay=self.weight_decay)
         if self.lr_scheduler == "cosine_with_restarts":
+            # scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(
+            #     opt, num_warmup_steps=self.number_of_steps_per_epoch*2, num_training_steps=int(1e6), num_cycles=self.n_epochs)
             scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(
-                opt, num_warmup_steps=4000, num_training_steps=int(1e6), num_cycles=self.n_epochs)
+                opt, num_warmup_steps=1000, num_training_steps=int(1e6), num_cycles=self.n_epochs)
         elif self.lr_scheduler == "cosine_with_warmup":
-            scheduler = get_cosine_schedule_with_warmup(opt, num_warmup_steps=4000, num_training_steps=int(1e6))
+            scheduler = get_cosine_schedule_with_warmup(opt, num_warmup_steps=1000, num_training_steps=int(1e6))
         else:
             raise Exception("Unexpected lr_scheduler")
         
@@ -66,12 +68,14 @@ class MultiomicTrainer(BaseTrainer):
     def train_dataloader(self):
         bs = self.hparams.batch_size
         data_sampler = SubsetRandomSampler(np.arange(len(self._train_dataset)))
-        return DataLoader(self._train_dataset, sampler=data_sampler, collate_fn=c_collate, num_workers=4)
-
+        res = DataLoader(self._train_dataset, batch_size=bs, sampler=data_sampler, collate_fn=c_collate, num_workers=4)
+        self.number_of_steps_per_epoch = len(res)
+        return res
+    
     def val_dataloader(self):
         bs = self.hparams.batch_size
         data_sampler = SubsetRandomSampler(np.arange(len(self._valid_dataset)))
-        return DataLoader(self._valid_dataset, sampler=data_sampler, collate_fn=c_collate, num_workers=4)
+        return DataLoader(self._valid_dataset, batch_size=bs, sampler=data_sampler, collate_fn=c_collate, num_workers=4)
 
     def load_average_weights(self, file_paths) -> None:
         state = {}

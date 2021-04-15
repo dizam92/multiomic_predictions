@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from multiomic_modeling.models.utils.embedding import Embeddings, PositionalEncoding
-from multiomic_modeling.models.utils import init_params_xavier_uniform,  EncoderState
+from multiomic_modeling.models.utils import init_params_xavier_uniform, init_params_xavier_normal, EncoderState
 from multiomic_modeling.data.structs import Sequence
 from multiomic_modeling import logging
 
@@ -25,9 +25,10 @@ class TorchSeqTransformerEncoder(nn.Module):
         self.net = nn.TransformerEncoder(encoder_layer, self.n_layers, encoder_norm)
 
         init_params_xavier_uniform(self)
+        # init_params_xavier_normal(self)
 
     def forward(self, inputs) -> EncoderState:
-        mask_padding_x = inputs[1]
+        mask_padding_x = ~inputs[1]
         inputs = inputs[0].float()
         
         x = self.embedding(inputs)

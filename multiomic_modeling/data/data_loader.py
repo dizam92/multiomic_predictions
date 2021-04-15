@@ -84,6 +84,8 @@ class MultiomicDataset(Dataset):
                 except ValueError:
                     data[i][:view['data'][view['patient_names'].get(patient_name, 0)].shape[0]] = view['data'][view['patient_names'].get(patient_name, 0)]
         mask = np.array([(patient_name in view['patient_names']) for view in self.views])
+        # data = data.reshape(-1) # 16000
+        # return data.astype(float), patient_label
         return (data.astype(float), mask), patient_label
         
     def __len__(self):
@@ -94,20 +96,11 @@ def multiomic_dataset_builder(dataset, test_size=0.2, valid_size=0.1):
     n = len(dataset)
     idxs = np.arange(n)
     labels = dataset.all_patient_labels
-    sss = StratifiedShuffleSplit(n_splits=1, test_size=test_size, random_state=42) 
-    for train_index, test_index in sss.split(idxs, labels):
-        train_idx = train_index
-        test_idx = test_index
-        idxs = idxs[train_index]
-        labels = labels[train_index]
-    sss = StratifiedShuffleSplit(n_splits=1, test_size=valid_size, random_state=42) 
-    for train_index, valid_index in sss.split(idxs, labels):
-        train_idx = train_index
-        valid_idx = valid_index
-        idxs = idxs[train_index]
-    train_dataset = Subset(dataset, indices=train_idx)
-    test_dataset = Subset(dataset, indices=test_idx)
-    valid_dataset =  Subset(dataset, indices=valid_idx)
+    X_train, X_test, y_train, y_test = train_test_split(idxs, labels, test_size=test_size, random_state=42)
+    X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=valid_size, random_state=42)
+    train_dataset = Subset(dataset, indices=X_train)
+    test_dataset = Subset(dataset, indices=X_test)
+    valid_dataset =  Subset(dataset, indices=X_valid)
     return train_dataset, test_dataset, valid_dataset
 
 def multiomic_dataset_loader(dataset, batch_size=32, nb_cpus=2):

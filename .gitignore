@@ -130,6 +130,7 @@ dmypy.json
 
 # Data
 *.h5
+*.csv
 results/*
 
 .vscode/

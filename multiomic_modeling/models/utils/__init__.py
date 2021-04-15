@@ -6,7 +6,7 @@ from multiomic_modeling.data.structs import Sequence
 from multiomic_modeling.torch_utils import get_activation
 from multiomic_modeling import logging
 from torch import nn
-from torch.nn.init import xavier_uniform_
+from torch.nn.init import xavier_uniform_, xavier_normal_
 from torch._six import int_classes, string_classes, container_abcs
 
 from multiomic_modeling.utilities import flatten_dict
@@ -43,6 +43,11 @@ def init_params_xavier_uniform(model: nn.Module):
     for param in model.parameters():
         if param.dim() > 1:
             xavier_uniform_(param)
+
+def init_params_xavier_normal(model: nn.Module):
+    for param in model.parameters():
+        if param.dim() > 1:
+            xavier_normal_(param)
 
 
 class Model(nn.Module):
