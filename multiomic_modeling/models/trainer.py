@@ -101,18 +101,21 @@ class MultiomicTrainer(BaseTrainer):
         print(*ckpt_fnames)
         ckpt_fnames = ckpt_fnames[:nb_ckpts]
         self.load_average_weights(ckpt_fnames)
-
         batch_size = self.hparams.batch_size  
         ploader = DataLoader(dataset, collate_fn=c_collate, batch_size=batch_size, shuffle=False)
-        res = [(patient_label, self.network.predict(inputs=x))
-                for i, (x, patient_label) in tqdm(enumerate(ploader))]
+        res = [(patient_label, torch.argmax(self.network.predict(inputs=x), dim=1))
+                for i, (x, patient_label) in tqdm(enumerate(ploader))] # classification multiclasse d'ou le argmax
         target_data, preds = map(list, zip(*res))
         target_data = to_numpy(target_data)
         preds = to_numpy(preds)
         clf_metrics = ClfMetrics()
-        # print(f'preds are {preds}')
-        # print(f'target data {target_data}')
-        scores = clf_metrics.score(y_pred=preds, y_true=target_data)
+        new_preds = []
+        for pred_batch in preds:
+            new_preds.extend(pred_batch)
+        new_target_data = []
+        for target_data_batch in target_data:
+            new_target_data.extend(target_data_batch)
+        scores = clf_metrics.score(y_pred=new_preds, y_true=new_target_data)
         if scores_fname is not None:
             print(scores)
             with open(scores_fname, 'w') as fd:
@@ -140,7 +143,7 @@ class MultiomicTrainer(BaseTrainer):
         with open(os.path.join(out_prefix, 'config.json'), 'w') as fd:
             json.dump(all_params, fd, sort_keys=True, indent=2)
 
-        dataset = MultiomicDataset()
+        dataset = MultiomicDataset(views_to_consider='all')
         train, valid, test = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
         logger.info("Training")
         model = MultiomicTrainer(Namespace(**model_params))

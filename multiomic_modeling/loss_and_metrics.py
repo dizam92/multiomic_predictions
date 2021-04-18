@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
+import numpy as np
 from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score
 
 def _adjust_shapes(pred, real, pad_token):
@@ -117,8 +118,8 @@ class ClfMetrics(object):
     
     def score(self, y_pred, y_true):
         return {
-            'acc': accuracy_score(y_pred, y_true),
-            'pred': precision_score(y_pred, y_true),
-            'rec': recall_score(y_pred, y_true),
-            'f1_score': f1_score(y_pred, y_true)
+            'acc': np.round(accuracy_score(y_pred, y_true) * 100, 3),
+            'pred': np.round(precision_score(y_pred, y_true, average='weighted') * 100, 3),
+            'rec': np.round(recall_score(y_pred, y_true, average='weighted') * 100, 3),
+            'f1_score': np.round(f1_score(y_pred, y_true, average='weighted') * 100, 3)
         }

@@ -47,31 +47,115 @@ patients_without_view = read_file_txt(FichierPath.patients_without_view_file)
 patients_with_one_view_file = read_file_txt(FichierPath.patients_with_one_view_file)
 
 class MultiomicDataset(Dataset):
-    def __init__(self):
+    def __init__(self, views_to_consider='all'):
         super(MultiomicDataset, self).__init__()
-        self.views = [
-            read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
-            read_h5py(fichier=FichierPath.methyl27_file, normalization=False),
-            read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
-            read_h5py(fichier=FichierPath.exon_file, normalization=True),
-            read_h5py(fichier=FichierPath.mirna_file, normalization=True),
-            read_h5py(fichier=FichierPath.rna_file, normalization=True),
-            read_h5py(fichier=FichierPath.rna_iso_file, normalization=True),
-            read_h5py(fichier=FichierPath.protein_file, normalization=True)
+        """
+        Arguments:
+            views_to_consider, str, 
+                all, load all the 8 views (cnv, methyl27, methyl450, exon, mirna, rna, rna_iso, protein)
+                cnv, load just cnv views
+                methyl, load just methyl27 and methyl450 views
+                exon, load just exon views
+                mirna, load just mirna views
+                rna, load just rna views
+                rna_iso, load just rna_iso views
+                protein, load just protein views
+        """
+        if views_to_consider == 'all':
+            self.views = [
+                read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
+                read_h5py(fichier=FichierPath.methyl27_file, normalization=False),
+                read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
+                read_h5py(fichier=FichierPath.exon_file, normalization=True),
+                read_h5py(fichier=FichierPath.mirna_file, normalization=True),
+                read_h5py(fichier=FichierPath.rna_file, normalization=True),
+                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True),
+                read_h5py(fichier=FichierPath.protein_file, normalization=True)
             ]
+        elif views_to_consider == 'cnv':
+            self.views = [
+                read_h5py(fichier=FichierPath.cnv_file, normalization=False)
+            ]
+        elif views_to_consider == 'methyl':
+            self.views = [
+                read_h5py(fichier=FichierPath.methyl27_file, normalization=False),
+                read_h5py(fichier=FichierPath.methyl450_file, normalization=False)
+            ]
+        elif views_to_consider == 'exon':
+            self.views = [
+                read_h5py(fichier=FichierPath.exon_file, normalization=True)
+            ]
+        elif views_to_consider == 'mirna':
+            self.views = [
+                read_h5py(fichier=FichierPath.mirna_file, normalization=True)
+            ]
+        elif views_to_consider == 'rna':
+            self.views = [
+                read_h5py(fichier=FichierPath.rna_file, normalization=True)
+            ]
+        elif views_to_consider == 'rna_iso':
+            self.views = [
+                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+            ]
+        elif views_to_consider == 'protein':
+            self.views = [
+                read_h5py(fichier=FichierPath.protein_file, normalization=True)
+            ]
+        else:
+            raise ValueError(f'the view {views_to_consider} is not available in the dataset')
         self.nb_features = np.max([view['data'].shape[1] for view in self.views])
         self.survival_data = read_pandas_csv(fichier=FichierPath.survival_file)
         self.sample_to_labels = {self.survival_data['sample'].values[idx]: self.survival_data['cancer type abbreviation'].values[idx] for idx, _ in enumerate(self.survival_data['sample'].values)}
         for patient_name in patients_without_view:
             self.sample_to_labels.pop(patient_name)
-        for patient_name in patients_with_one_view_file:
-            self.sample_to_labels.pop(patient_name)    
+        if views_to_consider == 'all':
+            for patient_name in patients_with_one_view_file:
+                self.sample_to_labels.pop(patient_name)        
+        elif views_to_consider == 'cnv':
+            patients_name_view = list(self.views[0]['patient_names'].keys())
+            for patient_name in self.sample_to_labels.keys():
+                if patient_name not in patients_name_view:
+                    self.sample_to_labels.pop(patient_name) 
+        elif views_to_consider == 'methyl':
+            patients_name_methyl_views = []
+            patients_name_methyl_views.extend(list(self.views[0]['patient_names'].keys()))
+            patients_name_methyl_views.extend(list(self.views[1]['patient_names'].keys()))
+            for patient_name in self.sample_to_labels.keys():
+                if patient_name not in patients_name_view:
+                    self.sample_to_labels.pop(patient_name) 
+        elif views_to_consider == 'exon':
+            patients_name_view = list(self.views[0]['patient_names'].keys())
+            for patient_name in self.sample_to_labels.keys():
+                if patient_name not in patients_name_view:
+                    self.sample_to_labels.pop(patient_name) 
+        elif views_to_consider == 'mirna':
+            patients_name_view = list(self.views[0]['patient_names'].keys())
+            for patient_name in self.sample_to_labels.keys():
+                if patient_name not in patients_name_view:
+                    self.sample_to_labels.pop(patient_name) 
+        elif views_to_consider == 'rna':
+            patients_name_view = list(self.views[0]['patient_names'].keys())
+            for patient_name in self.sample_to_labels.keys():
+                if patient_name not in patients_name_view:
+                    self.sample_to_labels.pop(patient_name) 
+        elif views_to_consider == 'rna_iso':
+            patients_name_view = list(self.views[0]['patient_names'].keys())
+            for patient_name in self.sample_to_labels.keys():
+                if patient_name not in patients_name_view:
+                    self.sample_to_labels.pop(patient_name) 
+        elif views_to_consider == 'protein':
+            patients_name_view = list(self.views[0]['patient_names'].keys())
+            for patient_name in self.sample_to_labels.keys():
+                if patient_name not in patients_name_view:
+                    self.sample_to_labels.pop(patient_name) 
+        else:
+            raise ValueError(f'the view {views_to_consider} is not available in the dataset')
         self.all_patient_names = np.asarray(list(self.sample_to_labels.keys()))
         self.all_patient_labels = np.asarray(list(self.sample_to_labels.values()))
         self.all_patient_labels = LabelEncoder().fit_transform(self.all_patient_labels)
-        self.class_weights = class_weight.compute_class_weight('balanced',
-                                                 np.unique(self.all_patient_labels),
-                                                 self.all_patient_labels) #pylint deconne sinon pas d'erreurs
+        # self.class_weights = class_weight.compute_class_weight('balanced',
+        #                                          np.unique(self.all_patient_labels),
+        #                                          self.all_patient_labels) #pylint deconne sinon pas d'erreurs
         
     def __getitem__(self, idx):
         patient_name = self.all_patient_names[idx]
