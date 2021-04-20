@@ -1,0 +1,44 @@
+{
+    "model_params": [{
+        "lr": 1e-3,
+        "d_input_enc": 2000 , 
+        "nb_classes_dec": 33,  
+        "d_model_enc": [32, 64, 128, 256], 
+        "d_ff_enc": [128, 256, 512, 1024], 
+        "n_heads_enc": [2, 3, 4], 
+        "n_layers_enc": [2, 3, 4],
+        "d_model_dec": [32, 64, 128, 256], 
+        "d_ff_dec": [128, 256, 512, 1024], 
+        "n_heads_dec": [2, 3, 4], 
+        "n_layers_dec": [2, 3, 4],
+        "activation": "relu", 
+        "dropout": 0.1, 
+        "loss": "ce",
+        "early_stopping": "True",
+        "optimizer": "Adam",
+        "lr_scheduler": "cosine_with_restarts",
+        "n_epochs": 200,
+        "batch_size": 64,
+        "class_weights":[4.1472332 , 0.87510425, 0.30869373, 1.2229021 , 8.47878788,
+            0.7000834 , 7.94886364, 1.87032086, 0.63379644, 0.63169777,
+            4.19280719, 0.40417951, 1.08393595, 1.90772727, 0.72125795,
+            0.87110834, 0.59523472, 0.61243251, 4.38557994, 0.63169777,
+            1.94666048, 2.04035002, 0.67410858, 2.08494784, 1.40791681,
+            0.79654583, 0.74666429, 2.74493133, 0.65783699, 3.02813853,
+            0.65445189, 6.6937799 , 4.76931818]
+    }],
+
+    "fit_params": [{
+        "nb_ckpts":1, 
+        "verbose":1
+    }],
+
+    "predict_params": [{
+        "nb_ckpts":1, 
+        "scores_fname": "transformer_exon_scores_saving.json"
+    }],
+
+    "seed": [42],
+    "dataset_views_to_consider": ["exon"],
+    "type_of_model": ["transformer"]
+}

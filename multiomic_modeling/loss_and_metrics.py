@@ -3,6 +3,7 @@ from torch import nn
 import torch.nn.functional as F
 import numpy as np
 from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score
+from sklearn.metrics import confusion_matrix, classification_report 
 
 def _adjust_shapes(pred, real, pad_token):
     if real.shape[1] > pred.shape[1]:
@@ -116,10 +117,13 @@ class ClfMetrics(object):
     def __init__(self):
         pass
     
-    def score(self, y_pred, y_true):
+    def score(self, y_test, y_pred):
         return {
-            'acc': np.round(accuracy_score(y_pred, y_true) * 100, 3),
-            'pred': np.round(precision_score(y_pred, y_true, average='weighted') * 100, 3),
-            'rec': np.round(recall_score(y_pred, y_true, average='weighted') * 100, 3),
-            'f1_score': np.round(f1_score(y_pred, y_true, average='weighted') * 100, 3)
+            'acc': np.round(accuracy_score(y_test, y_pred) * 100, 3),
+            'prec': np.round(precision_score(y_test, y_pred, average='weighted') * 100, 3),
+            'rec': np.round(recall_score(y_test, y_pred, average='weighted') * 100, 3),
+            'f1_score': np.round(f1_score(y_test, y_pred, average='weighted') * 100, 3)
         }
+        
+    def classif_report(self, y_test, y_pred):
+        return classification_report(y_test, y_pred)

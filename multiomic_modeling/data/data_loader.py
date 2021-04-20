@@ -27,7 +27,7 @@ def read_h5py(fichier, normalization=False) -> dict:
     d = h5py.File(fichier, 'r')
     data = d['dataset'][()]
     if normalization:
-        data = StandardScaler().fit_transform(data)
+        data = MinMaxScaler().fit_transform(data)
     feature_names = np.asarray([el.decode("utf-8") for el in d['features_names'][()]])
     patient_names = np.asarray([el.decode("utf-8") for el in d['patients_names'][()]])
     patient_names = dict(zip(patient_names, np.arange(len(patient_names))))
@@ -47,7 +47,7 @@ patients_without_view = read_file_txt(FichierPath.patients_without_view_file)
 patients_with_one_view_file = read_file_txt(FichierPath.patients_with_one_view_file)
 
 class MultiomicDataset(Dataset):
-    def __init__(self, views_to_consider='all'):
+    def __init__(self, views_to_consider='all', type_of_model='transformer'):
         super(MultiomicDataset, self).__init__()
         """
         Arguments:
@@ -113,39 +113,39 @@ class MultiomicDataset(Dataset):
                 self.sample_to_labels.pop(patient_name)        
         elif views_to_consider == 'cnv':
             patients_name_view = list(self.views[0]['patient_names'].keys())
-            for patient_name in self.sample_to_labels.keys():
+            for patient_name in list(self.sample_to_labels.keys()):
                 if patient_name not in patients_name_view:
                     self.sample_to_labels.pop(patient_name) 
         elif views_to_consider == 'methyl':
             patients_name_methyl_views = []
             patients_name_methyl_views.extend(list(self.views[0]['patient_names'].keys()))
             patients_name_methyl_views.extend(list(self.views[1]['patient_names'].keys()))
-            for patient_name in self.sample_to_labels.keys():
+            for patient_name in list(self.sample_to_labels.keys()):
                 if patient_name not in patients_name_view:
                     self.sample_to_labels.pop(patient_name) 
         elif views_to_consider == 'exon':
             patients_name_view = list(self.views[0]['patient_names'].keys())
-            for patient_name in self.sample_to_labels.keys():
+            for patient_name in list(self.sample_to_labels.keys()):
                 if patient_name not in patients_name_view:
                     self.sample_to_labels.pop(patient_name) 
         elif views_to_consider == 'mirna':
             patients_name_view = list(self.views[0]['patient_names'].keys())
-            for patient_name in self.sample_to_labels.keys():
+            for patient_name in list(self.sample_to_labels.keys()):
                 if patient_name not in patients_name_view:
                     self.sample_to_labels.pop(patient_name) 
         elif views_to_consider == 'rna':
             patients_name_view = list(self.views[0]['patient_names'].keys())
-            for patient_name in self.sample_to_labels.keys():
+            for patient_name in list(self.sample_to_labels.keys()):
                 if patient_name not in patients_name_view:
                     self.sample_to_labels.pop(patient_name) 
         elif views_to_consider == 'rna_iso':
             patients_name_view = list(self.views[0]['patient_names'].keys())
-            for patient_name in self.sample_to_labels.keys():
+            for patient_name in list(self.sample_to_labels.keys()):
                 if patient_name not in patients_name_view:
                     self.sample_to_labels.pop(patient_name) 
         elif views_to_consider == 'protein':
             patients_name_view = list(self.views[0]['patient_names'].keys())
-            for patient_name in self.sample_to_labels.keys():
+            for patient_name in list(self.sample_to_labels.keys()):
                 if patient_name not in patients_name_view:
                     self.sample_to_labels.pop(patient_name) 
         else:
@@ -153,9 +153,10 @@ class MultiomicDataset(Dataset):
         self.all_patient_names = np.asarray(list(self.sample_to_labels.keys()))
         self.all_patient_labels = np.asarray(list(self.sample_to_labels.values()))
         self.all_patient_labels = LabelEncoder().fit_transform(self.all_patient_labels)
-        # self.class_weights = class_weight.compute_class_weight('balanced',
-        #                                          np.unique(self.all_patient_labels),
-        #                                          self.all_patient_labels) #pylint deconne sinon pas d'erreurs
+        self.type_of_model = type_of_model
+        self.class_weights = class_weight.compute_class_weight('balanced',
+                                                 np.unique(self.all_patient_labels),
+                                                 self.all_patient_labels) #pylint deconne sinon pas d'erreurs
         
     def __getitem__(self, idx):
         patient_name = self.all_patient_names[idx]
@@ -168,9 +169,11 @@ class MultiomicDataset(Dataset):
                 except ValueError:
                     data[i][:view['data'][view['patient_names'].get(patient_name, 0)].shape[0]] = view['data'][view['patient_names'].get(patient_name, 0)]
         mask = np.array([(patient_name in view['patient_names']) for view in self.views])
-        # data = data.reshape(-1) # 16000
-        # return data.astype(float), patient_label
-        return (data.astype(float), mask), patient_label
+        if self.type_of_model == 'transformer':
+            return (data.astype(float), mask), patient_label
+        if self.type_of_model == 'mlp':
+            data = data.reshape(-1)
+            return data.astype(float), patient_label
         
     def __len__(self):
         return len(self.all_patient_names)

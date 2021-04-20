@@ -35,5 +35,14 @@ class MultiomicPredictionModel(Model):
         return self.encoder(inputs).attention_scores
 
     def compute_loss_metrics(self, preds, targets):
-        return self.__loss(preds, targets)
+        return {'ce': self.__loss(preds, targets),
+                'multi_acc': self.compute_multi_acc_metrics(preds=preds, targets=targets)
+        }
     
+    def compute_multi_acc_metrics(self, preds, targets):
+        y_pred_softmax = torch.log_softmax(preds, dim = 1)
+        _, y_pred_tags = torch.max(y_pred_softmax, dim = 1)    
+        correct_pred = (y_pred_tags == targets).float()
+        acc = correct_pred.sum() / len(correct_pred)
+        acc = torch.round(acc * 100)
+        return acc
