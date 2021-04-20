@@ -38,20 +38,20 @@ __Transformer__
 
 __MLP__
 
-    run_mlp_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/mlp_all_config.json' --exp-name 'all_multiomic_mlp' --cpus '4' --memory '4G' --type_gpus 'v100' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
+    run_mlp_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/mlp_all_config.json' --exp-name 'all_multiomic_mlp' --cpus '1' --memory '4G' --duration '01:00:00' --output-path '/home/maoss2/scratch/expts_results'
 
-    run_mlp_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/mlp_cnv_config.json' --exp-name 'cnv_multiomic_mlp' --cpus '4' --memory '4G' --type_gpus 'v100' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
+    run_mlp_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/mlp_cnv_config.json' --exp-name 'cnv_multiomic_mlp' --cpus '1' --memory '4G' --duration '00:30:00' --output-path '/home/maoss2/scratch/expts_results'
 
-    run_mlp_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/mlp_exon_config.json' --exp-name 'exon_multiomic_mlp' --cpus '4' --memory '4G' --type_gpus 'v100' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
+    run_mlp_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/mlp_exon_config.json' --exp-name 'exon_multiomic_mlp' --cpus '1' --memory '4G' --duration '00:30:00'  --output-path '/home/maoss2/scratch/expts_results'
 
-    run_mlp_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/mlp_methyl_config.json' --exp-name 'methyl_multiomic_mlp' --cpus '4' --memory '4G' --type_gpus 'v100' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
+    run_mlp_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/mlp_methyl_config.json' --exp-name 'methyl_multiomic_mlp' --cpus '1' --memory '4G' --duration '00:30:00' --output-path '/home/maoss2/scratch/expts_results'
 
-    run_mlp_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/mlp_mirna_config.json' --exp-name 'mirna_multiomic_mlp' --cpus '4' --memory '4G' --type_gpus 'v100' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
+    run_mlp_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/mlp_mirna_config.json' --exp-name 'mirna_multiomic_mlp' --cpus '1' --memory '4G' --duration '00:30:00' --output-path '/home/maoss2/scratch/expts_results'
 
-    run_mlp_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/mlp_protein_config.json' --exp-name 'protein_multiomic_mlp' --cpus '4' --memory '4G' --type_gpus 'v100' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
+    run_mlp_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/mlp_protein_config.json' --exp-name 'protein_multiomic_mlp' --cpus '1' --memory '4G' --duration '00:30:00' --output-path '/home/maoss2/scratch/expts_results'
 
-    run_mlp_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/mlp_rna_config.json' --exp-name 'rna_multiomic_mlp' --cpus '4' --memory '4G' --type_gpus 'v100' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
+    run_mlp_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/mlp_rna_config.json' --exp-name 'rna_multiomic_mlp' --cpus '1' --memory '4G' --duration '00:30:00' --output-path '/home/maoss2/scratch/expts_results'
 
-    run_mlp_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/mlp_rna_iso_config.json' --exp-name 'rna_iso_multiomic_mlp' --cpus '4' --memory '4G' --type_gpus 'v100' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
+    run_mlp_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/mlp_rna_iso_config.json' --exp-name 'rna_iso_multiomic_mlp' --cpus '1' --memory '4G' --duration '00:30:00' --output-path '/home/maoss2/scratch/expts_results'
 
     run_mlp_models dispatch --server 'local' --config-file 'expts/configs/mlp_all_config.json' --exp-name 'mlp_debuging' --cpus 2

@@ -8,8 +8,8 @@ from scipy.stats import median_absolute_deviation
 from torch.utils.data import Dataset, random_split, Subset, DataLoader, SubsetRandomSampler
 from torch.nn.utils.rnn import pad_sequence
 
-files_path_on_graham = '/home/maoss2/project/maoss2/tcga_pan_cancer_dataset/data_hdf5'
-# files_path_on_graham = '/Users/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/data/tcga_pan_cancer_dataset'
+# files_path_on_graham = '/home/maoss2/project/maoss2/tcga_pan_cancer_dataset/data_hdf5'
+files_path_on_graham = '/Users/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/data/tcga_pan_cancer_dataset'
 class FichierPath:
     exon_file = f'{files_path_on_graham}/exon_pancan_tcga_reduced.h5'
     cnv_file = f'{files_path_on_graham}/cnv_pancan_tcga_reduced.h5'
@@ -121,7 +121,7 @@ class MultiomicDataset(Dataset):
             patients_name_methyl_views.extend(list(self.views[0]['patient_names'].keys()))
             patients_name_methyl_views.extend(list(self.views[1]['patient_names'].keys()))
             for patient_name in list(self.sample_to_labels.keys()):
-                if patient_name not in patients_name_view:
+                if patient_name not in patients_name_methyl_views:
                     self.sample_to_labels.pop(patient_name) 
         elif views_to_consider == 'exon':
             patients_name_view = list(self.views[0]['patient_names'].keys())
