@@ -19,7 +19,7 @@
 ## Command form to run the code
 
 __Transformer__
-    
+
     run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_all_config.json' --exp-name 'all_multiomic_transformer' --n_gpus '1' --cpus '4' --memory '4G' --type_gpus 'v100' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
 
     run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_cnv_config.json' --exp-name 'cnv_multiomic_transformer' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
