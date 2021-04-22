@@ -3,19 +3,20 @@
         "lr": 1e-3,
         "d_input_enc": 2000 , 
         "nb_classes_dec": 33,  
-        "d_model_enc": 256, 
-        "d_ff_enc": 1024, 
-        "n_heads_enc": 8, 
+        "d_model_enc": 300, 
+        "d_ff_enc": 1200, 
+        "n_heads_enc": 16, 
         "n_layers_enc": 4,
-        "d_model_dec": 256, 
-        "d_ff_dec": 1024, 
-        "n_heads_dec": 8, 
-        "n_layers_dec": 4,
+        "d_model_dec": 300, 
+        "d_ff_dec": 1200, 
+        "n_heads_dec": 32, 
+        "n_layers_dec": 1,
         "activation": "relu", 
         "dropout": 0.1, 
         "loss": "ce",
         "early_stopping": "True",
         "optimizer": "Adam",
+        "weight_decay": 0.5,
         "lr_scheduler": "cosine_with_restarts",
         "n_epochs": 200,
         "batch_size": 64,
@@ -35,7 +36,7 @@
 
     "predict_params": [{
         "nb_ckpts":1, 
-        "scores_fname": "transformer_all_4_scores_saving.json"
+        "scores_fname": "transformer_all_3_scores_saving.json"
     }],
 
     "seed": [42],
