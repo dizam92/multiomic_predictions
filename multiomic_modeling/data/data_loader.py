@@ -13,7 +13,7 @@ files_path_on_graham = '/home/maoss2/project/maoss2/tcga_pan_cancer_dataset/data
 class FichierPath:
     exon_file = f'{files_path_on_graham}/exon_pancan_tcga_reduced.h5'
     cnv_file = f'{files_path_on_graham}/cnv_pancan_tcga_reduced.h5'
-    methyl27_file = f'{files_path_on_graham}/methyl_27_pancan_tcga_reduced_new.h5'
+    methyl27_file = f'{files_path_on_graham}/methyl_27_pancan_tcga_reduced .h5'
     methyl450_file = f'{files_path_on_graham}/methyl_450_pancan_tcga_reduced.h5'
     protein_file = f'{files_path_on_graham}/protein_pancan_tcga_reduced.h5'
     mirna_file = f'{files_path_on_graham}/mirna_pancan_tcga_reduced.h5'
