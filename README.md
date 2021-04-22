@@ -20,24 +20,24 @@
 
 __Transformer__
 
-    run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_all_config_0.json' --exp-name 'all_multiomic_transformer' --n_gpus '1' --cpus '4' --memory '4G' --type_gpus 'v100' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
+    run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_all_config_7.json' --exp-name 'all_multiomic_transformer_7' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
 
-    run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_all_config_0.json' --exp-name 'all_multiomic_transformer' --cpus '4' --memory '4G' --duration '02:00:00' --output-path '/home/maoss2/scratch/expts_results'
+    run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_all_config_6.json' --exp-name 'all_multiomic_transformer_6' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
 
-    run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_cnv_config.json' --exp-name 'cnv_multiomic_transformer' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
+    run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_all_config_5.json' --exp-name 'all_multiomic_transformer_5' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
 
-    run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_exon_config.json' --exp-name 'exon_multiomic_transformer' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
+    run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_all_config_5.json' --exp-name 'all_multiomic_transformer_5' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
 
-    run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_methyl_config.json' --exp-name 'methyl_multiomic_transformer' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
+    run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_all_config_4.json' --exp-name 'all_multiomic_transformer_4' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
 
-    run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_mirna_config.json' --exp-name 'mirna_multiomic_transformer' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
+    run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_all_config_3.json' --exp-name 'all_multiomic_transformer_3' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
 
-    run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_protein_config.json' --exp-name 'protein_multiomic_transformer' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
+    run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_all_config_2.json' --exp-name 'all_multiomic_transformer_2' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
 
-     run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_rna_config.json' --exp-name 'rna_multiomic_transformer' --cpus '4' --memory '4G'  --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
+    run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_all_config_1.json' --exp-name 'all_multiomic_transformer_1' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
 
-     run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_rna_iso_config.json' --exp-name 'rna_iso_multiomic_transformer' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
-
+    run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_all_config_0.json' --exp-name 'all_multiomic_transformer_0' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
+    
 __MLP__
 
     run_mlp_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/mlp_all_config.json' --exp-name 'all_multiomic_mlp' --cpus '1' --memory '4G' --duration '01:00:00' --output-path '/home/maoss2/scratch/expts_results'
