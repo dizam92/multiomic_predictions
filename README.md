@@ -26,8 +26,6 @@ __Transformer__
 
     run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_all_config_5.json' --exp-name 'all_multiomic_transformer_5' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
 
-    run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_all_config_5.json' --exp-name 'all_multiomic_transformer_5' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
-
     run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_all_config_4.json' --exp-name 'all_multiomic_transformer_4' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'
 
     run_multiomic_models dispatch --server 'graham' --config-file '/home/maoss2/PycharmProjects/multiomic_predictions/expts/configs/transformer_all_config_3.json' --exp-name 'all_multiomic_transformer_3' --cpus '4' --memory '4G' --duration '05:00:00' --output-path '/home/maoss2/scratch/expts_results'

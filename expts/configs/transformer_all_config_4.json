@@ -3,12 +3,12 @@
         "lr": 1e-3,
         "d_input_enc": 2000 , 
         "nb_classes_dec": 33,  
-        "d_model_enc": 300, 
-        "d_ff_enc": 1200, 
+        "d_model_enc": 320, 
+        "d_ff_enc": 1280, 
         "n_heads_enc": 16, 
         "n_layers_enc": 4,
-        "d_model_dec": 300, 
-        "d_ff_dec": 1200, 
+        "d_model_dec": 320, 
+        "d_ff_dec": 1280, 
         "n_heads_dec": 32, 
         "n_layers_dec": 1,
         "activation": "relu", 
@@ -36,7 +36,7 @@
 
     "predict_params": [{
         "nb_ckpts":1, 
-        "scores_fname": "transformer_all_3_scores_saving.json"
+        "scores_fname": "transformer_all_4_scores_saving.json"
     }],
 
     "seed": [42],

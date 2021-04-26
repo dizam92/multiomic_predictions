@@ -8,8 +8,8 @@ from scipy.stats import median_absolute_deviation
 from torch.utils.data import Dataset, random_split, Subset, DataLoader, SubsetRandomSampler
 from torch.nn.utils.rnn import pad_sequence
 
-files_path_on_graham = '/home/maoss2/project/maoss2/tcga_pan_cancer_dataset/data_hdf5'
-# files_path_on_graham = '/Users/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/data/tcga_pan_cancer_dataset'
+# files_path_on_graham = '/home/maoss2/project/maoss2/tcga_pan_cancer_dataset/data_hdf5'
+files_path_on_graham = '/Users/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/data/tcga_pan_cancer_dataset'
 class FichierPath:
     exon_file = f'{files_path_on_graham}/exon_pancan_tcga_reduced.h5'
     cnv_file = f'{files_path_on_graham}/cnv_pancan_tcga_reduced.h5'
@@ -104,6 +104,9 @@ class MultiomicDataset(Dataset):
         else:
             raise ValueError(f'the view {views_to_consider} is not available in the dataset')
         self.nb_features = np.max([view['data'].shape[1] for view in self.views])
+        self.feature_names  = []
+        for view in self.views:
+            self.feature_names.extend(list(view['feature_names'] ))        
         self.survival_data = read_pandas_csv(fichier=FichierPath.survival_file)
         self.sample_to_labels = {self.survival_data['sample'].values[idx]: self.survival_data['cancer type abbreviation'].values[idx] for idx, _ in enumerate(self.survival_data['sample'].values)}
         for patient_name in patients_without_view:
