@@ -10,5 +10,5 @@
 #SBATCH --time=01:00:00
 #SBATCH --output=/home/maoss2/scratch/expts/sklearn_dispatch.out
 
-python multiomic_modeling/models/run_classification_models.py 
+python /home/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/models/run_classification_models.py 
 

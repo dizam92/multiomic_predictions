@@ -14,7 +14,7 @@ logging.getLogger('parso.python.diff').disabled = True
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 nb_jobs = 32
-cv_fold = KFold(n_splits=5, shuffle=True, random_state=42)
+cv_fold = KFold(n_splits=3, shuffle=True, random_state=42)
 parameters_dt = {'max_depth': np.arange(1, 5),  # Moins de profondeur pour toujours eviter l'overfitting
                  'min_samples_split': np.arange(2, 15),  # Eviter les small value pour eviter l'overfitting
                  'criterion': ['gini', 'entropy']

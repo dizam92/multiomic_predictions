@@ -25,7 +25,7 @@ def load_dataset(views_to_consider='all'):
     
     return x_train, y_train, x_test, y_test, feature_names
 
-if '__name__' == '__main__':
+if __name__ == '__main__':
     x_train, y_train, x_test, y_test, feature_names = load_dataset(views_to_consider='all')
     dt_clf = TreeAndForestTemplate(algo='tree')
     rf_clf = TreeAndForestTemplate(algo='rf')
