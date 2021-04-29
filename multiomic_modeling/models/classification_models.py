@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import json
 import logging
+import pickle
 from collections import defaultdict
 from sklearn.model_selection import GridSearchCV, KFold, train_test_split
 from sklearn.pipeline import Pipeline
@@ -13,7 +14,7 @@ from multiomic_modeling.loss_and_metrics import ClfMetrics
 logging.getLogger('parso.python.diff').disabled = True
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-nb_jobs = 32
+nb_jobs = 4
 cv_fold = KFold(n_splits=3, shuffle=True, random_state=42)
 parameters_dt = {'max_depth': np.arange(1, 5),  # Moins de profondeur pour toujours eviter l'overfitting
                  'min_samples_split': np.arange(2, 15),  # Eviter les small value pour eviter l'overfitting
@@ -69,8 +70,8 @@ class TreeAndForestTemplate():
         self.saving_dict = defaultdict(dict)
         self.saving_dict['test_scores'] = test_scores
         self.saving_dict['train_metrics'] = train_scores
-        self.saving_dict['test_clf_report'] = test_clf_report
-        self.saving_dict['train_clf_report'] = train_clf_report
+        # self.saving_dict['test_clf_report'] = test_clf_report
+        # self.saving_dict['train_clf_report'] = train_clf_report
         self.saving_dict['cv_results'] = self.gs_clf.cv_results_
         self.saving_dict['best_params'] = self.gs_clf.best_params_
         self.saving_dict['importances'] = []
@@ -85,6 +86,7 @@ class TreeAndForestTemplate():
         self.saving_dict['rules'] = [(f + 1, indices[f], importances[indices[f]], feature_names[indices[f]]) for f in
                             range(100) if importances[indices[f]] > 0]
         
-        with open(saving_file, 'w') as fd:
-            json.dump(self.saving_dict, fd)
+        with open(saving_file, 'wb') as fd:
+            pickle.dump(self.saving_dict, fd)
+        
             

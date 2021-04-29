@@ -22,6 +22,8 @@ class FichierPath:
     survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
     patients_without_view_file = f'{files_path_on_graham}/patients_without_view.txt'
     patients_with_one_view_file = f'{files_path_on_graham}/patients_with_one_view.txt'
+    patients_with_two_or_more_views_file = f'{files_path_on_graham}/patients_with_two_or_more_views.txt'
+    patients_with_all_4_views_available_file = f'{files_path_on_graham}/patients_with_all_4_views_available.txt'
     
 def read_h5py(fichier, normalization=False) -> dict:
     d = h5py.File(fichier, 'r')
@@ -43,8 +45,52 @@ def read_file_txt(fichier) -> list:
         lines = [l.strip('\n') for l in f.readlines()] 
     return lines
 
+def clean_patients_list_problem():
+    """
+    Utility function used to build the file where all the aptients have at least 2 views in all the 4 
+    [cnv, methyl450, mirna, rna_iso]
+    """
+    cnv = read_h5py(fichier=FichierPath.cnv_file, normalization=False)
+    methyl = read_h5py(fichier=FichierPath.methyl450_file, normalization=False)
+    mirna = read_h5py(fichier=FichierPath.mirna_file, normalization=True)
+    rna = read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+    survival_data = read_pandas_csv(fichier=FichierPath.survival_file)
+    sample_to_labels = {survival_data['sample'].values[idx]: survival_data['cancer type abbreviation'].values[idx] 
+                        for idx, _ in enumerate(survival_data['sample'].values)}
+    sample_to_labels_keys = list(sample_to_labels.keys())  
+    patients_cnv = list(cnv['patient_names'].keys())
+    patients_methyl = list(methyl['patient_names'].keys())
+    patients_mirna = list(mirna['patient_names'].keys())
+    patients_rna = list(rna['patient_names'].keys())
+    cnv_inter_methyl = list(set(patients_cnv).intersection(set(patients_methyl)))
+    cnv_inter_mirna = list(set(patients_cnv).intersection(set(patients_mirna)))
+    cnv_inter_rna = list(set(patients_cnv).intersection(set(patients_rna)))
+    methyl_inter_mirna = list(set(patients_methyl).intersection(set(patients_mirna)))
+    methyl_inter_rna = list(set(patients_methyl).intersection(set(patients_rna)))
+    mirna_inter_rna = list(set(patients_mirna).intersection(set(patients_rna)))
+    patients_with_two_or_more_views = []
+    for patient in sample_to_labels_keys:
+        cpt = 0
+        if patient in cnv_inter_methyl: cpt += 1
+        if patient in cnv_inter_mirna: cpt += 1
+        if patient in cnv_inter_rna: cpt += 1
+        if patient in methyl_inter_mirna: cpt += 1
+        if patient in methyl_inter_rna: cpt += 1
+        if patient in mirna_inter_rna: cpt += 1
+        if cpt >= 2 :
+            patients_with_two_or_more_views.append(patient)
+    with open('patients_with_two_or_more_views.txt', 'w') as f:
+        for patient in patients_with_two_or_more_views:
+            f.write(f'{patient}\n')
+    patients_with_all_4_views_available = list(set(sample_to_labels_keys).intersection(set(patients_cnv)).intersection(set(patients_methyl)).intersection(set(patients_mirna)).intersection(set(patients_rna)))
+    with open('patients_with_all_4_views_available.txt', 'w') as f:
+        for patient in patients_with_all_4_views_available:
+            f.write(f'{patient}\n')
+   
 patients_without_view = read_file_txt(FichierPath.patients_without_view_file)
 patients_with_one_view_file = read_file_txt(FichierPath.patients_with_one_view_file)
+patients_with_two_or_more_views_file = read_file_txt(FichierPath.patients_with_two_or_more_views_file)
+patients_with_all_4_views_available_file = read_file_txt(FichierPath.patients_with_all_4_views_available_file)
 
 class MultiomicDataset(Dataset):
     def __init__(self, views_to_consider='all', type_of_model='transformer'):
@@ -52,7 +98,7 @@ class MultiomicDataset(Dataset):
         """
         Arguments:
             views_to_consider, str, 
-                all, load all the 8 views (cnv, methyl27, methyl450, exon, mirna, rna, rna_iso, protein)
+                all, load all the 4 views (cnv, methyl450, mirna, rna_iso )
                 cnv, load just cnv views
                 methyl, load just methyl27 and methyl450 views
                 exon, load just exon views
@@ -64,13 +110,13 @@ class MultiomicDataset(Dataset):
         if views_to_consider == 'all':
             self.views = [
                 read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
-                read_h5py(fichier=FichierPath.methyl27_file, normalization=False),
                 read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
-                read_h5py(fichier=FichierPath.exon_file, normalization=True),
                 read_h5py(fichier=FichierPath.mirna_file, normalization=True),
-                read_h5py(fichier=FichierPath.rna_file, normalization=True),
-                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True),
-                read_h5py(fichier=FichierPath.protein_file, normalization=True)
+                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+                # read_h5py(fichier=FichierPath.methyl27_file, normalization=False),
+                # read_h5py(fichier=FichierPath.exon_file, normalization=True),
+                # read_h5py(fichier=FichierPath.rna_file, normalization=True),
+                # read_h5py(fichier=FichierPath.protein_file, normalization=True)
             ]
         elif views_to_consider == 'cnv':
             self.views = [
@@ -78,7 +124,7 @@ class MultiomicDataset(Dataset):
             ]
         elif views_to_consider == 'methyl':
             self.views = [
-                read_h5py(fichier=FichierPath.methyl27_file, normalization=False),
+                # read_h5py(fichier=FichierPath.methyl27_file, normalization=False),
                 read_h5py(fichier=FichierPath.methyl450_file, normalization=False)
             ]
         elif views_to_consider == 'exon':
@@ -106,14 +152,16 @@ class MultiomicDataset(Dataset):
         self.nb_features = np.max([view['data'].shape[1] for view in self.views])
         self.feature_names  = []
         for view in self.views:
-            self.feature_names.extend(list(view['feature_names'] ))        
+            self.feature_names.extend(list(view['feature_names']))        
         self.survival_data = read_pandas_csv(fichier=FichierPath.survival_file)
-        self.sample_to_labels = {self.survival_data['sample'].values[idx]: self.survival_data['cancer type abbreviation'].values[idx] for idx, _ in enumerate(self.survival_data['sample'].values)}
+        self.sample_to_labels = {self.survival_data['sample'].values[idx]: self.survival_data['cancer type abbreviation'].values[idx] 
+                                 for idx, _ in enumerate(self.survival_data['sample'].values)}
         for patient_name in patients_without_view:
             self.sample_to_labels.pop(patient_name)
         if views_to_consider == 'all':
-            for patient_name in patients_with_one_view_file:
-                self.sample_to_labels.pop(patient_name)        
+            for patient_name in list(self.sample_to_labels.keys()):
+                if patient_name not in patients_with_two_or_more_views_file:
+                    self.sample_to_labels.pop(patient_name)    
         elif views_to_consider == 'cnv':
             patients_name_view = list(self.views[0]['patient_names'].keys())
             for patient_name in list(self.sample_to_labels.keys()):
@@ -122,7 +170,7 @@ class MultiomicDataset(Dataset):
         elif views_to_consider == 'methyl':
             patients_name_methyl_views = []
             patients_name_methyl_views.extend(list(self.views[0]['patient_names'].keys()))
-            patients_name_methyl_views.extend(list(self.views[1]['patient_names'].keys()))
+            # patients_name_methyl_views.extend(list(self.views[1]['patient_names'].keys()))
             for patient_name in list(self.sample_to_labels.keys()):
                 if patient_name not in patients_name_methyl_views:
                     self.sample_to_labels.pop(patient_name) 

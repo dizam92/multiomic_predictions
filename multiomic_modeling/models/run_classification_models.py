@@ -31,7 +31,7 @@ if __name__ == '__main__':
     rf_clf = TreeAndForestTemplate(algo='rf')
     dt_clf.learn(x_train=x_train, y_train=y_train, 
                  x_test=x_test, y_test=y_test, 
-                 feature_names=feature_names, saving_file='/home/maoss2/scratch/expts/decison_trees_scores.json')
+                 feature_names=feature_names, saving_file='decison_trees_scores.pck')
     rf_clf.learn(x_train=x_train, y_train=y_train, 
                  x_test=x_test, y_test=y_test, 
-                 feature_names=feature_names, saving_file='/home/maoss2/scratch/expts/rf_trees_scores.json')
+                 feature_names=feature_names, saving_file='rf_trees_scores.pck')
