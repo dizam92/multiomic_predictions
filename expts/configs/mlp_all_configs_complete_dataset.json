@@ -1,7 +1,7 @@
 {
     "model_params": [{
         "lr": 1e-3,
-        "input_size": 493411, 
+        "input_size": 1077092, 
         "hidden_sizes": [512, 128, 64], 
         "nb_classes": 33, 
         "activation": "relu", 
