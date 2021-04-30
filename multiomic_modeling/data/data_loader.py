@@ -24,7 +24,90 @@ class FichierPath:
     patients_with_one_view_file = f'{files_path_on_graham}/patients_with_one_view.txt'
     patients_with_two_or_more_views_file = f'{files_path_on_graham}/patients_with_two_or_more_views.txt'
     patients_with_all_4_views_available_file = f'{files_path_on_graham}/patients_with_all_4_views_available.txt'
-    
+
+class FichierPathCompleteDataset: #matrice complete des 4 vues a 493411 features
+    exon_file = f'{files_path_on_graham}/exon_pancan_tcga.h5' 
+    cnv_file = f'{files_path_on_graham}/cnv_pancan_tcga.h5' # (10845, 24776)
+    methyl27_file = f'{files_path_on_graham}/methyl_27_pancan_tcga.h5'
+    methyl450_file = f'{files_path_on_graham}/methyl_450_pancan_tcga.h5' # (9664, 100000)(-31278) * (9664, 100000)(-31711) * (9664, 100000)(-33085) * (9664, 96065) (-30718 qui sont nan) == 
+                                                                        # (9664, 269273) features restant
+    protein_file = f'{files_path_on_graham}/protein_pancan_tcga.h5'
+    mirna_file = f'{files_path_on_graham}/mirna_pancan_tcga.h5' # (10824, 743)
+    rna_file = f'{files_path_on_graham}/rna_pancan_tcga.h5'
+    rna_iso_file = f'{files_path_on_graham}/rna_isoforms_pancan_tcga.h5' # (10534, 100000) * (10534, 98619)
+    survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
+    patients_without_view_file = f'{files_path_on_graham}/patients_without_view.txt'
+    patients_with_one_view_file = f'{files_path_on_graham}/patients_with_one_view.txt'
+    patients_with_two_or_more_views_file = f'{files_path_on_graham}/patients_with_two_or_more_views.txt'
+    patients_with_all_4_views_available_file = f'{files_path_on_graham}/patients_with_all_4_views_available.txt'
+
+def read_h5py_all_data(fichier, normalization=False) -> dict:
+    d = h5py.File(fichier, 'r')
+    if fichier[62:].startswith('cnv') or fichier[62:].startswith('mirna'):
+        data = d['dataset_0'][()].T
+        feature_names = np.asarray([el.decode("utf-8") for el in d['features_names'][()]])
+        patient_names = np.asarray([el.decode("utf-8") for el in d['patients_names'][()]])
+        patient_names = dict(zip(patient_names, np.arange(len(patient_names))))
+        return {'data': data, 
+            'feature_names': feature_names, 
+            'patient_names': patient_names}
+        
+    if fichier[62:].startswith('methyl_450'):
+        feature_names = np.asarray([el.decode("utf-8") for el in d['features_names'][()]])
+        patient_names = np.asarray([el.decode("utf-8") for el in d['patients_names'][()]])
+        patient_names = dict(zip(patient_names, np.arange(len(patient_names))))
+        
+        data_0 = d['dataset_0'][()].T
+        idx_0 = np.unique(np.where(np.isnan(data_0))[1])
+        feature_names_to_be_deleted_data = feature_names[idx_0]
+        feature_names = np.asarray(list(set(feature_names) - set(feature_names_to_be_deleted_data)))
+        data_0 = data_0[:, ~np.isnan(data_0).any(axis=0)]
+
+        data_1 = d['dataset_1'][()].T
+        idx_1 = np.unique(np.where(np.isnan(data_1))[1])
+        feature_names_to_be_deleted_data = feature_names[idx_1]
+        feature_names = np.asarray(list(set(feature_names) - set(feature_names_to_be_deleted_data)))
+        data_1 = data_1[:, ~np.isnan(data_1).any(axis=0)]
+
+        data_2 = d['dataset_2'][()].T
+        idx_2 = np.unique(np.where(np.isnan(data_2))[1])
+        feature_names_to_be_deleted_data = feature_names[idx_2]
+        feature_names = np.asarray(list(set(feature_names) - set(feature_names_to_be_deleted_data)))
+        data_2 = data_2[:, ~np.isnan(data_2).any(axis=0)]
+        
+        data_3 = d['dataset_3'][()].T
+        idx_3 = np.unique(np.where(np.isnan(data_3))[1])
+        feature_names_to_be_deleted_data = feature_names[idx_3]
+        feature_names = np.asarray(list(set(feature_names) - set(feature_names_to_be_deleted_data)))
+        data_3 = data_3[:, ~np.isnan(data_3).any(axis=0)]
+        
+        data = np.hstack((data_0, data_1, data_2, data_3))
+        return {'data': data,
+                'feature_names': feature_names, 
+                'patient_names': patient_names}
+        
+    if fichier[62:].startswith('rna_isoforms'):
+        feature_names = np.asarray([el.decode("utf-8") for el in d['features_names'][()]])
+        patient_names = np.asarray([el.decode("utf-8") for el in d['patients_names'][()]])
+        patient_names = dict(zip(patient_names, np.arange(len(patient_names))))
+        
+        data_0 = d['dataset_0'][()].T
+        idx_0 = np.unique(np.where(np.isnan(data_0))[1])
+        feature_names_to_be_deleted_data = feature_names[idx_0]
+        feature_names = np.asarray(list(set(feature_names) - set(feature_names_to_be_deleted_data)))
+        data_0 = data_0[:, ~np.isnan(data_0).any(axis=0)]
+
+        data_1 = d['dataset_1'][()].T
+        idx_1 = np.unique(np.where(np.isnan(data_1))[1])
+        feature_names_to_be_deleted_data = feature_names[idx_1]
+        feature_names = np.asarray(list(set(feature_names) - set(feature_names_to_be_deleted_data)))
+        data_1 = data_1[:, ~np.isnan(data_1).any(axis=0)]
+        
+        data = np.hstack((data_0, data_1))
+        return {'data': data, 
+                'feature_names': feature_names, 
+                'patient_names': patient_names}
+            
 def read_h5py(fichier, normalization=False) -> dict:
     d = h5py.File(fichier, 'r')
     data = d['dataset'][()]
@@ -93,7 +176,7 @@ patients_with_two_or_more_views_file = read_file_txt(FichierPath.patients_with_t
 patients_with_all_4_views_available_file = read_file_txt(FichierPath.patients_with_all_4_views_available_file)
 
 class MultiomicDataset(Dataset):
-    def __init__(self, views_to_consider='all', type_of_model='transformer'):
+    def __init__(self, views_to_consider='all', type_of_model='transformer', complete_dataset=False):
         super(MultiomicDataset, self).__init__()
         """
         Arguments:
@@ -106,47 +189,93 @@ class MultiomicDataset(Dataset):
                 rna, load just rna views
                 rna_iso, load just rna_iso views
                 protein, load just protein views
+            type_of_model: mlp or transformer (impact the get function to have it concatenated or not)
+            complete_dataset: to load the original view (complete version) or the selected features version
         """
         if views_to_consider == 'all':
-            self.views = [
-                read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
-                read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
-                read_h5py(fichier=FichierPath.mirna_file, normalization=True),
-                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
-                # read_h5py(fichier=FichierPath.methyl27_file, normalization=False),
-                # read_h5py(fichier=FichierPath.exon_file, normalization=True),
-                # read_h5py(fichier=FichierPath.rna_file, normalization=True),
-                # read_h5py(fichier=FichierPath.protein_file, normalization=True)
+            if complete_dataset:
+                self.views = [
+                read_h5py_all_data(fichier=FichierPathCompleteDataset.cnv_file, normalization=False), 
+                read_h5py_all_data(fichier=FichierPathCompleteDataset.methyl450_file, normalization=False),
+                read_h5py_all_data(fichier=FichierPathCompleteDataset.mirna_file, normalization=True),
+                read_h5py_all_data(fichier=FichierPathCompleteDataset.rna_iso_file, normalization=True)
             ]
+            else:
+                self.views = [
+                    read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
+                    read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
+                    read_h5py(fichier=FichierPath.mirna_file, normalization=True),
+                    read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+                    # read_h5py(fichier=FichierPath.methyl27_file, normalization=False),
+                    # read_h5py(fichier=FichierPath.exon_file, normalization=True),
+                    # read_h5py(fichier=FichierPath.rna_file, normalization=True),
+                    # read_h5py(fichier=FichierPath.protein_file, normalization=True)
+                ]
         elif views_to_consider == 'cnv':
-            self.views = [
-                read_h5py(fichier=FichierPath.cnv_file, normalization=False)
+            if complete_dataset:
+                self.views = [
+                read_h5py_all_data(fichier=FichierPathCompleteDataset.cnv_file, normalization=False)
             ]
+            else:
+                self.views = [
+                    read_h5py(fichier=FichierPath.cnv_file, normalization=False)
+                ]
         elif views_to_consider == 'methyl':
-            self.views = [
+            if complete_dataset:
+                self.views = [
                 # read_h5py(fichier=FichierPath.methyl27_file, normalization=False),
-                read_h5py(fichier=FichierPath.methyl450_file, normalization=False)
+                read_h5py_all_data(fichier=FichierPathCompleteDataset.methyl450_file, normalization=False)
             ]
+            else:
+                self.views = [
+                    # read_h5py(fichier=FichierPath.methyl27_file, normalization=False),
+                    read_h5py(fichier=FichierPath.methyl450_file, normalization=False)
+                ]
         elif views_to_consider == 'exon':
-            self.views = [
-                read_h5py(fichier=FichierPath.exon_file, normalization=True)
+            if complete_dataset:
+                self.views = [
+                read_h5py_all_data(fichier=FichierPathCompleteDataset.exon_file, normalization=True)
             ]
+            else:
+                self.views = [
+                    read_h5py(fichier=FichierPath.exon_file, normalization=True)
+                ]
         elif views_to_consider == 'mirna':
-            self.views = [
-                read_h5py(fichier=FichierPath.mirna_file, normalization=True)
-            ]
+            if complete_dataset:
+                    self.views = [
+                    read_h5py_all_data(fichier=FichierPathCompleteDataset.mirna_file, normalization=True)
+                ]
+            else:
+                self.views = [
+                    read_h5py(fichier=FichierPath.mirna_file, normalization=True)
+                ]
         elif views_to_consider == 'rna':
-            self.views = [
-                read_h5py(fichier=FichierPath.rna_file, normalization=True)
+            if complete_dataset:
+                self.views = [
+                read_h5py_all_data(fichier=FichierPathCompleteDataset.rna_file, normalization=True)
             ]
+            else:
+                self.views = [
+                    read_h5py(fichier=FichierPath.rna_file, normalization=True)
+                ]
         elif views_to_consider == 'rna_iso':
-            self.views = [
-                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+            if complete_dataset:
+                self.views = [
+                read_h5py_all_data(fichier=FichierPathCompleteDataset.rna_iso_file, normalization=True)
             ]
+            else:
+                self.views = [
+                    read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+                ]
         elif views_to_consider == 'protein':
-            self.views = [
-                read_h5py(fichier=FichierPath.protein_file, normalization=True)
+            if complete_dataset:
+                self.views = [
+                read_h5py_all_data(fichier=FichierPathCompleteDataset.protein_file, normalization=True)
             ]
+            else:
+                self.views = [
+                    read_h5py(fichier=FichierPath.protein_file, normalization=True)
+                ]
         else:
             raise ValueError(f'the view {views_to_consider} is not available in the dataset')
         self.nb_features = np.max([view['data'].shape[1] for view in self.views])

@@ -1,7 +1,7 @@
 {
     "model_params": [{
         "lr": 1e-3,
-        "input_size": 8000, 
+        "input_size": 493411, 
         "hidden_sizes": [512, 128, 64], 
         "nb_classes": 33, 
         "activation": "relu", 
@@ -28,11 +28,11 @@
 
     "predict_params": [{
         "nb_ckpts":1, 
-        "scores_fname": "mlp_all_scores_saving.json"
+        "scores_fname": "mlp_all_complete_dataset_scores_saving.json"
     }],
 
     "seed": [42],
     "dataset_views_to_consider": ["all"],
     "type_of_model": ["mlp"],
-    "complete_dataset": ["False"]
+    "complete_dataset": ["True"]
 }
