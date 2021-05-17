@@ -107,7 +107,7 @@ else:
 
 if __name__ == '__main__':
     # TODO: Si la liste fichiers_path change, il faut update la liste saving_files_names car chaque nom a été écrit pour le fichier correspondant
-    fichiers_path = [exon_path, cnv_path, methyl_27_path, methyl_450_path, rna_path, rna_isoforms_path, mirna_path, protein_path]
+    fichiers_path = [cnv_path, methyl_450_path, rna_path, mirna_path]
     # saving_files_names = ['exon_pancan_tcga.h5', 'cnv_pancan_tcga.h5', 'methyl_27_pancan_tcga.h5', 'methyl_450_pancan_tcga.h5', 
     #                       'rna_pancan_tcga.h5', 'rna_isoforms_pancan_tcga.h5', 'mirna_pancan_tcga.h5', 'protein_pancan_tcga.h5']
     # saving_files_names_reduced = ['exon_pancan_tcga_reduced', 'cnv_pancan_tcga_reduced', 'methyl_27_pancan_tcga_reduced', 
