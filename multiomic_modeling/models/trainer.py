@@ -18,7 +18,15 @@ from multiomic_modeling import logging
 from torch.utils.data import DataLoader
 from transformers.optimization import Adafactor, AdamW, \
     get_cosine_schedule_with_warmup, get_cosine_with_hard_restarts_schedule_with_warmup
-    
+
+import optuna
+from optuna.integration import PyTorchLightningPruningCallback
+ 
+from pytorch_lightning.tuner.tuning import Tuner
+from pytorch_lightning.loggers import TestTubeLogger
+from pytorch_lightning import Trainer, LightningModule
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+
 logger = logging.create_logger(__name__)
 
 class MultiomicTrainer(BaseTrainer):
@@ -123,8 +131,54 @@ class MultiomicTrainer(BaseTrainer):
                 json.dump(clf_report, fd)
         return scores
     
+    def fit(self, trial: optuna.trial.Trial, train_dataset=None, valid_dataset=None, artifact_dir=None, nb_ckpts=1, verbose=0, **kwargs):
+        self._train_dataset, self._valid_dataset = train_dataset, valid_dataset
+
+        def get_trainer():
+            # callbacks = [EarlyStopping(patience=10)] if self.early_stopping else []
+            callbacks = [PyTorchLightningPruningCallback(trial, monitor="val_acc")]
+            if artifact_dir is not None:
+                logger = TestTubeLogger(save_dir=artifact_dir, name='logs', version=1)
+                checkpoint = ModelCheckpoint(filename='{epoch}--{val_loss:.2f}', monitor="checkpoint_on",
+                                             dirpath=os.path.join(artifact_dir, 'checkpoints'),
+                                             verbose=False, mode='min', save_top_k=nb_ckpts, prefix='', save_last=False)
+                callbacks.append(checkpoint)
+            else:
+                logger = verbose > 0
+            res = Trainer(gpus=(1 if torch.cuda.is_available() else 0),
+                          max_epochs=self.n_epochs,
+                          logger=logger,
+                          default_root_dir=artifact_dir,
+                          progress_bar_refresh_rate=int(verbose > 0),
+                          accumulate_grad_batches=self.accumulate_grad_batches,
+                          callbacks=callbacks,
+                          auto_scale_batch_size=self.auto_scale_batch_size,
+                          auto_lr_find=self.auto_lr_find,
+                          amp_backend=self.amp_backend,
+                          amp_level=self.amp_level,
+                          precision=(self.precision if torch.cuda.is_available() else 32),
+                          )
+            return res
+
+        trainer = get_trainer()
+        tuner = Tuner(trainer)
+        if (self.auto_scale_batch_size is not None) and self.auto_scale_batch_size:
+            self.hparams.batch_size = tuner.scale_batch_size(self, steps_per_trial=5, init_val=self.min_batch_size,
+                                                             max_trials=int(np.log2(self.max_batch_size/self.min_batch_size)))
+
+        if self.hparams.get('auto_lr_find', False):
+            lr_finder_res = tuner.lr_find(self, min_lr=self.hparams.get('min_lr', 1e-6),
+                                          max_lr=self.hparams.get('max_lr', 1e-1),
+                                          num_training=50, early_stop_threshold=None)
+            print(lr_finder_res.results)
+
+        trainer = get_trainer()
+        trainer.fit(self)
+        self.fitted = True
+        return self
+    
     @staticmethod
-    def run_experiment(model_params, fit_params, predict_params, dataset_views_to_consider, type_of_model,
+    def run_experiment(trial, model_params, fit_params, predict_params, dataset_views_to_consider, type_of_model,
                        complete_dataset, seed, output_path, outfmt_keys=None, **kwargs):
         all_params = locals()
 
@@ -150,11 +204,12 @@ class MultiomicTrainer(BaseTrainer):
         train, valid, test = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
         logger.info("Training")
         model = MultiomicTrainer(Namespace(**model_params))
-        model.fit(train_dataset=train, valid_dataset=valid, **fit_params)
-
-        logger.info("Testing....")
-        preds_fname = os.path.join(out_prefix, "naive_predictions.txt")
-        scores_fname = os.path.join(out_prefix, predict_params.get('scores_fname', "naive_scores.txt"))
-        scores = model.score(dataset=test, artifact_dir=out_prefix, nb_ckpts=predict_params.get('nb_ckpts', 1), scores_fname=scores_fname)
+        model.fit(trial=trial, train_dataset=train, valid_dataset=valid, **fit_params)
+        return model
+    
+        # logger.info("Testing....")
+        # preds_fname = os.path.join(out_prefix, "naive_predictions.txt")
+        # scores_fname = os.path.join(out_prefix, predict_params.get('scores_fname', "naive_scores.txt"))
+        # scores = model.score(dataset=test, artifact_dir=out_prefix, nb_ckpts=predict_params.get('nb_ckpts', 1), scores_fname=scores_fname)
 
 

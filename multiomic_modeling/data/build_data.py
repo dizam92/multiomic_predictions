@@ -66,7 +66,7 @@ def build_file_with_dimentionality_reduction(fichier_path, saving_file_name, nb_
     patients_names = data.columns.values
     features_names = data.index.values
     data = data.values
-    if fichier_path.find('cnv') != -1:
+    if fichier_path.find('CopyNumber') != -1:
         y = np.ones(data.shape[0])
         learner = SelectKBest(mutual_info_classif, k=nb_features_selected).fit(X=data, y=y)
         indices_selected = learner.get_support(indices=True)
@@ -118,12 +118,12 @@ if __name__ == '__main__':
     for idx, fichier in enumerate(fichiers_path):
         # read_chunk_file(fichier_path=fichier, saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names[idx]}', chunk_size=100000)
         build_file_with_dimentionality_reduction(fichier_path=fichier, 
-                                                 saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}_2000.h5',
-                                                 nb_features_selected=2000)
+                                                saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}_2000.h5',
+                                                nb_features_selected=2000)
         build_file_with_dimentionality_reduction(fichier_path=fichier, 
-                                                 saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}_5000.h5',
-                                                 nb_features_selected=5000)
+                                                saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}_5000.h5',
+                                                nb_features_selected=5000)
         build_file_with_dimentionality_reduction(fichier_path=fichier, 
-                                                 saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}_10000.h5',
-                                                 nb_features_selected=10000)
+                                                saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}_10000.h5',
+                                                nb_features_selected=10000)
 
