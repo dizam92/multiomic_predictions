@@ -107,23 +107,36 @@ else:
 
 if __name__ == '__main__':
     # TODO: Si la liste fichiers_path change, il faut update la liste saving_files_names car chaque nom a été écrit pour le fichier correspondant
-    fichiers_path = [cnv_path, methyl_450_path, rna_path, mirna_path]
+    
     # saving_files_names = ['exon_pancan_tcga.h5', 'cnv_pancan_tcga.h5', 'methyl_27_pancan_tcga.h5', 'methyl_450_pancan_tcga.h5', 
     #                       'rna_pancan_tcga.h5', 'rna_isoforms_pancan_tcga.h5', 'mirna_pancan_tcga.h5', 'protein_pancan_tcga.h5']
     # saving_files_names_reduced = ['exon_pancan_tcga_reduced', 'cnv_pancan_tcga_reduced', 'methyl_27_pancan_tcga_reduced', 
     #                               'methyl_450_pancan_tcga_reduced', 'rna_pancan_tcga_reduced', 'rna_isoforms_pancan_tcga_reduced', 
     #                               'mirna_pancan_tcga_reduced', 'protein_pancan_tcga_reduced']
-    saving_files_names = ['cnv_pancan_tcga.h5', 'methyl_450_pancan_tcga.h5', 'rna_pancan_tcga.h5','mirna_pancan_tcga.h5']
-    saving_files_names_reduced = ['cnv_pancan_tcga_reduced', 'methyl_450_pancan_tcga_reduced', 'rna_pancan_tcga_reduced', 'mirna_pancan_tcga_reduced']
+
+    fichiers_path = [cnv_path, methyl_450_path, rna_path, rna_isoforms_path, mirna_path]
+    saving_files_names_reduced = ['cnv_pancan_tcga_reduced', 'methyl_450_pancan_tcga_reduced', 
+                                  'rna_pancan_tcga_reduced', 'rna_isoforms_pancan_tcga_reduced', 
+                                  'mirna_pancan_tcga_reduced']
+    
     for idx, fichier in enumerate(fichiers_path):
         # read_chunk_file(fichier_path=fichier, saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names[idx]}', chunk_size=100000)
-        build_file_with_dimentionality_reduction(fichier_path=fichier, 
-                                                saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}_2000.h5',
-                                                nb_features_selected=2000)
-        build_file_with_dimentionality_reduction(fichier_path=fichier, 
-                                                saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}_5000.h5',
-                                                nb_features_selected=5000)
-        build_file_with_dimentionality_reduction(fichier_path=fichier, 
-                                                saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}_10000.h5',
-                                                nb_features_selected=10000)
+        if os.path.exists(f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}_2000.h5'):
+            pass
+        else: 
+            build_file_with_dimentionality_reduction(fichier_path=fichier, 
+                                                    saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}_2000.h5',
+                                                    nb_features_selected=2000)
+        if os.path.exists(f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}_5000.h5'):
+            pass    
+        else:
+            build_file_with_dimentionality_reduction(fichier_path=fichier, 
+                                                    saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}_5000.h5',
+                                                    nb_features_selected=5000)
+        if os.path.exists(f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}_10000.h5'):
+            pass    
+        else:
+            build_file_with_dimentionality_reduction(fichier_path=fichier, 
+                                                    saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}_10000.h5',
+                                                    nb_features_selected=10000)
 

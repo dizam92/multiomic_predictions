@@ -7,7 +7,7 @@
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
-#SBATCH --time=02:00:00
+#SBATCH --time=05:00:00
 #SBATCH --output=/home/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/data/data_dispatch.out
 
 python build_data.py
