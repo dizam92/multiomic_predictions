@@ -67,23 +67,30 @@ def build_file_with_dimentionality_reduction(fichier_path, saving_file_name, nb_
     features_names = data.index.values
     data = data.values
     if fichier_path.find('CopyNumber') != -1:
+        data = data.T
         y = np.ones(data.shape[0])
         learner = SelectKBest(mutual_info_classif, k=nb_features_selected).fit(X=data, y=y)
         indices_selected = learner.get_support(indices=True)
         data = learner.transform(data)
         features_names = features_names[indices_selected]
         del y, learner, indices_selected
+        features_names = [str(x).encode('utf-8') for x in features_names]
+        patients_names = [str(x).encode('utf-8') for x in patients_names]
+        hf.create_dataset(f'dataset', data=data)
+        hf.create_dataset('features_names', data=features_names)
+        hf.create_dataset('patients_names', data=patients_names)
+        hf.close()
     else:
         indices_mad_selected = select_features_based_on_mad(x=data, axe=1, nb_features=nb_features_selected)
         data = data[indices_mad_selected]
         features_names = features_names[indices_mad_selected]
         del indices_mad_selected
-    features_names = [str(x).encode('utf-8') for x in features_names]
-    patients_names = [str(x).encode('utf-8') for x in patients_names]
-    hf.create_dataset(f'dataset', data=data.T)
-    hf.create_dataset('features_names', data=features_names)
-    hf.create_dataset('patients_names', data=patients_names)
-    hf.close()
+        features_names = [str(x).encode('utf-8') for x in features_names]
+        patients_names = [str(x).encode('utf-8') for x in patients_names]
+        hf.create_dataset(f'dataset', data=data.T)
+        hf.create_dataset('features_names', data=features_names)
+        hf.create_dataset('patients_names', data=patients_names)
+        hf.close()
         
 if LOCAL:
     exon_path = f'{local_file_path_origin}/HiSeqV2_exon'
