@@ -136,7 +136,7 @@ class MultiomicTrainer(BaseTrainer):
 
         def get_trainer():
             # callbacks = [EarlyStopping(patience=10)] if self.early_stopping else []
-            callbacks = [PyTorchLightningPruningCallback(trial, monitor="val_acc")]
+            callbacks = [PyTorchLightningPruningCallback(trial, monitor="val_multi_acc")]
             if artifact_dir is not None:
                 logger = TestTubeLogger(save_dir=artifact_dir, name='logs', version=1)
                 checkpoint = ModelCheckpoint(filename='{epoch}--{val_loss:.2f}', monitor="checkpoint_on",
@@ -160,7 +160,7 @@ class MultiomicTrainer(BaseTrainer):
                           )
             return res
 
-        trainer = get_trainer()
+        trainer = get_trainer()        
         tuner = Tuner(trainer)
         if (self.auto_scale_batch_size is not None) and self.auto_scale_batch_size:
             self.hparams.batch_size = tuner.scale_batch_size(self, steps_per_trial=5, init_val=self.min_batch_size,
@@ -172,8 +172,8 @@ class MultiomicTrainer(BaseTrainer):
                                           num_training=50, early_stop_threshold=None)
             print(lr_finder_res.results)
 
-        trainer = get_trainer()
-        trainer.fit(self)
+        self.trainer = get_trainer()
+        self.trainer.fit(self)
         self.fitted = True
         return self
     
@@ -181,7 +181,7 @@ class MultiomicTrainer(BaseTrainer):
     def run_experiment(trial, model_params, fit_params, predict_params, dataset_views_to_consider, type_of_model,
                        complete_dataset, seed, output_path, outfmt_keys=None, **kwargs):
         all_params = locals()
-
+        all_params.pop('trial')
         random.seed(seed)
         np.random.seed(seed)
         torch.manual_seed(seed)

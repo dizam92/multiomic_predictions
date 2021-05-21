@@ -19,7 +19,8 @@ if version.parse(pl.__version__) < version.parse("1.0.2"):
 training_params_global = []
 def objective(trial: optuna.trial.Trial) -> float:
     """ Main fonction to poptimize with Optuna """
-    model_params = [{
+    model_params = {
+        "d_input_enc": 2000, #TODO: modifier ceci to 5k or 10k when i wanna test on other dataset
         "lr": trial.suggest_float("lr", 1e-5, 1e-3, log=True),
         "nb_classes_dec": 33,
         "dropout": trial.suggest_float("dropout", 0.1, 0.5),
@@ -40,33 +41,37 @@ def objective(trial: optuna.trial.Trial) -> float:
         "d_model_enc_dec": trial.suggest_categorical("n_heads_enc_dec", [128, 256, 512, 1024, 2048]),
         "n_heads_enc_dec": trial.suggest_categorical("n_heads_enc_dec", [128, 256, 512, 1024, 2048]),
         "n_layers_enc_dec": trial.suggest_int("n_layers_enc_dec", 1, 10, step=1)
-    }]
-    d_ff_enc_dec_value = model_params[0]["d_model_enc_dec"] * 4
-    model_params[0]["d_ff_enc_dec"] = d_ff_enc_dec_value
+    }
+    d_ff_enc_dec_value = model_params["d_model_enc_dec"] * 4
+    model_params["d_ff_enc_dec"] = d_ff_enc_dec_value
 
-    fit_params = [{
+    fit_params = {
         "nb_ckpts":1, 
         "verbose":1
-    }]
+    }
 
-    predict_params = [{
+    predict_params = {
         "nb_ckpts":1, 
-        "scores_fname": "transformer_scores.json"
-    }]
+        "scores_fname": "transformer_scores.json" # change the name when we doing 2K 5K or 10k?
+    }
 
     training_params = {
         "model_params": model_params,
         "fit_params": fit_params,
         "predict_params": predict_params,
-        "seed": [trial.suggest_int("seed", 42, 1000)],
-        "dataset_views_to_consider": ["all"],
-        "type_of_model": ["transformer"],
-        "complete_dataset": ["True"]
+        "dataset_views_to_consider": "all",
+        "type_of_model": "transformer",
+        "complete_dataset": False,
+        "seed": trial.suggest_int("seed", 42, 1000)
     }
     training_params_global.append(training_params)
-    model = MultiomicTrainer.run_experiment(**training_params, output_path='/home/maoss2/scratch/optuna_test_output')
+    # TODO: Change the outputpath for each exp
+    model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_2000')
+    # model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_5000')
+    # model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_10000')
+    # model = MultiomicTrainer.run_experiment(trial=trial, **training_params, output_path='./')
     
-    return model.trainer.callback_metrics["val_acc"].item()
+    return model.trainer.callback_metrics["val_multi_acc"].item()
 
 def detailed_objective(trial):
     """ For the evaluation on the test set """
@@ -84,7 +89,7 @@ def detailed_objective(trial):
     scores = model.score(dataset=test, 
                          artifact_dir=all_params['fit_params']['output_path'], 
                          nb_ckpts=all_params['predict_params'].get('nb_ckpts', 1), 
-                         scores_fname=None) # scores_fname
+                         scores_fname=scores_fname) # scores_fname
     return scores['acc'], scores['prec'], scores['rec'], scores['f1_score']
 
 if __name__ == "__main__":
@@ -103,7 +108,7 @@ if __name__ == "__main__":
     )
 
     study = optuna.create_study(direction="maximize", pruner=pruner)
-    study.optimize(objective, n_trials=2, timeout=None, n_jobs=-1) # modifier le nbre de trials ici
+    study.optimize(objective, n_trials=100, timeout=None, n_jobs=-1) # modifier le nbre de trials ici
 
     print("Number of finished trials: {}".format(len(study.trials)))
 
@@ -116,4 +121,5 @@ if __name__ == "__main__":
     for key, value in trial.params.items():
         print("    {}: {}".format(key, value))
 
-    print(detailed_objective(study.best_trial))
+    scores_test = detailed_objective(study.best_trial)
+    print(f'Acc {scores_test[0]}\tPrec {scores_test[1]}\tRec {scores_test[2]}\tF1_score {scores_test[3]}')
