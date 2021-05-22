@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=8
-#SBATCH --mem=128000M
+#SBATCH --mem=32G
 #SBATCH --account=rrg-corbeilj-ac
 #SBATCH --mail-user=mazid-abiodoun.osseni.1@ulaval.ca
 #SBATCH --mail-type=BEGIN
