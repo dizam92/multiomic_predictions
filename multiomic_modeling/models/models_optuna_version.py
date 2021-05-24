@@ -67,7 +67,8 @@ def objective(trial: optuna.trial.Trial) -> float:
     }
     training_params_global.append(training_params)
     # TODO: Change the outputpath for each exp
-    model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_2000')
+    model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_2000_gpu')
+    # model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_2000')
     # model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_5000')
     # model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_10000')
     # model = MultiomicTrainer.run_experiment(trial=trial, **training_params, output_path='./')
