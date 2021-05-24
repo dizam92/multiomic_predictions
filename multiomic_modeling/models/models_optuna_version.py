@@ -23,6 +23,7 @@ def objective(trial: optuna.trial.Trial) -> float:
         "d_input_enc": 2000, #TODO: modifier ceci to 5k or 10k when i wanna test on other dataset
         "lr": trial.suggest_float("lr", 1e-5, 1e-3, log=True),
         "nb_classes_dec": 33,
+        "early_stopping": True,
         "dropout": trial.suggest_float("dropout", 0.1, 0.5),
         "weight_decay": trial.suggest_float("weight_decay", 0.1, 0.5),
         "activation": "relu",
@@ -103,13 +104,19 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    # pruner: optuna.pruners.BasePruner = (
+    #     optuna.pruners.MedianPruner() if args.pruning else optuna.pruners.NopPruner()
+    # )
+    pruning = True
     pruner: optuna.pruners.BasePruner = (
-        optuna.pruners.MedianPruner() if bool(args.pruning) else optuna.pruners.NopPruner()
+        optuna.pruners.MedianPruner() if pruning else optuna.pruners.NopPruner()
     )
 
-    study = optuna.create_study(direction="maximize", pruner=pruner)
-    study.optimize(objective, n_trials=100, timeout=None, n_jobs=-1) # modifier le nbre de trials ici
 
+    study = optuna.create_study(direction="maximize", pruner=pruner)
+    # study.optimize(objective, n_trials=30, timeout=None, n_jobs=-1) # modifier le nbre de trials ici
+    study.optimize(objective, n_trials=30, timeout=None)
+    
     print("Number of finished trials: {}".format(len(study.trials)))
 
     print("Best trial:")

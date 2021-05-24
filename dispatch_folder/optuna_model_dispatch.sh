@@ -7,7 +7,7 @@
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
-#SBATCH --time=25:00:00
+#SBATCH --time=15:00:00
 
 date
 SECONDS=0
