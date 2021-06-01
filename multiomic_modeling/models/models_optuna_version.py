@@ -39,7 +39,7 @@ def objective(trial: optuna.trial.Trial) -> float:
             1.94666048, 2.04035002, 0.67410858, 2.08494784, 1.40791681,
             0.79654583, 0.74666429, 2.74493133, 0.65783699, 3.02813853,
             0.65445189, 6.6937799 , 4.76931818],
-        "d_model_enc_dec": trial.suggest_categorical("n_heads_enc_dec", [128, 256, 512, 1024, 2048]),
+        "d_model_enc_dec": trial.suggest_categorical("d_model_enc_dec", [128, 256, 512, 1024, 2048]),
         "n_heads_enc_dec": trial.suggest_categorical("n_heads_enc_dec", [256, 512, 1024, 2048]),
         "n_layers_enc_dec": trial.suggest_int("n_layers_enc_dec", 1, 10, step=1)
     }
