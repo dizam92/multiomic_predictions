@@ -40,8 +40,8 @@ def objective(trial: optuna.trial.Trial) -> float:
             0.79654583, 0.74666429, 2.74493133, 0.65783699, 3.02813853,
             0.65445189, 6.6937799 , 4.76931818],
         "d_model_enc_dec": trial.suggest_categorical("d_model_enc_dec", [128, 256, 512, 1024, 2048]),
-        "n_heads_enc_dec": trial.suggest_categorical("n_heads_enc_dec", [256, 512, 1024, 2048]),
-        "n_layers_enc_dec": trial.suggest_int("n_layers_enc_dec", 1, 10, step=1)
+        "n_heads_enc_dec": trial.suggest_categorical("n_heads_enc_dec", [32, 64, 128, 256]),
+        "n_layers_enc_dec": trial.suggest_categorical("n_layers_enc_dec", [1, 2, 4, 6, 8, 10, 12])
     }
     d_ff_enc_dec_value = model_params["d_model_enc_dec"] * 4
     model_params["d_ff_enc_dec"] = d_ff_enc_dec_value
@@ -116,7 +116,7 @@ if __name__ == "__main__":
 
     study = optuna.create_study(direction="maximize", pruner=pruner)
     # study.optimize(objective, n_trials=30, timeout=None, n_jobs=-1) # modifier le nbre de trials ici
-    study.optimize(objective, n_trials=10, timeout=9000)
+    study.optimize(objective, n_trials=10, timeout=225000)
     
     print("Number of finished trials: {}".format(len(study.trials)))
 
