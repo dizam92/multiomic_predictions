@@ -114,21 +114,30 @@ if __name__ == "__main__":
         optuna.pruners.MedianPruner() if pruning else optuna.pruners.NopPruner()
     )
 
-
-    study = optuna.create_study(direction="maximize", pruner=pruner)
-    # study.optimize(objective, n_trials=30, timeout=None, n_jobs=-1) # modifier le nbre de trials ici
-    study.optimize(objective, n_trials=10, timeout=225000)
+    # storage = optuna.storages.RDBStorage(
+    #             url="sqlite:///:memory:", #absolute path
+    #             engine_kwargs={"pool_size": 20, "connect_args": {"timeout": 10}},
+    #         )
+    storage = optuna.storages.RDBStorage(
+                url="sqlite:////home/maoss2/scratch/optuna_test_output_2000/experiment_1_data_2000.db"
+            )
+    study = optuna.create_study(study_name='experiment_1_data_2000', 
+                                storage='experiment_1_data_2000.db', 
+                                direction="maximize", 
+                                pruner=pruner, 
+                                load_if_exists= True)
+    study.optimize(objective, n_trials=15, timeout=225000)
     
     print("Number of finished trials: {}".format(len(study.trials)))
 
     print("Best trial:")
-    trial = study.best_trial
+    best_trial = study.best_trial
 
-    print("  Value: {}".format(trial.value))
-
+    print("  Value: {}".format(best_trial.value))
     print("  Params: ")
-    for key, value in trial.params.items():
+    for key, value in best_trial.params.items():
         print("    {}: {}".format(key, value))
 
-    scores_test = detailed_objective(study.best_trial)
+    # scores_test = detailed_objective(study.best_trial)
+    scores_test = detailed_objective(best_trial)
     print(f'Acc {scores_test[0]}\tPrec {scores_test[1]}\tRec {scores_test[2]}\tF1_score {scores_test[3]}')
