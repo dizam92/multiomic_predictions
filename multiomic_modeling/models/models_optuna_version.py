@@ -118,14 +118,14 @@ if __name__ == "__main__":
     #             url="sqlite:///:memory:", #absolute path
     #             engine_kwargs={"pool_size": 20, "connect_args": {"timeout": 10}},
     #         )
-    storage = optuna.storages.RDBStorage(
+    storage_db = optuna.storages.RDBStorage(
                 url="sqlite:////home/maoss2/scratch/optuna_test_output_2000/experiment_1_data_2000.db"
             )
     study = optuna.create_study(study_name='experiment_1_data_2000', 
-                                storage='experiment_1_data_2000.db', 
+                                storage=storage_db, 
                                 direction="maximize", 
                                 pruner=pruner, 
-                                load_if_exists= True)
+                                load_if_exists=True)
     study.optimize(objective, n_trials=15, timeout=225000)
     
     print("Number of finished trials: {}".format(len(study.trials)))
