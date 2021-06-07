@@ -135,8 +135,8 @@ class MultiomicTrainer(BaseTrainer):
         self._train_dataset, self._valid_dataset = train_dataset, valid_dataset
 
         def get_trainer():
-            callbacks = [EarlyStopping(patience=20)] if self.early_stopping else []
-            callbacks = [PyTorchLightningPruningCallback(trial, monitor="val_multi_acc")]
+            callbacks = [EarlyStopping(patience=10)] if self.early_stopping else []
+            # callbacks = [PyTorchLightningPruningCallback(trial, monitor="val_multi_acc")]
             if artifact_dir is not None:
                 logger = TestTubeLogger(save_dir=artifact_dir, name='logs', version=1)
                 checkpoint = ModelCheckpoint(filename='{epoch}--{val_loss:.2f}', monitor="checkpoint_on",
@@ -205,11 +205,11 @@ class MultiomicTrainer(BaseTrainer):
         logger.info("Training")
         model = MultiomicTrainer(Namespace(**model_params))
         model.fit(trial=trial, train_dataset=train, valid_dataset=valid, **fit_params)
+        logger.info("Testing....")
+        preds_fname = os.path.join(out_prefix, "naive_predictions.txt")
+        scores_fname = os.path.join(out_prefix, predict_params.get('scores_fname', "naive_scores.txt"))
+        scores = model.score(dataset=test, artifact_dir=out_prefix, nb_ckpts=predict_params.get('nb_ckpts', 1), scores_fname=scores_fname)
+        
         return model
-    
-        # logger.info("Testing....")
-        # preds_fname = os.path.join(out_prefix, "naive_predictions.txt")
-        # scores_fname = os.path.join(out_prefix, predict_params.get('scores_fname', "naive_scores.txt"))
-        # scores = model.score(dataset=test, artifact_dir=out_prefix, nb_ckpts=predict_params.get('nb_ckpts', 1), scores_fname=scores_fname)
 
 

@@ -5,7 +5,7 @@ import numpy as np
 from argparse import Namespace
 
 import optuna
-from optuna.integration import PyTorchLightningPruningCallback
+# from optuna.integration import PyTorchLightningPruningCallback
 from packaging import version
 from multiomic_modeling.models.trainer import MultiomicTrainer
 from multiomic_modeling.data.data_loader import MultiomicDataset, SubsetRandomSampler, multiomic_dataset_builder
@@ -16,11 +16,33 @@ import torch
 if version.parse(pl.__version__) < version.parse("1.0.2"):
     raise RuntimeError("PyTorch Lightning>=1.0.2 is required for this example.")
 
-training_params_global = []
+OPTUNE_EARLY_STOPING = 10
+class EarlyStoppingExceeded(optuna.exceptions.OptunaError):
+    early_stop = OPTUNE_EARLY_STOPING
+    early_stop_count = 0
+    best_score = None
+
+def early_stopping_opt(study, trial):
+    if EarlyStoppingExceeded.best_score == None:
+      EarlyStoppingExceeded.best_score = study.best_value
+
+    if study.best_value < EarlyStoppingExceeded.best_score:
+        EarlyStoppingExceeded.best_score = study.best_value
+        EarlyStoppingExceeded.early_stop_count = 0
+    else:
+      if EarlyStoppingExceeded.early_stop_count > EarlyStoppingExceeded.early_stop:
+            EarlyStoppingExceeded.early_stop_count = 0
+            best_score = None
+            raise EarlyStoppingExceeded()
+      else:
+            EarlyStoppingExceeded.early_stop_count=EarlyStoppingExceeded.early_stop_count+1
+    print(f'EarlyStop counter: {EarlyStoppingExceeded.early_stop_count}, Best score: {study.best_value} and {EarlyStoppingExceeded.best_score}')
+    return
+
 def objective(trial: optuna.trial.Trial) -> float:
     """ Main fonction to poptimize with Optuna """
     model_params = {
-        "d_input_enc": 5000, #TODO: modifier ceci to 5k or 10k when i wanna test on other dataset
+        "d_input_enc": 2000, #TODO: modifier ceci to 5k or 10k when i wanna test on other dataset
         "lr": trial.suggest_float("lr", 1e-6, 1e0, log=True),
         "nb_classes_dec": 33,
         "early_stopping": True,
@@ -66,35 +88,67 @@ def objective(trial: optuna.trial.Trial) -> float:
         "complete_dataset": False,
         "seed": 42
     }
-    training_params_global.append(training_params)
+
     # TODO: Change the outputpath for each exp
-    # model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_2000_gpu')
-    # model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_2000')
-    model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_5000')
+    model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_2000')
+    # model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_5000')
     # model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_10000')
     # model = MultiomicTrainer.run_experiment(trial=trial, **training_params, output_path='./')
     
     return model.trainer.callback_metrics["val_multi_acc"].item()
 
-def detailed_objective(trial):
-    """ For the evaluation on the test set """
-    all_params = training_params_global[0]
-    random.seed(all_params['seed'])
-    np.random.seed(all_params['seed'])
-    torch.manual_seed(all_params['seed'])
-    dataset = MultiomicDataset(views_to_consider=all_params["dataset_views_to_consider"], 
-                                   type_of_model=all_params["type_of_model"], 
-                                   complete_dataset=all_params["complete_dataset"])
-    train, valid, test = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
-    model = MultiomicTrainer(Namespace(**all_params['model_params']))
-    scores_fname = os.path.join(all_params['fit_params']['output_path'], 
-                                all_params['predict_params'].get('scores_fname', "naive_scores.txt"))
-    scores = model.score(dataset=test, 
-                         artifact_dir=all_params['fit_params']['output_path'], 
-                         nb_ckpts=all_params['predict_params'].get('nb_ckpts', 1), 
-                         scores_fname=scores_fname) # scores_fname
-    return scores['acc'], scores['prec'], scores['rec'], scores['f1_score']
+# def detailed_objective(trial):
+#     """ For the evaluation on the test set
+#     This is not Working because it does not really take the best hp of the trial (maybe idk how to make it work) 
+#     """
+#     all_params = training_params_global[0]
+#     random.seed(all_params['seed'])
+#     np.random.seed(all_params['seed'])
+#     torch.manual_seed(all_params['seed'])
+#     dataset = MultiomicDataset(views_to_consider=all_params["dataset_views_to_consider"], 
+#                                    type_of_model=all_params["type_of_model"], 
+#                                    complete_dataset=all_params["complete_dataset"])
+#     train, valid, test = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
+#     model = MultiomicTrainer(Namespace(**all_params['model_params']))
+#     scores_fname = os.path.join(all_params['fit_params']['output_path'], 
+#                                 all_params['predict_params'].get('scores_fname', "naive_scores.txt"))
+#     scores = model.score(dataset=test, 
+#                          artifact_dir=all_params['fit_params']['output_path'], 
+#                          nb_ckpts=all_params['predict_params'].get('nb_ckpts', 1), 
+#                          scores_fname=scores_fname) # scores_fname
+#     return scores['acc'], scores['prec'], scores['rec'], scores['f1_score']
 
+class PatientPruner(optuna.pruners.BasePruner):
+    def __init__(self, patience=3):
+        self._patience = patience
+
+    def prune(self, study, trial):
+        intermediate_values = trial.intermediate_values
+
+        steps = np.asarray(list(intermediate_values.keys()))
+
+        # Do not prune if number of step to determine are insufficient.
+        if steps.size < self._patience + 1:
+            return False
+
+        # Prune based on if the values are monotically decreasing/increasing.
+        steps.sort()
+        patience_steps = steps[-self._patience - 1 :]
+
+        patience_values = np.asarray(list(intermediate_values[step] for step in patience_steps))
+
+        diffs = np.diff(patience_values)
+
+        direction = study.direction
+        if direction == StudyDirection.MINIMIZE:
+            promising_diffs = diffs <= 0
+        elif direction == StudyDirection.MAXIMIZE:
+            promising_diffs = diffs >= 0
+        else:
+            assert False
+
+        return not promising_diffs.any()
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Optuna version of Transformer model.")
     parser.add_argument(
@@ -110,23 +164,28 @@ if __name__ == "__main__":
     #     optuna.pruners.MedianPruner() if args.pruning else optuna.pruners.NopPruner()
     # )
     pruning = True
-    pruner: optuna.pruners.BasePruner = (
-        optuna.pruners.MedianPruner() if pruning else optuna.pruners.NopPruner()
-    )
-
+    # pruner: optuna.pruners.BasePruner = (
+    #     optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=8000) if pruning else optuna.pruners.NopPruner()
+    # ) # i checked this so the MedianPruner is ok but i should add the minimum step parameter
+    pruner = PatientPruner(patience=10) 
+    
     # storage = optuna.storages.RDBStorage(
     #             url="sqlite:///:memory:", #absolute path
     #             engine_kwargs={"pool_size": 20, "connect_args": {"timeout": 10}},
     #         )
     storage_db = optuna.storages.RDBStorage(
-                url="sqlite:////home/maoss2/scratch/optuna_test_output_2000/experiment_1_data_5000.db"
+                url="sqlite:////home/maoss2/scratch/optuna_test_output_2000/experiment_1_data_2000.db"
             )
     study = optuna.create_study(study_name='experiment_1_data_5000', 
                                 storage=storage_db, 
                                 direction="maximize", 
                                 pruner=pruner, 
                                 load_if_exists=True)
-    study.optimize(objective, n_trials=15, timeout=225000)
+    study.optimize(objective, n_trials=20, timeout=225000)
+    # try:
+    #     study.optimize(objective, n_trials=20, timeout=225000, callbacks=[early_stopping_opt])
+    # except EarlyStoppingExceeded:
+    # print(f'EarlyStopping Exceeded: No new best scores on iters {OPTUNE_EARLY_STOPING}')
     
     print("Number of finished trials: {}".format(len(study.trials)))
 
@@ -139,5 +198,5 @@ if __name__ == "__main__":
         print("    {}: {}".format(key, value))
 
     # scores_test = detailed_objective(study.best_trial)
-    scores_test = detailed_objective(best_trial)
-    print(f'Acc {scores_test[0]}\tPrec {scores_test[1]}\tRec {scores_test[2]}\tF1_score {scores_test[3]}')
+    # scores_test = detailed_objective(best_trial)
+    # print(f'Acc {scores_test[0]}\tPrec {scores_test[1]}\tRec {scores_test[2]}\tF1_score {scores_test[3]}')

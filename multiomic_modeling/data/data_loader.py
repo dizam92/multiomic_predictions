@@ -10,34 +10,34 @@ from torch.nn.utils.rnn import pad_sequence
 
 files_path_on_graham = '/home/maoss2/project/maoss2/tcga_pan_cancer_dataset/data_hdf5'
 # files_path_on_graham = '/Users/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/data/tcga_pan_cancer_dataset'
-# class FichierPath:
-#     exon_file = f'{files_path_on_graham}/exon_pancan_tcga_reduced.h5'
-#     cnv_file = f'{files_path_on_graham}/cnv_pancan_tcga_reduced_2000.h5'
-#     methyl27_file = f'{files_path_on_graham}/methyl_27_pancan_tcga_reduced.h5'
-#     methyl450_file = f'{files_path_on_graham}/methyl_450_pancan_tcga_reduced_2000.h5'
-#     protein_file = f'{files_path_on_graham}/protein_pancan_tcga_reduced.h5'
-#     mirna_file = f'{files_path_on_graham}/mirna_pancan_tcga_reduced_2000.h5'
-#     rna_file = f'{files_path_on_graham}/rna_pancan_tcga_reduced.h5'
-#     rna_iso_file = f'{files_path_on_graham}/rna_isoforms_pancan_tcga_reduced_2000.h5'
-#     survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
-#     patients_without_view_file = f'{files_path_on_graham}/patients_without_view.txt'
-#     patients_with_one_view_file = f'{files_path_on_graham}/patients_with_one_view.txt'
-#     patients_with_two_or_more_views_file = f'{files_path_on_graham}/patients_with_two_or_more_views.txt'
-#     patients_with_all_4_views_available_file = f'{files_path_on_graham}/patients_with_all_4_views_available.txt'
-
-# TODO: Decoment for 5K test
 class FichierPath:
-    cnv_file = f'{files_path_on_graham}/cnv_pancan_tcga_reduced_5000.h5'
-    methyl450_file = f'{files_path_on_graham}/methyl_450_pancan_tcga_reduced_5000.h5'
-    mirna_file = f'{files_path_on_graham}/mirna_pancan_tcga_reduced_5000.h5'
-    rna_iso_file = f'{files_path_on_graham}/rna_isoforms_pancan_tcga_reduced_5000.h5'
-    protein_file = f'{files_path_on_graham}/protein_pancan_tcga_reduced.h5'
     exon_file = f'{files_path_on_graham}/exon_pancan_tcga_reduced.h5'
+    cnv_file = f'{files_path_on_graham}/cnv_pancan_tcga_reduced_2000.h5'
+    methyl27_file = f'{files_path_on_graham}/methyl_27_pancan_tcga_reduced.h5'
+    methyl450_file = f'{files_path_on_graham}/methyl_450_pancan_tcga_reduced_2000.h5'
+    protein_file = f'{files_path_on_graham}/protein_pancan_tcga_reduced.h5'
+    mirna_file = f'{files_path_on_graham}/mirna_pancan_tcga_reduced_2000.h5'
+    rna_file = f'{files_path_on_graham}/rna_pancan_tcga_reduced.h5'
+    rna_iso_file = f'{files_path_on_graham}/rna_isoforms_pancan_tcga_reduced_2000.h5'
     survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
     patients_without_view_file = f'{files_path_on_graham}/patients_without_view.txt'
     patients_with_one_view_file = f'{files_path_on_graham}/patients_with_one_view.txt'
     patients_with_two_or_more_views_file = f'{files_path_on_graham}/patients_with_two_or_more_views.txt'
     patients_with_all_4_views_available_file = f'{files_path_on_graham}/patients_with_all_4_views_available.txt'
+
+# TODO: Decoment for 5K test
+# class FichierPath:
+#     cnv_file = f'{files_path_on_graham}/cnv_pancan_tcga_reduced_5000.h5'
+#     methyl450_file = f'{files_path_on_graham}/methyl_450_pancan_tcga_reduced_5000.h5'
+#     mirna_file = f'{files_path_on_graham}/mirna_pancan_tcga_reduced_5000.h5'
+#     rna_iso_file = f'{files_path_on_graham}/rna_isoforms_pancan_tcga_reduced_5000.h5'
+#     protein_file = f'{files_path_on_graham}/protein_pancan_tcga_reduced.h5'
+#     exon_file = f'{files_path_on_graham}/exon_pancan_tcga_reduced.h5'
+#     survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
+#     patients_without_view_file = f'{files_path_on_graham}/patients_without_view.txt'
+#     patients_with_one_view_file = f'{files_path_on_graham}/patients_with_one_view.txt'
+#     patients_with_two_or_more_views_file = f'{files_path_on_graham}/patients_with_two_or_more_views.txt'
+#     patients_with_all_4_views_available_file = f'{files_path_on_graham}/patients_with_all_4_views_available.txt'
 
 # TODO: Decoment for 10K test    
 # class FichierPath:
