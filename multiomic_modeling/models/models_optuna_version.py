@@ -20,7 +20,7 @@ training_params_global = []
 def objective(trial: optuna.trial.Trial) -> float:
     """ Main fonction to poptimize with Optuna """
     model_params = {
-        "d_input_enc": 2000, #TODO: modifier ceci to 5k or 10k when i wanna test on other dataset
+        "d_input_enc": 5000, #TODO: modifier ceci to 5k or 10k when i wanna test on other dataset
         "lr": trial.suggest_float("lr", 1e-6, 1e0, log=True),
         "nb_classes_dec": 33,
         "early_stopping": True,
@@ -69,8 +69,8 @@ def objective(trial: optuna.trial.Trial) -> float:
     training_params_global.append(training_params)
     # TODO: Change the outputpath for each exp
     # model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_2000_gpu')
-    model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_2000')
-    # model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_5000')
+    # model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_2000')
+    model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_5000')
     # model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_10000')
     # model = MultiomicTrainer.run_experiment(trial=trial, **training_params, output_path='./')
     
@@ -119,9 +119,9 @@ if __name__ == "__main__":
     #             engine_kwargs={"pool_size": 20, "connect_args": {"timeout": 10}},
     #         )
     storage_db = optuna.storages.RDBStorage(
-                url="sqlite:////home/maoss2/scratch/optuna_test_output_2000/experiment_1_data_2000.db"
+                url="sqlite:////home/maoss2/scratch/optuna_test_output_2000/experiment_1_data_5000.db"
             )
-    study = optuna.create_study(study_name='experiment_1_data_2000', 
+    study = optuna.create_study(study_name='experiment_1_data_5000', 
                                 storage=storage_db, 
                                 direction="maximize", 
                                 pruner=pruner, 

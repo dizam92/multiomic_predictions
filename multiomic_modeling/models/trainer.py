@@ -135,7 +135,7 @@ class MultiomicTrainer(BaseTrainer):
         self._train_dataset, self._valid_dataset = train_dataset, valid_dataset
 
         def get_trainer():
-            callbacks = [EarlyStopping(patience=10)] if self.early_stopping else []
+            callbacks = [EarlyStopping(patience=20)] if self.early_stopping else []
             callbacks = [PyTorchLightningPruningCallback(trial, monitor="val_multi_acc")]
             if artifact_dir is not None:
                 logger = TestTubeLogger(save_dir=artifact_dir, name='logs', version=1)
