@@ -5,6 +5,7 @@ import numpy as np
 from argparse import Namespace
 
 import optuna
+from optuna.study import StudyDirection
 # from optuna.integration import PyTorchLightningPruningCallback
 from packaging import version
 from multiomic_modeling.models.trainer import MultiomicTrainer
