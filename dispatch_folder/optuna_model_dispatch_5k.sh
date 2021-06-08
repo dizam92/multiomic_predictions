@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --gres=gpu:v100:1
 #SBATCH --cpus-per-task=3
-#SBATCH --mem=32G
+#SBATCH --mem=64G
 #SBATCH --account=rrg-corbeilj-ac
 #SBATCH --mail-user=mazid-abiodoun.osseni.1@ulaval.ca
 #SBATCH --mail-type=BEGIN
@@ -12,7 +12,7 @@
 date
 SECONDS=0
 which python
-python3 /home/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/models/models_optuna_version.py --p
+python3 /home/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/models/models_optuna_version_5000.py --p
 diff=$SECONDS
 echo "$(($diff / 60)) minutes and $(($diff % 60)) seconds elapsed."
 date
