@@ -178,7 +178,7 @@ class MultiomicTrainer(BaseTrainer):
         return self
     
     @staticmethod
-    def run_experiment(trial, model_params, fit_params, predict_params, dataset_views_to_consider, type_of_model,
+    def run_experiment(trial, model_params, fit_params, predict_params, data_size, dataset_views_to_consider, type_of_model,
                        complete_dataset, seed, output_path, outfmt_keys=None, **kwargs):
         all_params = locals()
         all_params.pop('trial')
@@ -198,7 +198,8 @@ class MultiomicTrainer(BaseTrainer):
         with open(os.path.join(out_prefix, 'config.json'), 'w') as fd:
             json.dump(all_params, fd, sort_keys=True, indent=2)
 
-        dataset = MultiomicDataset(views_to_consider=dataset_views_to_consider, 
+        dataset = MultiomicDataset(data_size=data_size,
+                                   views_to_consider=dataset_views_to_consider, 
                                    type_of_model=type_of_model, 
                                    complete_dataset=complete_dataset)
         train, valid, test = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1)

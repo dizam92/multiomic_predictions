@@ -19,7 +19,7 @@ if version.parse(pl.__version__) < version.parse("1.0.2"):
 def objective(trial: optuna.trial.Trial) -> float:
     """ Main fonction to poptimize with Optuna """
     model_params = {
-        "d_input_enc": 2000, #TODO: modifier ceci to 5k or 10k when i wanna test on other dataset
+        "d_input_enc": 5000, #TODO: modifier ceci to 5k or 10k when i wanna test on other dataset
         "lr": trial.suggest_float("lr", 1e-6, 1e0, log=True),
         "nb_classes_dec": 33,
         "early_stopping": True,
@@ -60,14 +60,14 @@ def objective(trial: optuna.trial.Trial) -> float:
         "model_params": model_params,
         "fit_params": fit_params,
         "predict_params": predict_params,
-        "data_size": 2000,
+        "data_size": 5000,
         "dataset_views_to_consider": "all",
         "type_of_model": "transformer",
         "complete_dataset": False,
         "seed": 42
     }
-
-    model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_2000')
+    
+    model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_5000')
     return model.trainer.callback_metrics["val_multi_acc"].item()
 
 
@@ -119,9 +119,9 @@ if __name__ == "__main__":
     # ) # i checked this so the MedianPruner is ok but i should add the minimum step parameter
     
     storage_db = optuna.storages.RDBStorage(
-                url="sqlite:////home/maoss2/scratch/optuna_test_output_2000/experiment_data_2000.db" # url="sqlite:///:memory:" quand le lien est relatif
+                url="sqlite:////home/maoss2/scratch/optuna_test_output_5000/experiment_data_5000.db" # url="sqlite:///:memory:" quand le lien est relatif
             )
-    study = optuna.create_study(study_name='experiment_data_2000', 
+    study = optuna.create_study(study_name='experiment_data_5000', 
                                 storage=storage_db, 
                                 direction="maximize", 
                                 pruner=PatientPruner(patience=10), 

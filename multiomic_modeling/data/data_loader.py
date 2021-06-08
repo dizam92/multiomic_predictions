@@ -11,47 +11,45 @@ from torch.nn.utils.rnn import pad_sequence
 files_path_on_graham = '/home/maoss2/project/maoss2/tcga_pan_cancer_dataset/data_hdf5'
 # files_path_on_graham = '/Users/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/data/tcga_pan_cancer_dataset'
 class FichierPath:
-    exon_file = f'{files_path_on_graham}/exon_pancan_tcga_reduced.h5'
     cnv_file = f'{files_path_on_graham}/cnv_pancan_tcga_reduced_2000.h5'
-    methyl27_file = f'{files_path_on_graham}/methyl_27_pancan_tcga_reduced.h5'
     methyl450_file = f'{files_path_on_graham}/methyl_450_pancan_tcga_reduced_2000.h5'
-    protein_file = f'{files_path_on_graham}/protein_pancan_tcga_reduced.h5'
     mirna_file = f'{files_path_on_graham}/mirna_pancan_tcga_reduced_2000.h5'
-    rna_file = f'{files_path_on_graham}/rna_pancan_tcga_reduced.h5'
     rna_iso_file = f'{files_path_on_graham}/rna_isoforms_pancan_tcga_reduced_2000.h5'
+    exon_file = f'{files_path_on_graham}/exon_pancan_tcga_reduced.h5'
+    methyl27_file = f'{files_path_on_graham}/methyl_27_pancan_tcga_reduced.h5'
+    protein_file = f'{files_path_on_graham}/protein_pancan_tcga_reduced.h5'
+    rna_file = f'{files_path_on_graham}/rna_pancan_tcga_reduced.h5'
     survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
     patients_without_view_file = f'{files_path_on_graham}/patients_without_view.txt'
     patients_with_one_view_file = f'{files_path_on_graham}/patients_with_one_view.txt'
     patients_with_two_or_more_views_file = f'{files_path_on_graham}/patients_with_two_or_more_views.txt'
     patients_with_all_4_views_available_file = f'{files_path_on_graham}/patients_with_all_4_views_available.txt'
 
-# TODO: Decoment for 5K test
-# class FichierPath:
-#     cnv_file = f'{files_path_on_graham}/cnv_pancan_tcga_reduced_5000.h5'
-#     methyl450_file = f'{files_path_on_graham}/methyl_450_pancan_tcga_reduced_5000.h5'
-#     mirna_file = f'{files_path_on_graham}/mirna_pancan_tcga_reduced_5000.h5'
-#     rna_iso_file = f'{files_path_on_graham}/rna_isoforms_pancan_tcga_reduced_5000.h5'
-#     protein_file = f'{files_path_on_graham}/protein_pancan_tcga_reduced.h5'
-#     exon_file = f'{files_path_on_graham}/exon_pancan_tcga_reduced.h5'
-#     survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
-#     patients_without_view_file = f'{files_path_on_graham}/patients_without_view.txt'
-#     patients_with_one_view_file = f'{files_path_on_graham}/patients_with_one_view.txt'
-#     patients_with_two_or_more_views_file = f'{files_path_on_graham}/patients_with_two_or_more_views.txt'
-#     patients_with_all_4_views_available_file = f'{files_path_on_graham}/patients_with_all_4_views_available.txt'
+class FichierPath5K:
+    cnv_file = f'{files_path_on_graham}/cnv_pancan_tcga_reduced_5000.h5'
+    methyl450_file = f'{files_path_on_graham}/methyl_450_pancan_tcga_reduced_5000.h5'
+    mirna_file = f'{files_path_on_graham}/mirna_pancan_tcga_reduced_5000.h5'
+    rna_iso_file = f'{files_path_on_graham}/rna_isoforms_pancan_tcga_reduced_5000.h5'
+    protein_file = f'{files_path_on_graham}/protein_pancan_tcga_reduced.h5'
+    exon_file = f'{files_path_on_graham}/exon_pancan_tcga_reduced.h5'
+    survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
+    patients_without_view_file = f'{files_path_on_graham}/patients_without_view.txt'
+    patients_with_one_view_file = f'{files_path_on_graham}/patients_with_one_view.txt'
+    patients_with_two_or_more_views_file = f'{files_path_on_graham}/patients_with_two_or_more_views.txt'
+    patients_with_all_4_views_available_file = f'{files_path_on_graham}/patients_with_all_4_views_available.txt'
 
-# TODO: Decoment for 10K test    
-# class FichierPath:
-#     cnv_file = f'{files_path_on_graham}/cnv_pancan_tcga_reduced_10000.h5'
-#     methyl450_file = f'{files_path_on_graham}/methyl_450_pancan_tcga_reduced_10000.h5'
-#     mirna_file = f'{files_path_on_graham}/mirna_pancan_tcga_reduced_10000.h5'
-#     rna_iso_file = f'{files_path_on_graham}/rna_isoforms_pancan_tcga_reduced_10000.h5'
-#     protein_file = f'{files_path_on_graham}/protein_pancan_tcga_reduced.h5'
-#     exon_file = f'{files_path_on_graham}/exon_pancan_tcga_reduced.h5'
-#     survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
-#     patients_without_view_file = f'{files_path_on_graham}/patients_without_view.txt'
-#     patients_with_one_view_file = f'{files_path_on_graham}/patients_with_one_view.txt'
-#     patients_with_two_or_more_views_file = f'{files_path_on_graham}/patients_with_two_or_more_views.txt'
-#     patients_with_all_4_views_available_file = f'{files_path_on_graham}/patients_with_all_4_views_available.txt'
+class FichierPath10K:
+    cnv_file = f'{files_path_on_graham}/cnv_pancan_tcga_reduced_10000.h5'
+    methyl450_file = f'{files_path_on_graham}/methyl_450_pancan_tcga_reduced_10000.h5'
+    mirna_file = f'{files_path_on_graham}/mirna_pancan_tcga_reduced_10000.h5'
+    rna_iso_file = f'{files_path_on_graham}/rna_isoforms_pancan_tcga_reduced_10000.h5'
+    protein_file = f'{files_path_on_graham}/protein_pancan_tcga_reduced.h5'
+    exon_file = f'{files_path_on_graham}/exon_pancan_tcga_reduced.h5'
+    survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
+    patients_without_view_file = f'{files_path_on_graham}/patients_without_view.txt'
+    patients_with_one_view_file = f'{files_path_on_graham}/patients_with_one_view.txt'
+    patients_with_two_or_more_views_file = f'{files_path_on_graham}/patients_with_two_or_more_views.txt'
+    patients_with_all_4_views_available_file = f'{files_path_on_graham}/patients_with_all_4_views_available.txt'
     
 class FichierPathCompleteDataset: #matrice complete des 4 vues a 493411 features
     exon_file = f'{files_path_on_graham}/exon_pancan_tcga.h5' 
@@ -207,10 +205,11 @@ patients_with_two_or_more_views_file = read_file_txt(FichierPath.patients_with_t
 patients_with_all_4_views_available_file = read_file_txt(FichierPath.patients_with_all_4_views_available_file)
 
 class MultiomicDataset(Dataset):
-    def __init__(self, views_to_consider='all', type_of_model='transformer', complete_dataset=False):
+    def __init__(self, data_size=2000, views_to_consider='all', type_of_model='transformer', complete_dataset=False):
         super(MultiomicDataset, self).__init__()
         """
         Arguments:
+            data_size: int, 2k; 5k or 10k for the specific patch file to load
             views_to_consider, str, 
                 all, load all the 4 views (cnv, methyl450, mirna, rna_iso )
                 cnv, load just cnv views
@@ -223,6 +222,18 @@ class MultiomicDataset(Dataset):
             type_of_model: mlp or transformer (impact the get function to have it concatenated or not)
             complete_dataset: to load the original view (complete version) or the selected features version
         """
+        if data_size == 2000: pass
+        if data_size == 5000:
+            FichierPath.cnv_file = FichierPath5K.cnv_file
+            FichierPath.methyl450_file = FichierPath5K.methyl450_file
+            FichierPath.mirna_file = FichierPath5K.mirna_file
+            FichierPath.rna_iso_file = FichierPath5K.rna_iso_file
+        if data_size == 10000:
+            FichierPath.cnv_file = FichierPath10K.cnv_file
+            FichierPath.methyl450_file = FichierPath10K.methyl450_file
+            FichierPath.mirna_file = FichierPath10K.mirna_file
+            FichierPath.rna_iso_file = FichierPath10K.rna_iso_file
+        if data_size not in [2000, 5000, 10000]: raise ValueError(f'the data size {data_size} is not available in the dataset')
         if views_to_consider == 'all':
             if complete_dataset:
                 self.views = [
