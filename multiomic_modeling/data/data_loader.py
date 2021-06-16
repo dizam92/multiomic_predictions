@@ -312,6 +312,60 @@ class MultiomicDataset(Dataset):
                 self.views = [
                     read_h5py(fichier=FichierPath.protein_file, normalization=True)
                 ]
+        elif views_to_consider == 'cnv_methyl_rna':
+            self.views = [
+                    read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
+                    read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
+                    read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+                ]
+        elif views_to_consider == 'cnv_methyl_mirna':
+             self.views = [
+                    read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
+                    read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
+                    read_h5py(fichier=FichierPath.mirna_file, normalization=True)
+                ]
+        elif views_to_consider == 'methyl_mirna_rna':
+            self.views = [
+                read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
+                read_h5py(fichier=FichierPath.mirna_file, normalization=True),
+                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+            ]
+        elif views_to_consider == 'cnv_mirna_rna':
+            self.views = [
+                read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
+                read_h5py(fichier=FichierPath.mirna_file, normalization=True),
+                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+            ]
+        elif views_to_consider == 'cnv_mirna':
+            self.views = [
+                read_h5py(fichier=FichierPath.cnv_file, normalization=False),
+                read_h5py(fichier=FichierPath.mirna_file, normalization=True)
+            ]
+        elif views_to_consider == 'cnv_rna':
+            self.views = [
+                read_h5py(fichier=FichierPath.cnv_file, normalization=False),
+                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+            ]
+        elif views_to_consider == 'cnv_methyl':
+            self.views = [
+                read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
+                read_h5py(fichier=FichierPath.methyl450_file, normalization=False)
+            ]
+        elif views_to_consider == 'mirna_rna':
+            self.views = [
+                read_h5py(fichier=FichierPath.mirna_file, normalization=True),
+                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+            ]
+        elif views_to_consider == 'methyl_mirna':
+            self.views = [
+                read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
+                read_h5py(fichier=FichierPath.mirna_file, normalization=True)
+            ]
+        elif views_to_consider == 'methyl_rna':
+            self.views = [
+                read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
+                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+            ]
         else:
             raise ValueError(f'the view {views_to_consider} is not available in the dataset')
         self.nb_features = np.max([view['data'].shape[1] for view in self.views])
@@ -327,43 +381,20 @@ class MultiomicDataset(Dataset):
             for patient_name in list(self.sample_to_labels.keys()):
                 if patient_name not in patients_with_two_or_more_views_file:
                     self.sample_to_labels.pop(patient_name)    
-        elif views_to_consider == 'cnv':
+        elif views_to_consider in ['cnv', 'methyl', 'exon', 'mirna', 'rna', 'rna_iso', 'protein']:
             patients_name_view = list(self.views[0]['patient_names'].keys())
             for patient_name in list(self.sample_to_labels.keys()):
                 if patient_name not in patients_name_view:
                     self.sample_to_labels.pop(patient_name) 
-        elif views_to_consider == 'methyl':
-            patients_name_methyl_views = []
-            patients_name_methyl_views.extend(list(self.views[0]['patient_names'].keys()))
-            # patients_name_methyl_views.extend(list(self.views[1]['patient_names'].keys()))
+        elif views_to_consider in ['cnv_methyl_rna', 'cnv_methyl_mirna', 'cnv_mirna_rna', 'methyl_mirna_rna', 'cnv_mirna', 
+                                   'cnv_rna', 'cnv_methyl', 'mirna_rna', 'methyl_mirna','methyl_rna']:
+            patients_name_views = []
+            for idx in range(len(self.views)):
+                patients_name_views.extend(list(self.views[idx]['patient_names'].keys()))
+            patients_name_views = list(np.unique(patients_name_views))
             for patient_name in list(self.sample_to_labels.keys()):
-                if patient_name not in patients_name_methyl_views:
-                    self.sample_to_labels.pop(patient_name) 
-        elif views_to_consider == 'exon':
-            patients_name_view = list(self.views[0]['patient_names'].keys())
-            for patient_name in list(self.sample_to_labels.keys()):
-                if patient_name not in patients_name_view:
-                    self.sample_to_labels.pop(patient_name) 
-        elif views_to_consider == 'mirna':
-            patients_name_view = list(self.views[0]['patient_names'].keys())
-            for patient_name in list(self.sample_to_labels.keys()):
-                if patient_name not in patients_name_view:
-                    self.sample_to_labels.pop(patient_name) 
-        elif views_to_consider == 'rna':
-            patients_name_view = list(self.views[0]['patient_names'].keys())
-            for patient_name in list(self.sample_to_labels.keys()):
-                if patient_name not in patients_name_view:
-                    self.sample_to_labels.pop(patient_name) 
-        elif views_to_consider == 'rna_iso':
-            patients_name_view = list(self.views[0]['patient_names'].keys())
-            for patient_name in list(self.sample_to_labels.keys()):
-                if patient_name not in patients_name_view:
-                    self.sample_to_labels.pop(patient_name) 
-        elif views_to_consider == 'protein':
-            patients_name_view = list(self.views[0]['patient_names'].keys())
-            for patient_name in list(self.sample_to_labels.keys()):
-                if patient_name not in patients_name_view:
-                    self.sample_to_labels.pop(patient_name) 
+                if patient_name not in patients_name_views:
+                    self.sample_to_labels.pop(patient_name)
         else:
             raise ValueError(f'the view {views_to_consider} is not available in the dataset')
         self.all_patient_names = np.asarray(list(self.sample_to_labels.keys()))

@@ -21,7 +21,8 @@ from multiomic_modeling.models.utils import c_collate
 from multiomic_modeling.loss_and_metrics import SeqCrossEntropyLoss, SeqLabelSmoothingLoss, _adjust_shapes
 from multiomic_modeling.data.structs import Sequence
 
-
+import optuna
+from optuna.study import StudyDirection
 logger = logging.create_logger(__name__)
 
 
@@ -225,3 +226,36 @@ class BaseTrainer(LightningModule):
         ploader = DataLoader(dataset, collate_fn=c_collate, batch_size=32)
         res = [self.network.predict(x[0]).data.numpy() for x in ploader]    # supposing that the first
         return np.concatenate(res, axis=0)
+
+
+class PatientPruner(optuna.pruners.BasePruner):
+    def __init__(self, patience=3):
+        self._patience = patience
+
+    def prune(self, study, trial):
+        intermediate_values = trial.intermediate_values
+
+        steps = np.asarray(list(intermediate_values.keys()))
+
+        # Do not prune if number of step to determine are insufficient.
+        if steps.size < self._patience + 1:
+            return False
+
+        # Prune based on if the values are monotically decreasing/increasing.
+        steps.sort()
+        patience_steps = steps[-self._patience - 1 :]
+
+        patience_values = np.asarray(list(intermediate_values[step] for step in patience_steps))
+
+        diffs = np.diff(patience_values)
+
+        direction = study.direction
+        if direction == StudyDirection.MINIMIZE:
+            promising_diffs = diffs <= 0
+        elif direction == StudyDirection.MAXIMIZE:
+            promising_diffs = diffs >= 0
+        else:
+            assert False
+
+        return not promising_diffs.any()
+    

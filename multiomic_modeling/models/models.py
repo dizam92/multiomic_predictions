@@ -6,10 +6,6 @@ import numpy as np
 from multiomic_modeling.torch_utils import to_numpy
 torch.autograd.set_detect_anomaly(True)
 class MultiomicPredictionModel(Model):
-    # def __init__(self, d_input_enc, nb_classes_dec, class_weights, 
-    #              d_model_enc=1024, d_ff_enc=1024, n_heads_enc=16, n_layers_enc=2,
-    #              d_model_dec=1024, d_ff_dec=1024, n_heads_dec=16, n_layers_dec=2,
-    #              activation="relu", dropout=0.1, loss: str = 'ce'):
     def __init__(self, d_input_enc, nb_classes_dec, class_weights, d_model_enc_dec=1024, d_ff_enc_dec=1024, 
                  n_heads_enc_dec=16, n_layers_enc=2, n_layers_dec=2, activation="relu", dropout=0.1, loss: str = 'ce'):
         super(MultiomicPredictionModel, self).__init__()
