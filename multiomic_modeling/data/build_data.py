@@ -103,9 +103,9 @@ if LOCAL:
     mirna_path = f'{local_file_path_origin}/pancanMiRs_EBadjOnProtocolPlatformWithoutRepsWithUnCorrectMiRs_08_04_16.xena'
     protein_path = f'{local_file_path_origin}/TCGA-RPPA-pancan-clean.xena'
 else:
-    exon_path = f'{graham_file_path_origin}/HiSeqV2_exon'
-    cnv_path = f'{graham_file_path_origin}/Gistic2_CopyNumber_Gistic2_all_thresholded.by_genes'
-    methyl_27_path = f'{graham_file_path_origin}/HumanMethylation27'
+    exon_path = f'{graham_file_path_origin}/TCGA.PANCAN.sampleMap%2FHiSeqV2_exon'
+    cnv_path = f'{graham_file_path_origin}/TCGA.PANCAN.sampleMap%2FGistic2_CopyNumber_Gistic2_all_thresholded.by_genes'
+    methyl_27_path = f'{graham_file_path_origin}/TCGA.PANCAN.sampleMap%2FHumanMethylation27'
     methyl_450_path = f'{graham_file_path_origin}/jhu-usc.edu_PANCAN_HumanMethylation450.betaValue_whitelisted.tsv.synapse_download_5096262.xena'
     rna_path = f'{graham_file_path_origin}/EB++AdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.xena'
     rna_isoforms_path = f'{graham_file_path_origin}/tcga_RSEM_isoform_fpkm'
