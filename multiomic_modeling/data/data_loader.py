@@ -7,6 +7,7 @@ from sklearn.utils import class_weight
 from scipy.stats import median_absolute_deviation
 from torch.utils.data import Dataset, random_split, Subset, DataLoader, SubsetRandomSampler
 from torch.nn.utils.rnn import pad_sequence
+from itertools import combinations
 
 files_path_on_graham = '/home/maoss2/project/maoss2/tcga_pan_cancer_dataset/data_hdf5'
 # files_path_on_graham = '/Users/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/data/tcga_pan_cancer_dataset'
@@ -368,7 +369,8 @@ class MultiomicDataset(Dataset):
             ]
         else:
             raise ValueError(f'the view {views_to_consider} is not available in the dataset')
-        self.nb_features = np.max([view['data'].shape[1] for view in self.views])
+        if views_to_consider == 'mirna': self.nb_features = data_size
+        else: self.nb_features = np.max([view['data'].shape[1] for view in self.views])
         self.feature_names  = []
         for view in self.views:
             self.feature_names.extend(list(view['feature_names']))        
@@ -404,38 +406,114 @@ class MultiomicDataset(Dataset):
         self.class_weights = class_weight.compute_class_weight('balanced',
                                                  np.unique(self.all_patient_labels),
                                                  self.all_patient_labels) #pylint deconne sinon pas d'erreurs
-        
+        self.number_of_views = len(self.views)
+        self.sample_to_labels = {self.all_patient_names[idx]: self.all_patient_labels[idx] 
+                                 for idx, _ in enumerate(self.all_patient_names)}
+        self.all_data_combination = self.build_combination_per_examples()
+               
+    def build_combination_per_examples(self):
+        for patient_name, patient_label in self.sample_to_labels.items():
+            idx_views_combinations = []
+            data_list = []
+            for pos in range(2, self.number_of_views + 1): 
+                idx_views_combinations.extend(MultiomicDataset.rSubset(arr=np.arange(self.number_of_views), r=pos))
+            for comb in idx_views_combinations:
+                data = np.zeros((len(comb), self.nb_features)) # nombre_views X nombre_features
+                mask = []
+                # for idx, i in enumerate(np.arange(len(comb))): # equivalent à un vecteur allant de [0 à data.shape[0]]
+                #     for idx in comb:
+                for idx in range(len(comb)): # equivalent à un vecteur allant de [0 à data.shape[0]]
+                    try:
+                        data[idx] = self.views[comb[idx]]['data'][self.views[comb[idx]]['patient_names'].get(patient_name, 0)]
+                        mask.append(True)
+                    except ValueError:
+                        data[idx][:self.views[comb[idx]]['data'][self.views[comb[idx]]['patient_names'].get(patient_name, 0)].shape[0]] = self.views[comb[idx]]['data'][self.views[comb[idx]]['patient_names'].get(patient_name, 0)]
+                        mask.append(False)
+                assert len(mask) == data.shape[0], 'Something went wrong with the mask size and the inner data.shape'
+                data_list.append((patient_name, patient_label, data.astype(float), np.array(mask)))
+        return data_list
+    
     def __getitem__(self, idx):
-        patient_name = self.all_patient_names[idx]
-        patient_label = self.all_patient_labels[idx]
-        data = np.zeros((len(self.views), self.nb_features)) # nombre_views X nombre_features 
-        for i, view in enumerate(self.views):
-            if patient_name in view['patient_names']:
-                try:
-                    data[i] = view['data'][view['patient_names'].get(patient_name, 0)]
-                except ValueError:
-                    data[i][:view['data'][view['patient_names'].get(patient_name, 0)].shape[0]] = view['data'][view['patient_names'].get(patient_name, 0)]
-        mask = np.array([(patient_name in view['patient_names']) for view in self.views])
-        if self.type_of_model == 'transformer':
-            return (data.astype(float), mask), patient_label
-        if self.type_of_model == 'mlp':
-            data = data.reshape(-1)
-            return data.astype(float), patient_label
-        
+        return self.all_data_combination[idx][2:], self.all_data_combination[idx][1] 
+        # on veut juste le dataset et le mask (pas besoin du nom du patient), et le label du patient
+    
     def __len__(self):
-        return len(self.all_patient_names)
+        # return len(self.all_patient_names)
+        return len(self.all_data_combination)
         
-        
+    @staticmethod
+    def rSubset(arr, r):
+        """
+        return list of all subsets of length r; to deal with duplicate subsets use or just use return list(combinations(arr, r))
+        """
+        return list(set(list(combinations(arr, r))))
+    
 def multiomic_dataset_builder(dataset, test_size=0.2, valid_size=0.1):
-    n = len(dataset)
-    idxs = np.arange(n)
+    patient_names = dataset.all_patient_names
     labels = dataset.all_patient_labels
-    X_train, X_test, y_train, y_test = train_test_split(idxs, labels, test_size=test_size, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(patient_names, labels, test_size=test_size, random_state=42)
     X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=valid_size, random_state=42)
-    train_dataset = Subset(dataset, indices=X_train)
-    test_dataset = Subset(dataset, indices=X_test)
-    valid_dataset =  Subset(dataset, indices=X_valid)
+    X_train_indices = []; X_test_indices = []; X_valid_indices = []
+    for idx, example in enumerate(dataset.all_data_combination): # Example : (patient_name, patient_label, data.astype(float), np.array(mask))
+        if example[0] in X_train: X_train_indices.append(idx)
+        if example[0] in X_test: X_test_indices.append(idx)
+        if example[0] in X_valid: X_valid_indices.append(idx)
+        
+    train_dataset = Subset(dataset, indices=X_train_indices)
+    test_dataset = Subset(dataset, indices=X_test_indices)
+    valid_dataset =  Subset(dataset, indices=X_valid_indices)
     return train_dataset, test_dataset, valid_dataset
+
+    # TODO: ORIGINAL TO NOT DELETE 
+    # def __getitem__(self, idx): 
+    #     patient_name = self.all_patient_names[idx]
+    #     patient_label = self.all_patient_labels[idx]
+    #     data = np.zeros((len(self.views), self.nb_features)) # nombre_views X nombre_features 
+    #     for i, view in enumerate(self.views):
+    #         if patient_name in view['patient_names']:
+    #             try:
+    #                 data[i] = view['data'][view['patient_names'].get(patient_name, 0)]
+    #             except ValueError:
+    #                 data[i][:view['data'][view['patient_names'].get(patient_name, 0)].shape[0]] = view['data'][view['patient_names'].get(patient_name, 0)]
+    #     mask = np.array([(patient_name in view['patient_names']) for view in self.views])
+    #     if self.type_of_model == 'transformer':
+    #         return (data.astype(float), mask), patient_label
+    #     if self.type_of_model == 'mlp':
+    #         data = data.reshape(-1)
+    #         return data.astype(float), patient_label
+    
+    # TODO: The one that doing the job in the getitem but i cant visualize how to use them downstream. DONT DELETE    
+    # def __getitem__(self, idx):
+    #     patient_name = self.all_patient_names[idx]
+    #     patient_label = self.all_patient_labels[idx]
+    #     data = np.zeros((len(self.views), self.nb_features)) # nombre_views X nombre_features 
+    #     idx_views_combinations = []
+    #     data_list = []
+    #     mask = np.array([(patient_name in view['patient_names']) for view in self.views]) # le meme mask va etre réutiliser: par défaut je garde la structure de base (4 views)
+    #     for pos in range(2, self.number_of_views + 1): idx_views_combinations.extend(MultiomicDataset.rSubset(arr=np.arange(4), r=pos))
+    #     for comb in idx_views_combinations:
+    #         data = np.zeros((len(self.views), self.nb_features))
+    #         for idx in comb:
+    #             try:
+    #                 data[idx] = self.views[idx]['data'][self.views[idx]['patient_names'].get(patient_name, 0)]
+    #             except ValueError:
+    #                 data[idx][:self.views[idx]['data'][self.views[idx]['patient_names'].get(patient_name, 0)].shape[0]] = self.views[idx]['data'][self.views[idx]['patient_names'].get(patient_name, 0)]
+    #         data_list.append((data.astype(float), mask))
+    #     return data_list, patient_label
+        
+# TODO: ORIGINAL TO NOT DELETE     
+# def multiomic_dataset_builder(dataset, test_size=0.2, valid_size=0.1):
+#     n = len(dataset)
+#     idxs = np.arange(n)
+#     labels = dataset.all_patient_labels
+#     X_train, X_test, y_train, y_test = train_test_split(idxs, labels, test_size=test_size, random_state=42)
+#     X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=valid_size, random_state=42)
+#     train_dataset = Subset(dataset, indices=X_train)
+#     test_dataset = Subset(dataset, indices=X_test)
+#     valid_dataset =  Subset(dataset, indices=X_valid)
+#     return train_dataset, test_dataset, valid_dataset
+
+
 
 def multiomic_dataset_loader(dataset, batch_size=32, nb_cpus=2):
     n = len(dataset)

@@ -7,7 +7,8 @@ from collections import defaultdict
 from scipy.stats import median_abs_deviation
 from sklearn.feature_selection import SelectKBest, mutual_info_classif
 local_file_path_origin='/Volumes/Second Part/TCGA Pan-Cancer (PANCAN)/'
-graham_file_path_origin='/home/maoss2/project/maoss2/tcga_pan_cancer_dataset'
+# graham_file_path_origin='/home/maoss2/project/maoss2/tcga_pan_cancer_dataset'
+graham_file_path_origin='/project/6000474/maoss2/tcga_pan_cancer_dataset'
 LOCAL = False
 def read_chunk_file(fichier_path, saving_file_name, chunk_size=100000):
     """
@@ -127,7 +128,7 @@ if __name__ == '__main__':
                                   'mirna_pancan_tcga_reduced']
     
     for idx, fichier in enumerate(fichiers_path):
-        # read_chunk_file(fichier_path=fichier, saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names[idx]}', chunk_size=100000)
+        # read_chunk_file(fichier_path=fichier, saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}', chunk_size=100000)
         if os.path.exists(f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}_2000.h5'):
             pass
         else: 
