@@ -17,10 +17,10 @@ if version.parse(pl.__version__) < version.parse("1.0.2"):
     raise RuntimeError("PyTorch Lightning>=1.0.2 is required for this example.")
 
 
-def objective(trial: optuna.trial.Trial) -> float:
+def objective(trial: optuna.trial.Trial, d_input_enc: int, dataset_views_to_consider: str, data_size: int, output_path: str) -> float:
     """ Main fonction to poptimize with Optuna """
     model_params = {
-        "d_input_enc": 2000, 
+        "d_input_enc": int(d_input_enc), 
         "lr": trial.suggest_float("lr", 1e-6, 1e-2, log=True),
         "nb_classes_dec": 33,
         "early_stopping": True,
@@ -61,42 +61,53 @@ def objective(trial: optuna.trial.Trial) -> float:
         "model_params": model_params,
         "fit_params": fit_params,
         "predict_params": predict_params,
-        "data_size": 2000,
-        "dataset_views_to_consider": "all",
+        "data_size": int(data_size),
+        "dataset_views_to_consider": dataset_views_to_consider,
         "type_of_model": "transformer",
         "complete_dataset": False,
         "seed": 42
     }
 
-    model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_2000')
+    model = MultiomicTrainer.run_experiment(**training_params, output_path=output_path)
     return model.trainer.callback_metrics["val_multi_acc"].item()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Optuna version of Transformer model.")
-    parser.add_argument(
-        "--pruning",
-        "-p",
-        action="store_true",
-        help="Activate the pruning feature. `MedianPruner` stops unpromising "
-        "trials at the early stages of training.",
-    )
+    # parser.add_argument(
+    #     "--pruning",  "-p", action="store_true",
+    #     help="Activate the pruning feature. `MedianPruner` stops unpromising "
+    #     "trials at the early stages of training.",
+    # )
+    parser.add_argument('-d', '--d_input_enc', type=int, default=2000)
+    parser.add_argument('-d_view', '--dataset_views_to_consider', type=str, default='all')
+    parser.add_argument('-o', '--output_path', type=str, default='/home/maoss2/scratch/optuna_test_output_2000')
+    parser.add_argument('-s', '--data_size', type=int, default=2000)
+    parser.add_argument('-db_name', '--db_name', type=str, default='experiment_data_2000')
+    parser.add_argument('-study_name', '--study_name', type=str, default='experiment_data_2000')
     args = parser.parse_args()
-
+    assert args.d_input_enc == args.data_size, 'must be the same size'
+    if os.path.exists(args.output_path): pass
+    else: os.mkdir(args.output_path)
     # pruning = True
     # pruner: optuna.pruners.BasePruner = (
     #     optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=8000) if args.pruning else optuna.pruners.NopPruner()
     # ) # i checked this so the MedianPruner is ok but i should add the minimum step parameter
     
     storage_db = optuna.storages.RDBStorage(
-                url="sqlite:////home/maoss2/scratch/optuna_test_output_2000/experiment_data_2000.db" # url="sqlite:///:memory:" quand le lien est relatif
+                url=f"sqlite:///{args.output_path}/{args.output_path}.db" # url="sqlite:///:memory:" quand le lien est relatif
             )
-    study = optuna.create_study(study_name='experiment_data_2000', 
+    study = optuna.create_study(study_name=args.study_name, 
                                 storage=storage_db, 
                                 direction="maximize", 
                                 pruner=PatientPruner(patience=10), 
                                 load_if_exists=True)
-    study.optimize(objective, n_trials=30, timeout=225000)
+    study.optimize(lambda trial: objective(trial, 
+                                           args.d_input_enc, 
+                                           args.dataset_views_to_consider, 
+                                           args.data_size, 
+                                           args.output_path), 
+                   n_trials=30, timeout=225000)
     
     print("Number of finished trials: {}".format(len(study.trials)))
 

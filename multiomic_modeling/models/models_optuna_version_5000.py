@@ -68,7 +68,7 @@ def objective(trial: optuna.trial.Trial) -> float:
         "seed": 42
     }
     
-    model = MultiomicTrainer.run_experiment(**training_params, trial=trial, output_path='/home/maoss2/scratch/optuna_test_output_5000')
+    model = MultiomicTrainer.run_experiment(**training_params, output_path='/home/maoss2/scratch/optuna_test_output_5000')
     return model.trainer.callback_metrics["val_multi_acc"].item()
 
 
