@@ -443,9 +443,11 @@ class MultiomicDataset(Dataset):
         return data_list
     
     def __getitem__(self, idx):
-        return self.all_data_combination[idx][2:], self.all_data_combination[idx][1] 
+        # return self.all_data_combination[idx][2:], self.all_data_combination[idx][1] 
+        return (self.all_data_combination[idx][2], self.all_data_combination[idx][3]), self.all_data_combination[idx][1] 
         # on veut juste le dataset et le mask (pas besoin du nom du patient), et le label du patient
-    
+        # return (data.astype(float), mask), patient_label
+        
     def __len__(self):
         # return len(self.all_patient_names)
         return len(self.all_data_combination)
