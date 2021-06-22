@@ -9,7 +9,8 @@ from torch.utils.data import Dataset, random_split, Subset, DataLoader, SubsetRa
 from torch.nn.utils.rnn import pad_sequence
 from itertools import combinations
 
-files_path_on_graham = '/home/maoss2/project/maoss2/tcga_pan_cancer_dataset/data_hdf5'
+# files_path_on_graham = '/home/maoss2/project/maoss2/tcga_pan_cancer_dataset/data_hdf5'
+files_path_on_graham = '/project/6000474/maoss2/tcga_pan_cancer_dataset/data_hdf5'
 # files_path_on_graham = '/Users/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/data/tcga_pan_cancer_dataset'
 class FichierPath:
     cnv_file = f'{files_path_on_graham}/cnv_pancan_tcga_reduced_2000.h5'
@@ -412,25 +413,33 @@ class MultiomicDataset(Dataset):
         self.all_data_combination = self.build_combination_per_examples()
                
     def build_combination_per_examples(self):
-        for patient_name, patient_label in self.sample_to_labels.items():
-            idx_views_combinations = []
-            data_list = []
-            for pos in range(2, self.number_of_views + 1): 
-                idx_views_combinations.extend(MultiomicDataset.rSubset(arr=np.arange(self.number_of_views), r=pos))
-            for comb in idx_views_combinations:
-                data = np.zeros((len(comb), self.nb_features)) # nombre_views X nombre_features
-                mask = []
-                # for idx, i in enumerate(np.arange(len(comb))): # equivalent à un vecteur allant de [0 à data.shape[0]]
-                #     for idx in comb:
-                for idx in range(len(comb)): # equivalent à un vecteur allant de [0 à data.shape[0]]
-                    try:
-                        data[idx] = self.views[comb[idx]]['data'][self.views[comb[idx]]['patient_names'].get(patient_name, 0)]
-                        mask.append(True)
-                    except ValueError:
-                        data[idx][:self.views[comb[idx]]['data'][self.views[comb[idx]]['patient_names'].get(patient_name, 0)].shape[0]] = self.views[comb[idx]]['data'][self.views[comb[idx]]['patient_names'].get(patient_name, 0)]
-                        mask.append(False)
-                assert len(mask) == data.shape[0], 'Something went wrong with the mask size and the inner data.shape'
-                data_list.append((patient_name, patient_label, data.astype(float), np.array(mask)))
+        data_list = []
+        if self.number_of_views == 1:
+            for patient_name, patient_label in self.sample_to_labels.items():
+                data = np.zeros((1, self.nb_features))
+                for i, view in enumerate(self.views):
+                    if patient_name in view['patient_names']:
+                        try:
+                            data[i] = view['data'][view['patient_names'].get(patient_name, 0)]
+                        except ValueError:
+                            data[i][:view['data'][view['patient_names'].get(patient_name, 0)].shape[0]] = view['data'][view['patient_names'].get(patient_name, 0)]
+                mask = np.array([(patient_name in view['patient_names']) for view in self.views])
+                data_list.append((patient_name, patient_label, data.astype(float), mask))
+        else:
+            for patient_name, patient_label in self.sample_to_labels.items():
+                idx_views_combinations = []
+                for pos in range(2, self.number_of_views + 1): 
+                    idx_views_combinations.extend(MultiomicDataset.rSubset(arr=np.arange(self.number_of_views), r=pos))
+                for comb in idx_views_combinations:
+                    data = np.zeros((len(comb), self.nb_features)) # nombre_views X nombre_features
+                    for idx in range(len(comb)): # equivalent à un vecteur allant de [0 à data.shape[0]]
+                        try:
+                            data[idx] = self.views[comb[idx]]['data'][self.views[comb[idx]]['patient_names'].get(patient_name, 0)]
+                        except ValueError:
+                            data[idx][:self.views[comb[idx]]['data'][self.views[comb[idx]]['patient_names'].get(patient_name, 0)].shape[0]] = self.views[comb[idx]]['data'][self.views[comb[idx]]['patient_names'].get(patient_name, 0)]
+                    mask = np.array([(patient_name in self.views[comb[idx]]['patient_names']) for idx in range(len(comb))])
+                    # assert len(mask) == data.shape[0], 'Something went wrong with the mask size and the inner data.shape'
+                    data_list.append((patient_name, patient_label, data.astype(float), mask))
         return data_list
     
     def __getitem__(self, idx):
