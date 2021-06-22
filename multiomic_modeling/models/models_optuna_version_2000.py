@@ -95,7 +95,7 @@ if __name__ == "__main__":
     # ) # i checked this so the MedianPruner is ok but i should add the minimum step parameter
     
     storage_db = optuna.storages.RDBStorage(
-                url=f"sqlite:///{args.output_path}/{args.output_path}.db" # url="sqlite:///:memory:" quand le lien est relatif
+                url=f"sqlite:///{args.output_path}/{args.db_name}.db" # url="sqlite:///:memory:" quand le lien est relatif
             )
     study = optuna.create_study(study_name=args.study_name, 
                                 storage=storage_db, 
