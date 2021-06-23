@@ -416,7 +416,7 @@ class MultiomicDataset(Dataset):
         data_list = []
         if self.number_of_views == 1:
             for patient_name, patient_label in self.sample_to_labels.items():
-                data = np.zeros((1, self.nb_features))
+                data = np.zeros((self.number_of_views, self.nb_features))
                 for i, view in enumerate(self.views):
                     if patient_name in view['patient_names']:
                         try:
@@ -424,29 +424,31 @@ class MultiomicDataset(Dataset):
                         except ValueError:
                             data[i][:view['data'][view['patient_names'].get(patient_name, 0)].shape[0]] = view['data'][view['patient_names'].get(patient_name, 0)]
                 mask = np.array([(patient_name in view['patient_names']) for view in self.views])
-                data_list.append((patient_name, patient_label, data.astype(float), mask))
+                data_list.append([patient_name, patient_label, data.astype(float), mask])
         else:
             for patient_name, patient_label in self.sample_to_labels.items():
                 idx_views_combinations = []
                 for pos in range(2, self.number_of_views + 1): 
                     idx_views_combinations.extend(MultiomicDataset.rSubset(arr=np.arange(self.number_of_views), r=pos))
                 for comb in idx_views_combinations:
-                    data = np.zeros((len(comb), self.nb_features)) # nombre_views X nombre_features
+                    # data = np.zeros((len(comb), self.nb_features)) # nombre_views X nombre_features
+                    data = np.zeros((self.number_of_views, self.nb_features))
                     for idx in range(len(comb)): # equivalent à un vecteur allant de [0 à data.shape[0]]
                         try:
                             data[idx] = self.views[comb[idx]]['data'][self.views[comb[idx]]['patient_names'].get(patient_name, 0)]
                         except ValueError:
                             data[idx][:self.views[comb[idx]]['data'][self.views[comb[idx]]['patient_names'].get(patient_name, 0)].shape[0]] = self.views[comb[idx]]['data'][self.views[comb[idx]]['patient_names'].get(patient_name, 0)]
-                    mask = np.array([(patient_name in self.views[comb[idx]]['patient_names']) for idx in range(len(comb))])
+                    mask = np.array([(patient_name in view['patient_names']) for view in self.views])
+                    # mask = np.array([(patient_name in self.views[comb[idx]]['patient_names']) for idx in range(len(comb))])
                     # assert len(mask) == data.shape[0], 'Something went wrong with the mask size and the inner data.shape'
-                    data_list.append((patient_name, patient_label, data.astype(float), mask))
+                    data_list.append([patient_name, patient_label, data.astype(float), mask])
         return data_list
     
     def __getitem__(self, idx):
-        # return self.all_data_combination[idx][2:], self.all_data_combination[idx][1] 
-        return (self.all_data_combination[idx][2], self.all_data_combination[idx][3]), self.all_data_combination[idx][1] 
-        # on veut juste le dataset et le mask (pas besoin du nom du patient), et le label du patient
-        # return (data.astype(float), mask), patient_label
+        data = np.asarray(self.all_data_combination[idx][2])
+        mask = np.asarray(self.all_data_combination[idx][3])
+        patient_label = self.all_data_combination[idx][1]
+        return (data, mask), patient_label
         
     def __len__(self):
         # return len(self.all_patient_names)
@@ -474,6 +476,14 @@ def multiomic_dataset_builder(dataset, test_size=0.2, valid_size=0.1):
     test_dataset = Subset(dataset, indices=X_test_indices)
     valid_dataset =  Subset(dataset, indices=X_valid_indices)
     return train_dataset, test_dataset, valid_dataset
+
+def multiomic_dataset_loader(dataset, batch_size=32, nb_cpus=2):
+    n = len(dataset)
+    idx = np.arange(n)
+    data_sampler = SubsetRandomSampler(idx)
+    data_loader = DataLoader(dataset, batch_size=batch_size, sampler=data_sampler, num_workers=nb_cpus)
+    return data_loader
+
 
     # TODO: ORIGINAL TO NOT DELETE 
     # def __getitem__(self, idx): 
@@ -523,13 +533,3 @@ def multiomic_dataset_builder(dataset, test_size=0.2, valid_size=0.1):
 #     test_dataset = Subset(dataset, indices=X_test)
 #     valid_dataset =  Subset(dataset, indices=X_valid)
 #     return train_dataset, test_dataset, valid_dataset
-
-
-
-def multiomic_dataset_loader(dataset, batch_size=32, nb_cpus=2):
-    n = len(dataset)
-    idx = np.arange(n)
-    data_sampler = SubsetRandomSampler(idx)
-    data_loader = DataLoader(dataset, batch_size=batch_size, sampler=data_sampler, num_workers=nb_cpus)
-    return data_loader
-
