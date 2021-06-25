@@ -235,7 +235,7 @@ class MultiomicDataset(Dataset):
             FichierPath.methyl450_file = FichierPath10K.methyl450_file
             FichierPath.mirna_file = FichierPath10K.mirna_file
             FichierPath.rna_iso_file = FichierPath10K.rna_iso_file
-        if data_size not in [2000, 5000, 10000]: raise ValueError(f'the data size {data_size} is not available in the dataset')
+        if data_size not in [743, 2000, 5000, 10000]: raise ValueError(f'the data size {data_size} is not available in the dataset')
         if views_to_consider == 'all':
             if complete_dataset:
                 self.views = [
