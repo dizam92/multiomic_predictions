@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH --gres=gpu:v100:1
 #SBATCH --cpus-per-task=3
-#SBATCH --mem=8G
+#SBATCH --mem=32G
 #SBATCH --account=rrg-corbeilj-ac
 #SBATCH --mail-user=mazid-abiodoun.osseni.1@ulaval.ca
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
-#SBATCH --time=5:00:00
+#SBATCH --time=20:00:00
 
 date
 SECONDS=0
