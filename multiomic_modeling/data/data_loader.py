@@ -266,7 +266,8 @@ class MultiomicDataset(Dataset):
             raise ValueError(f'The view {views_to_consider} is not available in the dataset')
         self.all_patient_names = np.asarray(list(self.sample_to_labels.keys()))
         self.all_patient_labels = np.asarray(list(self.sample_to_labels.values()))
-        self.all_patient_labels = LabelEncoder().fit_transform(self.all_patient_labels)
+        self.label_encoder = LabelEncoder() # i will need this to inverse_tranform afterward i think for the analysis downstream
+        self.all_patient_labels = self.label_encoder.fit_transform(self.all_patient_labels)
         self.class_weights = class_weight.compute_class_weight('balanced',
                                                  np.unique(self.all_patient_labels),
                                                  self.all_patient_labels) #pylint deconne sinon pas d'erreurs
