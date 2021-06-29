@@ -7,12 +7,12 @@
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
-#SBATCH --time=20:00:00
+#SBATCH --time=25:00:00
 
 date
 SECONDS=0
 which python
-python3 /home/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/models/models_optuna_version.py --d_input_enc 743 --dataset_views_to_consider mirna --output_path /home/maoss2/scratch/optuna_test_output_mirna --data_size 743 --db_name experiment_cnv_data_743 --study_name experiment_cnv_data_743
+python3 /home/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/models/models_optuna_version.py --d_input_enc 743 --dataset_views_to_consider mirna --output_path /home/maoss2/scratch/optuna_test_output_mirna --data_size 743 --db_name experiment_mirna_data_743 --study_name experiment_cnv_data_743
 diff=$SECONDS
 echo "$(($diff / 60)) minutes and $(($diff % 60)) seconds elapsed."
 date

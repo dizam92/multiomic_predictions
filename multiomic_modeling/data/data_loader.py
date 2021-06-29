@@ -120,6 +120,101 @@ patients_with_one_view_file = read_file_txt(FichierPath.patients_with_one_view_f
 patients_with_two_or_more_views_file = read_file_txt(FichierPath.patients_with_two_or_more_views_file)
 patients_with_all_4_views_available_file = read_file_txt(FichierPath.patients_with_all_4_views_available_file)
 
+class BuildViews(object):
+    def __init__(self, data_size, view_name):
+        super(BuildViews, self).__init__()
+        if data_size == 2000: pass
+        if data_size == 5000:
+            FichierPath.cnv_file = FichierPath5K.cnv_file
+            FichierPath.methyl450_file = FichierPath5K.methyl450_file
+            FichierPath.mirna_file = FichierPath5K.mirna_file
+            FichierPath.rna_iso_file = FichierPath5K.rna_iso_file
+        if data_size == 10000:
+            FichierPath.cnv_file = FichierPath10K.cnv_file
+            FichierPath.methyl450_file = FichierPath10K.methyl450_file
+            FichierPath.mirna_file = FichierPath10K.mirna_file
+            FichierPath.rna_iso_file = FichierPath10K.rna_iso_file
+        if data_size not in [743, 2000, 5000, 10000]: raise ValueError(f'the data size {data_size} is not available in the dataset')
+        if view_name == 'all':
+            self.views = [
+                read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
+                read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
+                read_h5py(fichier=FichierPath.mirna_file, normalization=True),
+                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+            ]
+        elif view_name == 'cnv':
+            self.views = [
+                read_h5py(fichier=FichierPath.cnv_file, normalization=False)
+            ]
+        elif view_name == 'methyl':
+            self.views = [
+                read_h5py(fichier=FichierPath.methyl450_file, normalization=False)
+            ]
+        elif view_name == 'mirna':
+            self.views = [
+                read_h5py(fichier=FichierPath.mirna_file, normalization=True)
+            ]
+        elif view_name == 'rna_iso':
+            self.views = [
+                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+            ]
+        elif view_name == 'cnv_methyl_rna':
+            self.views = [
+                    read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
+                    read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
+                    read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+                ]
+        elif view_name == 'cnv_methyl_mirna':
+             self.views = [
+                    read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
+                    read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
+                    read_h5py(fichier=FichierPath.mirna_file, normalization=True)
+                ]
+        elif view_name == 'methyl_mirna_rna':
+            self.views = [
+                read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
+                read_h5py(fichier=FichierPath.mirna_file, normalization=True),
+                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+            ]
+        elif view_name == 'cnv_mirna_rna':
+            self.views = [
+                read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
+                read_h5py(fichier=FichierPath.mirna_file, normalization=True),
+                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+            ]
+        elif view_name == 'cnv_mirna':
+            self.views = [
+                read_h5py(fichier=FichierPath.cnv_file, normalization=False),
+                read_h5py(fichier=FichierPath.mirna_file, normalization=True)
+            ]
+        elif view_name == 'cnv_rna':
+            self.views = [
+                read_h5py(fichier=FichierPath.cnv_file, normalization=False),
+                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+            ]
+        elif view_name == 'cnv_methyl':
+            self.views = [
+                read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
+                read_h5py(fichier=FichierPath.methyl450_file, normalization=False)
+            ]
+        elif view_name == 'mirna_rna':
+            self.views = [
+                read_h5py(fichier=FichierPath.mirna_file, normalization=True),
+                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+            ]
+        elif view_name == 'methyl_mirna':
+            self.views = [
+                read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
+                read_h5py(fichier=FichierPath.mirna_file, normalization=True)
+            ]
+        elif view_name == 'methyl_rna':
+            self.views = [
+                read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
+                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+            ]
+        else:
+            raise ValueError(f'The view {view_name} is not available in the dataset')
+        
 class MultiomicDataset(Dataset):
     def __init__(self, data_size=2000, views_to_consider='all'):
         super(MultiomicDataset, self).__init__()
@@ -138,105 +233,7 @@ class MultiomicDataset(Dataset):
             type_of_model: mlp or transformer (impact the get function to have it concatenated or not)
             complete_dataset: to load the original view (complete version) or the selected features version
         """
-        if data_size == 2000: pass
-        if data_size == 5000:
-            FichierPath.cnv_file = FichierPath5K.cnv_file
-            FichierPath.methyl450_file = FichierPath5K.methyl450_file
-            FichierPath.mirna_file = FichierPath5K.mirna_file
-            FichierPath.rna_iso_file = FichierPath5K.rna_iso_file
-        if data_size == 10000:
-            FichierPath.cnv_file = FichierPath10K.cnv_file
-            FichierPath.methyl450_file = FichierPath10K.methyl450_file
-            FichierPath.mirna_file = FichierPath10K.mirna_file
-            FichierPath.rna_iso_file = FichierPath10K.rna_iso_file
-        if data_size not in [743, 2000, 5000, 10000]: raise ValueError(f'the data size {data_size} is not available in the dataset')
-        if views_to_consider == 'all':
-            if complete_dataset:
-                self.views = [
-                read_h5py_all_data(fichier=FichierPathCompleteDataset.cnv_file, normalization=False), 
-                read_h5py_all_data(fichier=FichierPathCompleteDataset.methyl450_file, normalization=False),
-                read_h5py_all_data(fichier=FichierPathCompleteDataset.mirna_file, normalization=True),
-                read_h5py_all_data(fichier=FichierPathCompleteDataset.rna_iso_file, normalization=True)
-            ]
-            else:
-                self.views = [
-                    read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
-                    read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
-                    read_h5py(fichier=FichierPath.mirna_file, normalization=True),
-                    read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
-                ]
-        elif views_to_consider == 'cnv':
-            self.views = [
-                read_h5py(fichier=FichierPath.cnv_file, normalization=False)
-            ]
-        elif views_to_consider == 'methyl':
-            self.views = [
-                read_h5py(fichier=FichierPath.methyl450_file, normalization=False)
-            ]
-        elif views_to_consider == 'mirna':
-            self.views = [
-                read_h5py(fichier=FichierPath.mirna_file, normalization=True)
-            ]
-        elif views_to_consider == 'rna_iso':
-            self.views = [
-                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
-            ]
-        elif views_to_consider == 'cnv_methyl_rna':
-            self.views = [
-                    read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
-                    read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
-                    read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
-                ]
-        elif views_to_consider == 'cnv_methyl_mirna':
-             self.views = [
-                    read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
-                    read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
-                    read_h5py(fichier=FichierPath.mirna_file, normalization=True)
-                ]
-        elif views_to_consider == 'methyl_mirna_rna':
-            self.views = [
-                read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
-                read_h5py(fichier=FichierPath.mirna_file, normalization=True),
-                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
-            ]
-        elif views_to_consider == 'cnv_mirna_rna':
-            self.views = [
-                read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
-                read_h5py(fichier=FichierPath.mirna_file, normalization=True),
-                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
-            ]
-        elif views_to_consider == 'cnv_mirna':
-            self.views = [
-                read_h5py(fichier=FichierPath.cnv_file, normalization=False),
-                read_h5py(fichier=FichierPath.mirna_file, normalization=True)
-            ]
-        elif views_to_consider == 'cnv_rna':
-            self.views = [
-                read_h5py(fichier=FichierPath.cnv_file, normalization=False),
-                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
-            ]
-        elif views_to_consider == 'cnv_methyl':
-            self.views = [
-                read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
-                read_h5py(fichier=FichierPath.methyl450_file, normalization=False)
-            ]
-        elif views_to_consider == 'mirna_rna':
-            self.views = [
-                read_h5py(fichier=FichierPath.mirna_file, normalization=True),
-                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
-            ]
-        elif views_to_consider == 'methyl_mirna':
-            self.views = [
-                read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
-                read_h5py(fichier=FichierPath.mirna_file, normalization=True)
-            ]
-        elif views_to_consider == 'methyl_rna':
-            self.views = [
-                read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
-                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
-            ]
-        else:
-            raise ValueError(f'The view {views_to_consider} is not available in the dataset')
+        self.views = BuildViews(data_size=data_size, view_name=views_to_consider).views
         if views_to_consider == 'mirna': self.nb_features = data_size
         else: self.nb_features = np.max([view['data'].shape[1] for view in self.views])
         self.feature_names  = []

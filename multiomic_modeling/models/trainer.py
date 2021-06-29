@@ -149,7 +149,7 @@ class MultiomicTrainer(BaseTrainer):
         fit_params.update(output_path=out_prefix, artifact_dir=out_prefix)
         with open(os.path.join(out_prefix, 'config.json'), 'w') as fd:
             json.dump(all_params, fd, sort_keys=True, indent=2)
-        # data_size = 2000; dataset_views_to_consider = 'all'; type_of_model='transformer'; complete_dataset=False
+        # data_size = 2000; dataset_views_to_consider = 'all'
         dataset = MultiomicDataset(data_size=data_size, views_to_consider=dataset_views_to_consider)
         train, test, valid = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1) # j'avais train, valid, test avant c'est pour ca on avait juste 815 en test (ce qui devait etre le valid set)
         logger.info("Training")
