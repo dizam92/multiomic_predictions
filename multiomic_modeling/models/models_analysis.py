@@ -102,7 +102,7 @@ def plot_attentions_weights_per_batch(batch_weights, output_path='./',bidir_op="
     plt.close(fig)
 
 def main_plot(config_file, output_path='./', data_size=2000):
-    dataset = MultiomicDataset(data_size=int(data_size), views_to_consider='all', type_of_model='transformer', complete_dataset=False)
+    dataset = MultiomicDataset(data_size=int(data_size), views_to_consider='all')
     _, test, _ = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
     test_data_loader =  multiomic_dataset_loader(dataset=test, batch_size=32, nb_cpus=2)
     with open(config_file, 'r') as f:
@@ -124,7 +124,7 @@ def test_trainer_models_on_different_views(config_file, data_size=2000, save_fil
                               'methyl_mirna_rna', 'cnv_mirna_rna', 'cnv_mirna', 'cnv_rna', 'cnv_methyl', 'mirna_rna', 'methyl_mirna', 'methyl_rna'
                               ] # mirna match pas a cause de la taille du dataset (on doit probablement pad les 743 pour atteindre les 2000/5000/10000)
     for views_to_consider in views_to_consider_list:
-        dataset = MultiomicDataset(data_size=int(data_size), views_to_consider=views_to_consider, type_of_model='transformer', complete_dataset=False)
+        dataset = MultiomicDataset(data_size=int(data_size), views_to_consider=views_to_consider)
         _, test, _ = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
         test_data_loader =  multiomic_dataset_loader(dataset=test, batch_size=32, nb_cpus=2)
         with open(config_file, 'r') as f:
@@ -161,24 +161,3 @@ if __name__ == "__main__":
     test_trainer_models_on_different_views(config_file=args.config_file, data_size=args.data_size, save_file_name='naive_scores')
     # A zero exit code causes the job to be marked a Succeeded.
     sys.exit(0)
-
-
-
-
-# transposer dimension 1/0
-# l'idee est de faire la somme a travers tous les layers (bon j'ai vu on pouvais aussi generer par layer huh)
-# weights doit etre sum sur tous les layers de l'attention (donc weight c'est matrice carré 4 * 4)
-# def draw_reactants_5(weights, bidir_op="sum"):
-#     # ws = (weights - weights.min(keepdims=True)) / ((weights.max(keepdims=True) - weights.min(keepdims=True)) + 1e-8)
-#     # ws = (ws + ws.transpose())  if bidir_op == "sum" else (ws * ws.transpose())
-#     ws = (weights - weights.min()) / ((weights.max() - weights.min()) + 1e-8)
-#     ws = (ws + ws.T)  if bidir_op == "sum" else (ws * ws.T)
-#     atom_ws = ws.sum(-1)
-#     # afficher ici comme une matrice et mettre le nom des collones et des vues
-#     ws[ws < (np.mean(ws) + 1.645 * np.std(ws))] = 0 # for 95%  do mean + 1.645*std
-#     atom_threshold = np.mean(atom_ws) + 1.645 * np.std(atom_ws)
-#     attention_plots = []
-#     for pos, idx in enumerate([i for i in np.argsort(atom_ws)[::-1] if atom_ws[i] > atom_threshold]):
-#         top_i = __draw_mol_with_att_highlights__(reactants, idx, ws[idx])
-#         attention_plots.append(top_i)
-#         __draw_rxn_from_imgs__([top_i], [product_image], directory + f"__top{pos+1}_attention.png")

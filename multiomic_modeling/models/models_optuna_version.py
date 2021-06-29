@@ -63,8 +63,6 @@ def objective(trial: optuna.trial.Trial, d_input_enc: int, dataset_views_to_cons
         "predict_params": predict_params,
         "data_size": int(data_size),
         "dataset_views_to_consider": dataset_views_to_consider,
-        "type_of_model": "transformer",
-        "complete_dataset": False,
         "seed": 42
     }
 
@@ -74,11 +72,6 @@ def objective(trial: optuna.trial.Trial, d_input_enc: int, dataset_views_to_cons
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Optuna version of Transformer model.")
-    # parser.add_argument(
-    #     "--pruning",  "-p", action="store_true",
-    #     help="Activate the pruning feature. `MedianPruner` stops unpromising "
-    #     "trials at the early stages of training.",
-    # )
     parser.add_argument('-d', '--d_input_enc', type=int, default=2000)
     parser.add_argument('-d_view', '--dataset_views_to_consider', type=str, default='all')
     parser.add_argument('-o', '--output_path', type=str, default='/home/maoss2/scratch/optuna_test_output_2000')

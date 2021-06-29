@@ -132,8 +132,7 @@ class MultiomicTrainer(BaseTrainer):
         return scores
     
     @staticmethod
-    def run_experiment(model_params, fit_params, predict_params, data_size, dataset_views_to_consider, type_of_model,
-                       complete_dataset, seed, output_path, outfmt_keys=None, **kwargs):
+    def run_experiment(model_params, fit_params, predict_params, data_size, dataset_views_to_consider, seed, output_path, outfmt_keys=None, **kwargs):
         all_params = locals()
         random.seed(seed)
         np.random.seed(seed)
@@ -151,10 +150,7 @@ class MultiomicTrainer(BaseTrainer):
         with open(os.path.join(out_prefix, 'config.json'), 'w') as fd:
             json.dump(all_params, fd, sort_keys=True, indent=2)
         # data_size = 2000; dataset_views_to_consider = 'all'; type_of_model='transformer'; complete_dataset=False
-        dataset = MultiomicDataset(data_size=data_size,
-                                   views_to_consider=dataset_views_to_consider, 
-                                   type_of_model=type_of_model, 
-                                   complete_dataset=complete_dataset)
+        dataset = MultiomicDataset(data_size=data_size, views_to_consider=dataset_views_to_consider)
         train, test, valid = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1) # j'avais train, valid, test avant c'est pour ca on avait juste 815 en test (ce qui devait etre le valid set)
         logger.info("Training")
         model = MultiomicTrainer(Namespace(**model_params))
