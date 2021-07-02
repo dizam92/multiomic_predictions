@@ -214,6 +214,23 @@ class MultiomicTrainerMultiModal(MultiomicTrainer):
                 json.dump(clf_report, fd)
         return scores
     
+    def load_average_weights(self, file_paths) -> None:
+        state = {}
+        for file_path in file_paths:
+            state_new = MultiomicTrainerMultiModal.load_from_checkpoint(file_path, map_location=self.device).state_dict()
+            keys = state.keys()
+
+            if len(keys) == 0:
+                state = state_new
+            else:
+                for key in keys:
+                    state[key] += state_new[key]
+
+        num_weights = len(file_paths)
+        for key in state.keys():
+            state[key] = state[key] / num_weights
+        self.load_state_dict(state)
+        
     @staticmethod
     def run_experiment(model_params, fit_params, predict_params, data_size, dataset_views_to_consider, seed, output_path, outfmt_keys=None, **kwargs):
         all_params = locals()
