@@ -7,7 +7,7 @@ from argparse import Namespace
 import optuna
 from optuna.study import StudyDirection
 from packaging import version
-from multiomic_modeling.models.trainer import MultiomicPredictionModelMultiModal
+from multiomic_modeling.models.trainer import MultiomicTrainerMultiModal
 from multiomic_modeling.models.base import PatientPruner
 
 import pytorch_lightning as pl
@@ -66,7 +66,7 @@ def objective(trial: optuna.trial.Trial, d_input_enc: int, dataset_views_to_cons
         "seed": 42
     }
 
-    model = MultiomicPredictionModelMultiModal.run_experiment(**training_params, output_path=output_path)
+    model = MultiomicTrainerMultiModal.run_experiment(**training_params, output_path=output_path)
     return model.trainer.callback_metrics["val_multi_acc"].item()
 
 
