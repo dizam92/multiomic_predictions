@@ -15,7 +15,6 @@ class TorchSeqTransformerDecoder(nn.Module):
         self.d_ff = d_ff
         self.nb_classes = nb_classes
         self.n_heads = n_heads
-        self.d_ff = d_ff
         self.dropout = dropout
         self.n_layers = n_layers
         self.activation = activation
@@ -41,4 +40,40 @@ class TorchSeqTransformerDecoder(nn.Module):
             memory_key_padding_mask=enc_state.mask_padding_x,
         )
         x = self.output(x)[0]
+        return x
+    
+
+class TorchSeqTransformerDecoderViews(nn.Module):
+    def __init__(self, d_input, d_model=1024, d_ff=1024, n_heads=16, n_layers=2, dropout=0.1, activation="relu"): #dff = 4 * dmodel
+        super(TorchSeqTransformerDecoderViews, self).__init__()
+        self.d_model = d_model
+        self.d_ff = d_ff
+        self.d_input = d_input
+        self.n_heads = n_heads
+        self.dropout = dropout
+        self.n_layers = n_layers
+        self.activation = activation
+        
+        decoder_layer = nn.TransformerDecoderLayer(
+            self.d_model, self.n_heads, self.d_ff, self.dropout, self.activation
+        )
+        decoder_norm = nn.LayerNorm(d_model)
+        self.decoder = nn.TransformerDecoder(decoder_layer, self.n_layers, norm=decoder_norm)
+
+        self.output = nn.Linear(d_model, self.d_input)
+
+        init_params_xavier_uniform(self)
+        # init_params_xavier_normal(self)
+        
+    def forward(self, enc_state: EncoderState):
+        target = torch.zeros((4, enc_state.memory.shape[1], self.d_model), device=enc_state.memory.device)
+        
+        x = self.decoder(
+            target,
+            enc_state.memory,
+            memory_mask=enc_state.mask_x,
+            memory_key_padding_mask=enc_state.mask_padding_x,
+        )
+        # x = self.output(x)[0]
+        x = self.output(x)
         return x

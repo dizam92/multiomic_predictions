@@ -310,4 +310,4 @@ def multiomic_dataset_loader(dataset, batch_size=32, nb_cpus=2):
     idx = np.arange(n)
     data_sampler = SubsetRandomSampler(idx)
     data_loader = DataLoader(dataset, batch_size=batch_size, sampler=data_sampler, num_workers=nb_cpus)
-    return data_loader
+    return data_loader #next(iter(test_data))[0]

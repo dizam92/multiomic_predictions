@@ -12,7 +12,8 @@
 date
 SECONDS=0
 which python
-python3 /home/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/models/models_optuna_version.py --d_input_enc 10000 --dataset_views_to_consider all --output_path /home/maoss2/scratch/optuna_test_output_10000 --data_size 10000 --db_name experiment_all_data_10000 --study_name experiment_all_data_10000
+# python3 /home/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/models/models_optuna_version.py --d_input_enc 10000 --dataset_views_to_consider all --output_path /home/maoss2/scratch/optuna_test_output_10000 --data_size 10000 --db_name experiment_all_data_10000 --study_name experiment_all_data_10000
+python3 /home/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/models/models_optuna_version_multimodal.py --d_input_enc 10000 --dataset_views_to_consider all --output_path /home/maoss2/scratch/optuna_multimodal_test_output_10000 --data_size 10000 --db_name experiment_all_data_10000 --study_name experiment_all_data_10000
 diff=$SECONDS
 echo "$(($diff / 60)) minutes and $(($diff % 60)) seconds elapsed."
 date
