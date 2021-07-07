@@ -101,7 +101,7 @@ def plot_attentions_weights_per_batch(batch_weights, output_path='./',bidir_op="
     fig.savefig(f'{output_path}/{fig_name}_{batch_number}.pdf')
     plt.close(fig)
 
-def main_plot(config_file, output_path='./', data_size=2000):
+def main_plot(config_file, algo_type='normal', output_path='./', data_size=2000):
     dataset = MultiomicDataset(data_size=int(data_size), views_to_consider='all')
     _, test, _ = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
     test_data_loader =  multiomic_dataset_loader(dataset=test, batch_size=32, nb_cpus=2)
@@ -110,7 +110,9 @@ def main_plot(config_file, output_path='./', data_size=2000):
     random.seed(all_params['seed'])
     np.random.seed(all_params['seed'])
     torch.manual_seed(all_params['seed'])
-    trainer_model = MultiomicTrainer(Namespace(**all_params['model_params']))
+    if algo_type == 'normal': trainer_model = MultiomicTrainer(Namespace(**all_params['model_params']))
+    elif algo_type == 'multimodla' : trainer_model = MultiomicTrainerMultiModal(Namespace(**all_params['model_params']))
+    else: raise f'The algotype: {algo_type} is not implemented'    
     for idx, test_data in enumerate(iter(test_data_loader)):
         # batch_examples = next(iter(test_data))[0]
         batch_examples = test_data[0]
@@ -119,12 +121,15 @@ def main_plot(config_file, output_path='./', data_size=2000):
         plot_attentions_weights_per_batch(batch_weights=batch_examples_weigths, output_path=output_path, 
                                           bidir_op="sum", fig_name='batch_', batch_number=idx)
 
-def test_trainer_models_on_different_views(config_file, data_size=2000, save_file_name='naive_scores'):
-    views_to_consider_list = [ 'all', 'cnv', 'methyl', 'rna_iso', 'cnv_methyl_rna', 'cnv_methyl_mirna', 
-                              'methyl_mirna_rna', 'cnv_mirna_rna', 'cnv_mirna', 'cnv_rna', 'cnv_methyl', 'mirna_rna', 'methyl_mirna', 'methyl_rna'
-                              ] # mirna match pas a cause de la taille du dataset (on doit probablement pad les 743 pour atteindre les 2000/5000/10000)
+def test_trainer_models_on_different_views(config_file, algo_type='normal', data_size=2000, save_file_name='naive_scores'):
+    # views_to_consider_list = ['all', 'cnv', 'methyl', 'rna_iso', 'cnv_methyl_rna', 'cnv_methyl_mirna', 
+    #                           'methyl_mirna_rna', 'cnv_mirna_rna', 'cnv_mirna', 'cnv_rna', 'cnv_methyl', 
+    #                           'mirna_rna', 'methyl_mirna', 'methyl_rna'
+    #                           ] # mirna match pas a cause de la taille du dataset (on doit probablement pad les 743 pour atteindre les 2000/5000/10000)
+    views_to_consider_list = ['all', 'cnv', 'methyl', 'rna_iso', 'mirna'] 
     for views_to_consider in views_to_consider_list:
-        dataset = MultiomicDataset(data_size=int(data_size), views_to_consider=views_to_consider)
+        if views_to_consider == 'mirna': dataset = MultiomicDataset(data_size=743, views_to_consider=views_to_consider)
+        else: dataset = MultiomicDataset(data_size=int(data_size), views_to_consider=views_to_consider)
         _, test, _ = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
         test_data_loader =  multiomic_dataset_loader(dataset=test, batch_size=32, nb_cpus=2)
         with open(config_file, 'r') as f:
@@ -132,14 +137,29 @@ def test_trainer_models_on_different_views(config_file, data_size=2000, save_fil
         random.seed(all_params['seed'])
         np.random.seed(all_params['seed'])
         torch.manual_seed(all_params['seed'])
-        trainer_model = MultiomicTrainer(Namespace(**all_params['model_params']))
+        if algo_type == 'normal': trainer_model = MultiomicTrainer(Namespace(**all_params['model_params']))
+        elif algo_type == 'multimodal' : trainer_model = MultiomicTrainerMultiModal(Namespace(**all_params['model_params']))
+        else: raise f'The algotype: {algo_type} is not implemented'
         # scores_fname = os.path.join(all_params['fit_params']['output_path'], all_params['predict_params'].get('scores_fname', "naive_scores.txt"))
         scores_fname = os.path.join(all_params['fit_params']['output_path'], f'{save_file_name}_{views_to_consider}.txt')
         scores = trainer_model.score(dataset=test, artifact_dir=all_params['fit_params']['output_path'], nb_ckpts=all_params['predict_params'].get('nb_ckpts', 1), scores_fname=scores_fname)    
 
-best_config_file_path_2000 = '/home/maoss2/scratch/optuna_test_output_2000/0d5978314e7252b03bbd8515afa42b7c8c1621fc/config.json'
-best_config_file_path_5000 = '/home/maoss2/scratch/optuna_test_output_5000/7ba5aef75ab91cd2d985129435911522df496730/config.json'
-best_config_file_path_10000 = '/home/maoss2/scratch/optuna_test_output_10000/5e5bccac73c3be92f11dd69011a15f2a4df03ca4/config.json'
+best_config_file_path_all_2000_data = '/home/maoss2/scratch/previous_results/optuna_test_output_2000/0d5978314e7252b03bbd8515afa42b7c8c1621fc/config.json'
+best_config_file_path_all_5000_data = '/home/maoss2/scratch/previous_results/optuna_test_output_5000/7ba5aef75ab91cd2d985129435911522df496730/config.json'
+best_config_file_path_all_10000_data = '/home/maoss2/scratch/previous_results/optuna_test_output_10000/5e5bccac73c3be92f11dd69011a15f2a4df03ca4/config.json'
+
+best_config_file_path_all_2000_data_augmentation = '/home/maoss2/scratch/optuna_data_augmentation_test_output_2000/f3af0f144fd1e2afee48276156d57d3f85703384/config.json'
+best_config_file_path_all_5000_data_augmentation = '/home/maoss2/scratch/optuna_data_augmentation_test_output_5000/cbd211752368f75fc6cf2984bd9dd3474c25929a/config.json'
+best_config_file_path_all_10000_data_augmentation = '/home/maoss2/scratch/optuna_data_augmentation_test_output_10000/2a8d6486786b0776edcad273876d96e22968ead3/config.json'
+
+best_config_file_path_all_2000_data_augmentation_multimodal = '/home/maoss2/scratch/optuna_multimodal_test_output_2000/46ab0c165431876b737d36804bb926e834801517/config.json'
+best_config_file_path_all_5000_data_augmentation_multimodal = '/home/maoss2/scratch/optuna_multimodal_test_output_2000/2bbf7f409f49bc0abacb7838cd5516dcc52d65f0/config.json'
+best_config_file_path_all_10000_data_augmentation_multimodal = '/home/maoss2/scratch/optuna_multimodal_test_output_2000/76c336aee9bdeee6ca988f31124e75b21a8f0715/config.json'
+
+best_config_file_path_cnv_2000 = '/home/maoss2/scratch/optuna_test_output_cnv/8c16f093126f68ffa4816991113ffbd21a8b54f8/config.json'
+best_config_file_path_methyl_2000 = '/home/maoss2/scratch/optuna_test_output_methyl/dec24f31fbfb218043e2fb94071cdf4705b87242/config.json'
+best_config_file_path_mirna_2000 = '/home/maoss2/scratch/optuna_test_output_mirna/360c29ed6981010e0aab7607c35f20df90199524/config.json'
+best_config_file_path_rna_iso_2000 = '/home/maoss2/scratch/optuna_test_output_rna_iso/0474d2129f9fe1667a427d16aadd7fd21a8b2cb9/config.json'
 
 # main_plot(config_file=best_config_file_path_2000, output_path='/home/maoss2/scratch/optuna_test_output_2000/0d5978314e7252b03bbd8515afa42b7c8c1621fc', data_size=2000)
 # main_plot(config_file=best_config_file_path_5000, output_path='/home/maoss2/scratch/optuna_test_output_5000/7ba5aef75ab91cd2d985129435911522df496730', data_size=5000)
