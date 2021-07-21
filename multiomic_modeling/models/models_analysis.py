@@ -70,49 +70,14 @@ def get_attention_weights(trainer, inputs_list):
     # print(len(res))
     return torch.stack(res, dim=0) # return [number_of_layer * batch_size * number_of_views * number_of_views]
 
-def plot_attentions_weights_per_batch(batch_weights, output_path='./', bidir_op="sum", fig_name='batch_'):
-    list_ws = []
-    for i in range(batch_weights.shape[0]): # la derniere batch est en mode 20 * 4 *4 donc ca plante mais bon on verra ca apres
-        weights = batch_weights[i]
-        ws = (weights - weights.min()) / ((weights.max() - weights.min()) + 1e-8)
-        ws = (ws + ws.T)  if bidir_op == "sum" else (ws * ws.T)
-        ws[ws < (torch.mean(ws) + 1.645 * torch.std(ws))] = 0 # for 95%  do mean + 1.645*std # pk 1.645???
-        list_ws.append(ws)
-        
-        # faire lla moyenne sur tous les patients par type de cancer et enlever le filtering de zero
-    
-    columns_names = ['cnv', 'methyl_450', 'mirna', 'rna_iso'] # 4 views c'est pour ca
-    total_number = batch_weights.shape[0]
-    cpt = 0
-    while total_number >= 4:
-        i_range = 2; j_range = 2
-        fig, axes = plt.subplots(nrows=i_range, ncols=j_range, figsize=(11.69, 8.27))
-        sub_list = list_ws[:4]
-        list_ws = list(set(list_ws) - set(sub_list))
-        ws_arrays = np.asanyarray(sub_list).reshape(i_range, j_range)
-        for i in range(i_range):
-            for j in range(j_range): 
-                sns.heatmap(to_numpy(ws_arrays[i,j]), vmin=0, vmax=1, annot=True, linewidths=0.1, 
-                            xticklabels=columns_names, yticklabels=columns_names, ax=axes[i, j])
-        fig.savefig(f'{output_path}/{fig_name}_batch_{cpt}.pdf')
-        plt.close(fig)
-        cpt += 1
-        total_number -= 4        
-    if total_number != 0:
-        if total_number == 1:
-            fig, axes = plt.subplots(figsize=(11.69, 8.27))
-            sns.heatmap(to_numpy(list_ws[0]), vmin=0, vmax=1, annot=True, linewidths=0.1, 
-                            xticklabels=columns_names, yticklabels=columns_names)
-            fig.savefig(f'{output_path}/{fig_name}_batch_{cpt}.pdf')
-            plt.close(fig)
-        else: 
-            j_range = total_number
-            fig, axes = plt.subplots(nrows=j_range, figsize=(11.69, 8.27))
-            for j in range(j_range):
-                sns.heatmap(to_numpy(list_ws[j]), vmin=0, vmax=1, annot=True, linewidths=0.1, 
-                            xticklabels=columns_names, yticklabels=columns_names, ax=axes[j])
-            fig.savefig(f'{output_path}/{fig_name}_batch_{cpt}.pdf')
-            plt.close(fig)
+def plot_attentions_weights_per_batch(batch_weights, output_path='./', fig_name='batch_'):
+    final_array = to_numpy(torch.nn.functional.softmax(batch_weights * 100, dim=-1).mean(dim=0))
+    columns_names = ['cnv', 'methyl_450', 'mirna', 'rna_iso']
+    fig, axes = plt.subplots(figsize=(11.69, 8.27))
+    sns.heatmap(final_array, vmin=0, vmax=1, annot=True, linewidths=0.1, 
+                    xticklabels=columns_names, yticklabels=columns_names)
+    fig.savefig(f'{output_path}/new_plot_{fig_name}.pdf')
+    plt.close(fig)
     
 def build_examples_per_cancer(data_size=2000):
     dataset = MultiomicDataset(data_size=int(data_size), views_to_consider='all')
@@ -142,11 +107,11 @@ def main_plot(config_file, algo_type='normal', output_path='./', data_size=2000)
     for idx, cancer_list in enumerate(list_of_examples_per_cancer): 
         cancer_name = list_of_cancer_names[idx]
         attention_weights_per_layer_for_cancer_list = get_attention_weights(trainer=trainer_model, inputs_list=cancer_list)
-        batch_examples_weigths_for_cancer_list = torch.sum(attention_weights_per_layer_for_cancer_list, dim=0) # matrice [len(cancer_list) * 4 * 4]
+        batch_examples_weigths_for_cancer_list = torch.mean(attention_weights_per_layer_for_cancer_list, dim=0) # matrice [len(cancer_list) * 4 * 4]
         print(cancer_name)
         print(batch_examples_weigths_for_cancer_list.shape)
         plot_attentions_weights_per_batch(batch_weights=batch_examples_weigths_for_cancer_list, 
-                                          output_path=output_path, bidir_op="sum", fig_name=cancer_name,)
+                                          output_path=output_path, fig_name=cancer_name,)
         
 def test_trainer_models_on_different_views(config_file, algo_type='normal', data_size=2000, save_file_name='naive_scores'):
     # views_to_consider_list = ['all', 'cnv', 'methyl', 'rna_iso', 'cnv_methyl_rna', 'cnv_methyl_mirna', 
