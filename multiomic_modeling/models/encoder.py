@@ -9,7 +9,7 @@ logger = logging.create_logger(__name__)
 
 
 class TorchSeqTransformerEncoder(nn.Module):
-    def __init__(self, d_input, d_model=1024, d_ff=1024, n_heads=16, n_layers=2, dropout=0.1):
+    def __init__(self, d_input, original_mask=False, d_model=1024, d_ff=1024, n_heads=16, n_layers=2, dropout=0.1):
         super(TorchSeqTransformerEncoder, self).__init__()
         self.d_input = d_input
         self.d_model = d_model
@@ -19,7 +19,8 @@ class TorchSeqTransformerEncoder(nn.Module):
         self.n_layers = n_layers
         self.pos_encoding = PositionalEncoding(d_model, dropout)
         self.embedding = nn.Linear(self.d_input, self.d_model)
-
+        self.original_mask = original_mask
+        
         encoder_layer = nn.TransformerEncoderLayer(self.d_model, self.n_heads, self.d_ff, self.dropout, activation="relu")
         encoder_norm = nn.LayerNorm(d_model)
         self.net = nn.TransformerEncoder(encoder_layer, self.n_layers, encoder_norm)
@@ -28,7 +29,8 @@ class TorchSeqTransformerEncoder(nn.Module):
         # init_params_xavier_normal(self)
 
     def forward(self, inputs) -> EncoderState:
-        mask_padding_x = ~inputs[1]
+        if self.original_mask: mask_padding_x = ~inputs[2]
+        else: mask_padding_x = ~inputs[1]
         inputs = inputs[0].float()
         
         x = self.embedding(inputs)

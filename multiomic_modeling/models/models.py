@@ -6,10 +6,10 @@ import numpy as np
 from multiomic_modeling.torch_utils import to_numpy
 torch.autograd.set_detect_anomaly(True)
 class MultiomicPredictionModel(Model):
-    def __init__(self, d_input_enc, nb_classes_dec, class_weights, d_model_enc_dec=1024, d_ff_enc_dec=1024, 
+    def __init__(self, d_input_enc, nb_classes_dec, class_weights, original_mask=False, d_model_enc_dec=1024, d_ff_enc_dec=1024, 
                  n_heads_enc_dec=16, n_layers_enc=2, n_layers_dec=2, activation="relu", dropout=0.1, loss: str = 'ce'):
         super(MultiomicPredictionModel, self).__init__()
-        self.encoder = TorchSeqTransformerEncoder(d_input=d_input_enc, d_model=d_model_enc_dec, d_ff=d_ff_enc_dec, 
+        self.encoder = TorchSeqTransformerEncoder(d_input=d_input_enc, original_mask=original_mask, d_model=d_model_enc_dec, d_ff=d_ff_enc_dec, 
                                                   n_heads=n_heads_enc_dec, n_layers=n_layers_enc, dropout=dropout)
         self.decoder = TorchSeqTransformerDecoder(nb_classes=nb_classes_dec, d_model=d_model_enc_dec, d_ff=d_ff_enc_dec, 
                                                   n_heads=n_heads_enc_dec, n_layers=n_layers_dec, dropout=dropout, activation=activation)
@@ -47,10 +47,10 @@ class MultiomicPredictionModel(Model):
     
 torch.autograd.set_detect_anomaly(True)
 class MultiomicPredictionModelMultiModal(Model):
-    def __init__(self, d_input_enc, nb_classes_dec, class_weights, d_model_enc_dec=1024, d_ff_enc_dec=1024, 
+    def __init__(self, d_input_enc, nb_classes_dec, class_weights, original_mask=False, d_model_enc_dec=1024, d_ff_enc_dec=1024, 
                  n_heads_enc_dec=16, n_layers_enc=2, n_layers_dec=2, activation="relu", dropout=0.1, loss: str = 'ce', loss_views: str = 'mse'):
         super(MultiomicPredictionModelMultiModal, self).__init__()
-        self.encoder = TorchSeqTransformerEncoder(d_input=d_input_enc, d_model=d_model_enc_dec, d_ff=d_ff_enc_dec, 
+        self.encoder = TorchSeqTransformerEncoder(d_input=d_input_enc, original_mask=original_mask, d_model=d_model_enc_dec, d_ff=d_ff_enc_dec, 
                                                   n_heads=n_heads_enc_dec, n_layers=n_layers_enc, dropout=dropout)
         self.decoder = TorchSeqTransformerDecoder(nb_classes=nb_classes_dec, d_model=d_model_enc_dec, d_ff=d_ff_enc_dec, 
                                                   n_heads=n_heads_enc_dec, n_layers=n_layers_dec, dropout=dropout, activation=activation)

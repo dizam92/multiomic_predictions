@@ -7,7 +7,7 @@ from argparse import Namespace
 import optuna
 from optuna.study import StudyDirection
 from packaging import version
-from multiomic_modeling.models.trainer import MultiomicTrainerMultiModal
+from multiomic_modeling.models.trainer import MultiomicTrainer
 from multiomic_modeling.models.base import PatientPruner
 
 import pytorch_lightning as pl
@@ -21,7 +21,7 @@ def objective(trial: optuna.trial.Trial, d_input_enc: int, dataset_views_to_cons
     """ Main fonction to poptimize with Optuna """
     model_params = {
         "d_input_enc": int(d_input_enc), 
-        "original_mask": False, 
+        "original_mask": True, 
         "lr": trial.suggest_float("lr", 1e-6, 1e-2, log=True),
         "nb_classes_dec": 33,
         "early_stopping": True,
@@ -67,7 +67,7 @@ def objective(trial: optuna.trial.Trial, d_input_enc: int, dataset_views_to_cons
         "seed": 42
     }
 
-    model = MultiomicTrainerMultiModal.run_experiment(**training_params, output_path=output_path)
+    model = MultiomicTrainer.run_experiment(**training_params, output_path=output_path)
     return model.trainer.callback_metrics["val_multi_acc"].item()
 
 

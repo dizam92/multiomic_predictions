@@ -178,7 +178,7 @@ class MultiomicTrainerMultiModal(MultiomicTrainer):
         prefix = 'train_' if train else 'val_'
         for key, value in loss_metrics.items():
             self.log(prefix+key, value, prog_bar=True)
-        return loss_metrics.get('combined_loss')
+        return loss_metrics.get('combined_loss') # pour afficher les 2 autres loss, peut etre les retourner toutes ici une à une
     
     def score(self, dataset: MultiomicDataset, artifact_dir=None, nb_ckpts=1, scores_fname=None):
         ckpt_path = os.path.join(artifact_dir, 'checkpoints')

@@ -21,17 +21,18 @@ def objective(trial: optuna.trial.Trial, d_input_enc: int, dataset_views_to_cons
     """ Main fonction to poptimize with Optuna """
     model_params = {
         "d_input_enc": int(d_input_enc), 
+        "original_mask": False, 
         "lr": trial.suggest_float("lr", 1e-6, 1e-2, log=True),
         "nb_classes_dec": 33,
         "early_stopping": True,
-        "dropout": trial.suggest_float("dropout", 0.1, 0.4), # 0.1, 0.5
-        "weight_decay": trial.suggest_float("weight_decay", 1e-8, 1e-3, log=True), # 1e-8, 1e-2
+        "dropout": trial.suggest_float("dropout", 0.1, 0.5), # 0.1, 0.5
+        "weight_decay": trial.suggest_float("weight_decay", 1e-8, 1e-2, log=True), # 1e-8, 1e-2
         "activation": "relu",
         "optimizer": "Adam",
         "lr_scheduler": "cosine_with_restarts",
         "loss": "ce",
         "n_epochs": 300,
-        "batch_size": trial.suggest_categorical("batch_size", [128, 256]), # [128, 256, 512]
+        "batch_size": trial.suggest_categorical("batch_size", [128, 256, 512]), # [128, 256, 512]
         "class_weights":[4.1472332 , 0.87510425, 0.30869373, 1.2229021 , 8.47878788,
             0.7000834 , 7.94886364, 1.87032086, 0.63379644, 0.63169777,
             4.19280719, 0.40417951, 1.08393595, 1.90772727, 0.72125795,
@@ -42,7 +43,7 @@ def objective(trial: optuna.trial.Trial, d_input_enc: int, dataset_views_to_cons
         "d_model_enc_dec": trial.suggest_categorical("d_model_enc_dec", [64, 128, 256, 512]), # [32, 64, 128, 256, 512]
         "n_heads_enc_dec": trial.suggest_categorical("n_heads_enc_dec", [8, 16]),
         "n_layers_enc": trial.suggest_categorical("n_layers_enc", [2, 4, 6, 8, 10, 12]), # [2, 4, 6, 8, 10, 12]
-        "n_layers_dec": trial.suggest_categorical("n_layers_dec", [1, 2, 4]) # [1, 2, 4, 6]
+        "n_layers_dec": trial.suggest_categorical("n_layers_dec", [1, 2, 4, 6]) # [1, 2, 4, 6]
     }
     d_ff_enc_dec_value = model_params["d_model_enc_dec"] * 4
     model_params["d_ff_enc_dec"] = d_ff_enc_dec_value
@@ -100,7 +101,7 @@ if __name__ == "__main__":
                                            args.dataset_views_to_consider, 
                                            args.data_size, 
                                            args.output_path), 
-                   n_trials=30, timeout=225000)
+                   n_trials=50, timeout=259200)
     
     print("Number of finished trials: {}".format(len(study.trials)))
 
