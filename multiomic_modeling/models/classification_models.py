@@ -144,16 +144,17 @@ def run_algo(data_size=2000, dataset_views_to_consider='all'):
     x_train, y_train, x_test, y_test, feature_names = reload_dataset(data_size=data_size, dataset_views_to_consider=dataset_views_to_consider) 
     dt_base_model = BaseAlgoTemplate(algo='tree')
     rf_base_model = BaseAlgoTemplate(algo='rf')
-    scm_base_model = BaseAlgoTemplate(algo='scm')
+    # scm_base_model = BaseAlgoTemplate(algo='scm')
     dt_base_model.learn(x_train=x_train, y_train=y_train,
                         x_test=x_test, y_test=y_test, 
                         feature_names=feature_names, saving_file=f'/home/maoss2/scratch/dt_{dataset_views_to_consider}_data_{data_size}_scores.pck')
     rf_base_model.learn(x_train=x_train, y_train=y_train, 
                         x_test=x_test, y_test=y_test, 
                         feature_names=feature_names, saving_file=f'/home/maoss2/scratch/rf_{dataset_views_to_consider}_data_{data_size}_scores.pck')
-    scm_base_model.learn(x_train=x_train, y_train=y_train, 
-                        x_test=x_test, y_test=y_test, 
-                        feature_names=feature_names, saving_file=f'/home/maoss2/scratch/scm_{dataset_views_to_consider}_data_{data_size}_scores.pck')
+    # TODO: SCM ne marche pas car classification multiclasse. C'est pour ca j'avais ignoré dans un premier temps. DU coup si tu ignores encore tu sais pour quoi.
+    # scm_base_model.learn(x_train=x_train, y_train=y_train, 
+    #                     x_test=x_test, y_test=y_test, 
+    #                     feature_names=feature_names, saving_file=f'/home/maoss2/scratch/scm_{dataset_views_to_consider}_data_{data_size}_scores.pck')
     
 if __name__ == "__main__":
     for view in ['cnv', 'methyl', 'mirna', 'rna_iso']:
