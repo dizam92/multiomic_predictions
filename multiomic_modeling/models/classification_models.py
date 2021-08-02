@@ -18,7 +18,7 @@ logging.getLogger('parso.python.diff').disabled = True
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 nb_jobs = 16
-cv_fold = KFold(n_splits=5, random_state=42)
+cv_fold = KFold(n_splits=5)
 
 parameters_dt = {'max_depth': np.arange(1, 5),  # Moins de profondeur pour toujours eviter l'overfitting
                  'min_samples_split': np.arange(2, 15),  # Eviter les small value pour eviter l'overfitting
@@ -122,40 +122,40 @@ def reload_dataset(data_size=2000, dataset_views_to_consider='all'):
     dataset = MultiomicDataset(data_size=data_size, views_to_consider=dataset_views_to_consider)
     train_dataset, test_dataset, valid_dataset = multiomic_dataset_builder(dataset, test_size=0.2, valid_size=0.1)
     train_loader = DataLoader(train_dataset, batch_size=len(train_dataset))
-    train_dataset_array = next(iter(train_loader))[0].numpy()
+    train_dataset_array = next(iter(train_loader))[0][0].numpy()
     train_dataset_array_labels = next(iter(train_loader))[1].numpy()
     
     test_loader = DataLoader(test_dataset, batch_size=len(test_dataset))
-    x_test = next(iter(test_loader))[0].numpy()
+    x_test = next(iter(test_loader))[0][0].numpy()
     y_test = next(iter(test_loader))[1].numpy()
     
     valid_loader = DataLoader(valid_dataset, batch_size=len(valid_dataset))
-    valid_dataset_array = next(iter(valid_loader))[0].numpy()
+    valid_dataset_array = next(iter(valid_loader))[0][0].numpy()
     valid_dataset_array_labels = next(iter(valid_loader))[1].numpy()
     
     x_train = np.vstack((train_dataset_array, valid_dataset_array))
     y_train = np.hstack((train_dataset_array_labels, valid_dataset_array_labels))
     
     feature_names = train_dataset.dataset.feature_names
-    
-    return x_train, y_train, x_test, y_test, feature_names
+    # they are 3D models so i have to reshape them!
+    return x_train[:,0,:], y_train, x_test[:,0,:], y_test, feature_names
        
-def run_algo(data_size=2000):
-    x_train, y_train, x_test, y_test, feature_names = reload_dataset(data_size=data_size, dataset_views_to_consider='all')
+def run_algo(data_size=2000, dataset_views_to_consider='all'):
+    x_train, y_train, x_test, y_test, feature_names = reload_dataset(data_size=data_size, dataset_views_to_consider=dataset_views_to_consider) 
     dt_base_model = BaseAlgoTemplate(algo='tree')
     rf_base_model = BaseAlgoTemplate(algo='rf')
     scm_base_model = BaseAlgoTemplate(algo='scm')
     dt_base_model.learn(x_train=x_train, y_train=y_train,
                         x_test=x_test, y_test=y_test, 
-                        feature_names=feature_names, saving_file=f'/home/maoss2/scratch/dt_all_data_{data_size}_scores.pck')
+                        feature_names=feature_names, saving_file=f'/home/maoss2/scratch/dt_{dataset_views_to_consider}_data_{data_size}_scores.pck')
     rf_base_model.learn(x_train=x_train, y_train=y_train, 
                         x_test=x_test, y_test=y_test, 
-                        feature_names=feature_names, saving_file=f'/home/maoss2/scratch/rf_all_data_{data_size}_scores.pck')
+                        feature_names=feature_names, saving_file=f'/home/maoss2/scratch/rf_{dataset_views_to_consider}_data_{data_size}_scores.pck')
     scm_base_model.learn(x_train=x_train, y_train=y_train, 
                         x_test=x_test, y_test=y_test, 
-                        feature_names=feature_names, saving_file=f'/home/maoss2/scratch/scm_all_data_{data_size}_scores.pck')
+                        feature_names=feature_names, saving_file=f'/home/maoss2/scratch/scm_{dataset_views_to_consider}_data_{data_size}_scores.pck')
     
 if __name__ == "__main__":
-    run_algo(data_size=2000)
-    run_algo(data_size=5000)
-    run_algo(data_size=10000)
+    for view in ['cnv', 'methyl', 'mirna', 'rna_iso']:
+        for size in [2000, 5000, 10000]:
+            run_algo(data_size=size, dataset_views_to_consider=view)
