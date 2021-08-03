@@ -161,8 +161,8 @@ if __name__ == "__main__":
     #     for size in [2000, 5000, 10000]:
     #         run_algo(data_size=size, dataset_views_to_consider=view)
     # run_algo(data_size=5000, dataset_views_to_consider='methyl')
-    run_algo(data_size=10000, dataset_views_to_consider='methyl')
-    run_algo(data_size=2000, dataset_views_to_consider='rna_iso')
-    run_algo(data_size=5000, dataset_views_to_consider='rna_iso')
-    run_algo(data_size=10000, dataset_views_to_consider='rna_iso')
+    # run_algo(data_size=10000, dataset_views_to_consider='methyl')
+    # run_algo(data_size=2000, dataset_views_to_consider='rna_iso')
+    # run_algo(data_size=5000, dataset_views_to_consider='rna_iso')
+    # run_algo(data_size=10000, dataset_views_to_consider='rna_iso')
     run_algo(data_size=743, dataset_views_to_consider='mirna')
