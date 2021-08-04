@@ -114,7 +114,7 @@ def clean_patients_list_problem():
     with open('patients_with_all_4_views_available.txt', 'w') as f:
         for patient in patients_with_all_4_views_available:
             f.write(f'{patient}\n')
-   
+
 patients_without_view = read_file_txt(FichierPath.patients_without_view_file)
 patients_with_one_view_file = read_file_txt(FichierPath.patients_with_one_view_file)
 patients_with_two_or_more_views_file = read_file_txt(FichierPath.patients_with_two_or_more_views_file)

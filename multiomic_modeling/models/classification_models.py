@@ -157,12 +157,9 @@ def run_algo(data_size=2000, dataset_views_to_consider='all'):
     #                     feature_names=feature_names, saving_file=f'/home/maoss2/scratch/scm_{dataset_views_to_consider}_data_{data_size}_scores.pck')
     
 if __name__ == "__main__":
-    # for view in ['cnv', 'methyl', 'mirna', 'rna_iso']:
-    #     for size in [2000, 5000, 10000]:
-    #         run_algo(data_size=size, dataset_views_to_consider=view)
-    # run_algo(data_size=5000, dataset_views_to_consider='methyl')
-    # run_algo(data_size=10000, dataset_views_to_consider='methyl')
-    # run_algo(data_size=2000, dataset_views_to_consider='rna_iso')
-    # run_algo(data_size=5000, dataset_views_to_consider='rna_iso')
-    # run_algo(data_size=10000, dataset_views_to_consider='rna_iso')
+    for view in ['cnv', 'methyl', 'mirna', 'rna_iso']:
+        for size in [2000, 5000, 10000]:
+            run_algo(data_size=size, dataset_views_to_consider=view)
+    # bizare mais mirna n'est pas disponible pour le dernier type de cancer du coup en vaut-t-il la peine de faire cette expérimentation? 
+    # Mais c'est du gros n'importe quoi. J'ai pas eu ce pb quand je faisais l'expérience avec optuna! Pk ici ca fait ca? c'est pas possible....
     run_algo(data_size=743, dataset_views_to_consider='mirna')
