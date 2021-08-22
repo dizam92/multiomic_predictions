@@ -104,7 +104,8 @@ if LOCAL:
     protein_path = f'{local_file_path_origin}/TCGA-RPPA-pancan-clean.xena'
 else:
     exon_path = f'{graham_file_path_origin}/TCGA.PANCAN.sampleMap%2FHiSeqV2_exon'
-    cnv_path = f'{graham_file_path_origin}/TCGA.PANCAN.sampleMap%2FGistic2_CopyNumber_Gistic2_all_thresholded.by_genes'
+    # cnv_path = f'{graham_file_path_origin}/TCGA.PANCAN.sampleMap%2FGistic2_CopyNumber_Gistic2_all_thresholded.by_genes'
+    cnv_path = f'{graham_file_path_origin}/broad.mit.edu_PANCAN_Genome_Wide_SNP_6_whitelisted.gene.xena'
     methyl_27_path = f'{graham_file_path_origin}/TCGA.PANCAN.sampleMap%2FHumanMethylation27'
     methyl_450_path = f'{graham_file_path_origin}/jhu-usc.edu_PANCAN_HumanMethylation450.betaValue_whitelisted.tsv.synapse_download_5096262.xena'
     rna_path = f'{graham_file_path_origin}/EB++AdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.xena'
@@ -122,10 +123,12 @@ if __name__ == '__main__':
     #                               'methyl_450_pancan_tcga_reduced', 'rna_pancan_tcga_reduced', 'rna_isoforms_pancan_tcga_reduced', 
     #                               'mirna_pancan_tcga_reduced', 'protein_pancan_tcga_reduced']
 
-    fichiers_path = [cnv_path, methyl_450_path, rna_path, rna_isoforms_path, mirna_path]
-    saving_files_names_reduced = ['cnv_pancan_tcga_reduced', 'methyl_450_pancan_tcga_reduced', 
-                                  'rna_pancan_tcga_reduced', 'rna_isoforms_pancan_tcga_reduced', 
-                                  'mirna_pancan_tcga_reduced']
+    # fichiers_path = [cnv_path, methyl_450_path, rna_path, rna_isoforms_path, mirna_path]
+    # saving_files_names_reduced = ['cnv_pancan_tcga_reduced', 'methyl_450_pancan_tcga_reduced', 
+    #                               'rna_pancan_tcga_reduced', 'rna_isoforms_pancan_tcga_reduced', 
+    #                               'mirna_pancan_tcga_reduced']
+    fichiers_path = [cnv_path, protein_path]
+    saving_files_names_reduced = ['cnv_pancan_tcga_reduced', 'protein_pancan_tcga_reduced']
     
     for idx, fichier in enumerate(fichiers_path):
         # read_chunk_file(fichier_path=fichier, saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}', chunk_size=100000)
