@@ -208,9 +208,12 @@ class MultiomicDataset(Dataset):
         self.class_weights = compute_class_weight(class_weight='balanced',
                                                   classes=np.unique(self.all_patient_labels),
                                                   y=self.all_patient_labels) 
+        self.data_len_original = len(self.all_patient_names)
 
+    # Note to myself: Either play with the data lenght 9i think this is the more cleanier way) 
+        # and/or you just add more epoch that will allow the algorithm to sample more dataset here (eventually) but you don't control how much
     def __getitem__(self, idx): 
-        idx = idx % self.__len__() # pour contrer le fait que la longueur du dataset pourrait etre supérieure à l'idx samplé
+        idx = idx % self.data_len_original  # pour contrer le fait que la longueur du dataset pourrait etre supérieure à l'idx samplé
         patient_name = self.all_patient_names[idx]
         patient_label = self.all_patient_labels[idx]
         data = np.zeros((len(self.views), self.nb_features)) # nombre_views X nombre_features
@@ -223,21 +226,31 @@ class MultiomicDataset(Dataset):
         mask = np.array([(patient_name in view['patient_names']) for view in self.views])
         # original_mask = deepcopy(mask)
         nb_views = np.sum(mask)
-        n_views_to_drop = np.random.choice(nb_views - 1) # maybe le contraindre? Pk j'avais penser ca? je voulais probablement le contraindre à 1 vue mais bon why? 
-        if n_views_to_drop >= 1:
-            mask[np.random.choice(np.flatnonzero(mask), size=n_views_to_drop)] = 0
+        if nb_views > 1:
+            n_views_to_drop = np.random.choice(nb_views - 1) # maybe le contraindre? Pk j'avais penser ca? je voulais probablement le contraindre à 1 vue mais bon why? 
+            if n_views_to_drop >= 1:
+                mask[np.random.choice(np.flatnonzero(mask), size=n_views_to_drop)] = 0
         original_data = deepcopy(data.astype(float))
-        data_augmentation = data.astype(float) * mask # on met à zéro la vue ou les vues qu'on a dit de drop
+        data_augmentation = data.astype(float) * mask.reshape(-1, 1) # on met à zéro la vue ou les vues qu'on a dit de drop
         return (data_augmentation, mask), original_data, patient_label
         # return (data.astype(float), mask, original_mask), patient_label
     
     def __len__(self):
-        return len(self.all_patient_names) # estimer le nombre d'exemples que le dataset contient
+        # estimer le nombre d'exemples que le dataset contient Donc si on veut faire de l'augmentation de données il faut donner
+            # soit un gros chiffre ici ou calculer ca de manière plus intelligente: si on laisse normalement: on fait pas d'augmentation
+            # et la taille par défaut c'est 12581. Je pense on va y aller directement avec de l'augmentation et ca devient notre cas de base
+            # pour l'experimentation ici. 
+        # return len(self.all_patient_names) 
+        return len(self.all_patient_names) * 3 
                
 def multiomic_dataset_builder(dataset, test_size=0.2, valid_size=0.1):
     n = len(dataset)
     idxs = np.arange(n)
     labels = dataset.all_patient_labels
+    nb_of_times_len_data_was_multiplied = int(n / labels.shape[0])
+    new_labels = []
+    for _ in range(nb_of_times_len_data_was_multiplied): new_labels.extend(labels)
+    labels = new_labels
     X_train, X_test, y_train, y_test = train_test_split(idxs, labels, test_size=test_size, random_state=42)
     X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=valid_size, random_state=42)
     train_dataset = Subset(dataset, indices=X_train)
