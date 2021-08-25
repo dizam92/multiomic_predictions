@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import h5py
+import math
 from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
 from sklearn.preprocessing import LabelEncoder, StandardScaler, MinMaxScaler, Normalizer
 from sklearn.utils import class_weight, compute_class_weight
@@ -224,7 +225,7 @@ class MultiomicDataset(Dataset):
                 except ValueError:
                     data[i][:view['data'][view['patient_names'].get(patient_name, 0)].shape[0]] = view['data'][view['patient_names'].get(patient_name, 0)]
         mask = np.array([(patient_name in view['patient_names']) for view in self.views])
-        # original_mask = deepcopy(mask)
+        original_mask = deepcopy(mask)
         nb_views = np.sum(mask)
         if nb_views > 1:
             n_views_to_drop = np.random.choice(nb_views - 1) # maybe le contraindre? Pk j'avais penser ca? je voulais probablement le contraindre à 1 vue mais bon why? 
@@ -232,22 +233,19 @@ class MultiomicDataset(Dataset):
                 mask[np.random.choice(np.flatnonzero(mask), size=n_views_to_drop)] = 0
         original_data = deepcopy(data.astype(float))
         data_augmentation = data.astype(float) * mask.reshape(-1, 1) # on met à zéro la vue ou les vues qu'on a dit de drop
-        return (data_augmentation, mask), original_data, patient_label
-        # return (data.astype(float), mask, original_mask), patient_label
+        return (data_augmentation, mask, original_data, original_mask), patient_label
     
     def __len__(self):
-        # estimer le nombre d'exemples que le dataset contient Donc si on veut faire de l'augmentation de données il faut donner
-            # soit un gros chiffre ici ou calculer ca de manière plus intelligente: si on laisse normalement: on fait pas d'augmentation
-            # et la taille par défaut c'est 12581. Je pense on va y aller directement avec de l'augmentation et ca devient notre cas de base
-            # pour l'experimentation ici. 
+        # Estimation de la longueur du dataset equivaut à factorial(nbre_de_vues)
         # return len(self.all_patient_names) 
-        return len(self.all_patient_names) * 3 
+        return len(self.all_patient_names) * int(np.sqrt(math.factorial(len(self.views)))) 
                
 def multiomic_dataset_builder(dataset, test_size=0.2, valid_size=0.1):
     n = len(dataset)
     idxs = np.arange(n)
     labels = dataset.all_patient_labels
-    nb_of_times_len_data_was_multiplied = int(n / labels.shape[0])
+    # nb_of_times_len_data_was_multiplied = int(n / labels.shape[0])
+    nb_of_times_len_data_was_multiplied = int(np.sqrt(math.factorial(len(dataset.views)))) 
     new_labels = []
     for _ in range(nb_of_times_len_data_was_multiplied): new_labels.extend(labels)
     labels = new_labels

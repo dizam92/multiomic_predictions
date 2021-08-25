@@ -21,7 +21,6 @@ def objective(trial: optuna.trial.Trial, d_input_enc: int, dataset_views_to_cons
     """ Main fonction to poptimize with Optuna """
     model_params = {
         "d_input_enc": int(d_input_enc), 
-        "original_mask": False, 
         "lr": trial.suggest_float("lr", 1e-6, 1e-2, log=True),
         "nb_classes_dec": 33,
         "early_stopping": True,
@@ -31,7 +30,7 @@ def objective(trial: optuna.trial.Trial, d_input_enc: int, dataset_views_to_cons
         "optimizer": "Adam",
         "lr_scheduler": "cosine_with_restarts",
         "loss": "ce",
-        "n_epochs": 300,
+        "n_epochs": 500, # augmenter ca since i have more data
         "batch_size": trial.suggest_categorical("batch_size", [128, 256, 512]), # [128, 256, 512]
         "class_weights":[4.1472332 , 0.87510425, 0.30869373, 1.2229021 , 8.47878788,
             0.7000834 , 7.94886364, 1.87032086, 0.63379644, 0.63169777,
@@ -68,7 +67,8 @@ def objective(trial: optuna.trial.Trial, d_input_enc: int, dataset_views_to_cons
     }
 
     model = MultiomicTrainer.run_experiment(**training_params, output_path=output_path)
-    return model.trainer.callback_metrics["val_multi_acc"].item()
+    # return model.trainer.callback_metrics["val_multi_acc"].item()
+    return model.trainer.callback_metrics["val_ce"].item()
 
 
 if __name__ == "__main__":
@@ -93,7 +93,7 @@ if __name__ == "__main__":
             )
     study = optuna.create_study(study_name=args.study_name, 
                                 storage=storage_db, 
-                                direction="maximize", 
+                                direction="minimize", # direction="maximize", 
                                 pruner=PatientPruner(patience=10), 
                                 load_if_exists=True)
     study.optimize(lambda trial: objective(trial, 
@@ -101,7 +101,7 @@ if __name__ == "__main__":
                                            args.dataset_views_to_consider, 
                                            args.data_size, 
                                            args.output_path), 
-                   n_trials=50, timeout=259200)
+                   n_trials=25, timeout=259200)
     
     print("Number of finished trials: {}".format(len(study.trials)))
 

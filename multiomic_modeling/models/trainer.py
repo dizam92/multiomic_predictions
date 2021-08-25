@@ -13,7 +13,7 @@ from multiomic_modeling.models.models import MultiomicPredictionModel, Multiomic
 from multiomic_modeling.models.utils import expt_params_formatter, c_collate
 from multiomic_modeling.loss_and_metrics import ClfMetrics
 from multiomic_modeling.utilities import params_to_hash
-from multiomic_modeling.torch_utils import to_numpy, get_optimizer
+from multiomic_modeling.torch_utils import to_numpy, totensor, get_optimizer
 from multiomic_modeling import logging
 from torch.utils.data import DataLoader
 from transformers.optimization import Adafactor, AdamW, \
@@ -151,7 +151,7 @@ class MultiomicTrainer(BaseTrainer):
             json.dump(all_params, fd, sort_keys=True, indent=2)
         # data_size = 2000; dataset_views_to_consider = 'all'
         dataset = MultiomicDataset(data_size=data_size, views_to_consider=dataset_views_to_consider)
-        train, test, valid = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1) # j'avais train, valid, test avant c'est pour ca on avait juste 815 en test (ce qui devait etre le valid set)
+        train, test, valid = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1) 
         logger.info("Training")
         model = MultiomicTrainer(Namespace(**model_params))
         model.fit(train_dataset=train, valid_dataset=valid, **fit_params)
@@ -172,9 +172,16 @@ class MultiomicTrainerMultiModal(MultiomicTrainer):
         self.network = MultiomicPredictionModelMultiModal(**hparams).float()
     
     def train_val_step(self, batch, optimizer_idx=0, train=True): 
-        xs, ys = batch # xs: (example, mask_modifier, mask_original)
+        # target views c'est les views qui ont été éteinte par notre mask donc on fait bien de ret0ourner le baill original: 
+        # utiliser le mask pour simplifier l'acces à la vue cible et tout
+        xs, ys = batch # xs: (example, mask, original_data, mask_original)
         ys_pred, views_pred = self.network(xs)
-        loss_metrics = self.network.compute_loss_metrics(preds=ys_pred, targets=ys, preds_views=views_pred, targets_views=xs[0])
+        mask_cible = to_numpy(xs[3]).astype(int) -  to_numpy(xs[1]).astype(int)
+        loss_metrics = self.network.compute_loss_metrics(preds=ys_pred, 
+                                                         targets=ys, 
+                                                         preds_views=views_pred, 
+                                                         targets_views=xs[2],
+                                                         mask_cible=totensor(mask_cible))
         prefix = 'train_' if train else 'val_'
         for key, value in loss_metrics.items():
             self.log(prefix+key, value, prog_bar=True)
@@ -251,7 +258,7 @@ class MultiomicTrainerMultiModal(MultiomicTrainer):
             json.dump(all_params, fd, sort_keys=True, indent=2)
         # data_size = 2000; dataset_views_to_consider = 'all'
         dataset = MultiomicDataset(data_size=data_size, views_to_consider=dataset_views_to_consider)
-        train, test, valid = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1) # j'avais train, valid, test avant c'est pour ca on avait juste 815 en test (ce qui devait etre le valid set)
+        train, test, valid = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1) 
         logger.info("Training")
         model = MultiomicTrainerMultiModal(Namespace(**model_params))
         model.fit(train_dataset=train, valid_dataset=valid, **fit_params)
