@@ -22,7 +22,7 @@ class FichierPath:
     # methyl27_file = f'{files_path_on_graham}/methyl_27_pancan_tcga_reduced.h5'
     protein_file = f'{files_path_on_graham}/protein_pancan_tcga_reduced_2000.h5'
     survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
-    patients_without_view_file = f'{files_path_on_graham}/patients_without_view.txt'
+    patients_without_view_file = f'{files_path_on_graham}/patients_a_exclure_car_sans_vues.txt'
     # patients_with_one_view_file = f'{files_path_on_graham}/patients_with_one_view.txt'
     # patients_with_two_or_more_views_file = f'{files_path_on_graham}/patients_with_two_or_more_views.txt'
     # patients_with_all_4_views_available_file = f'{files_path_on_graham}/patients_with_all_4_views_available.txt'
@@ -36,7 +36,7 @@ class FichierPath5K:
     protein_file = f'{files_path_on_graham}/protein_pancan_tcga_reduced_5000.h5'
     exon_file = f'{files_path_on_graham}/exon_pancan_tcga_reduced.h5'
     survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
-    patients_without_view_file = f'{files_path_on_graham}/patients_without_view.txt'
+    patients_without_view_file = f'{files_path_on_graham}/patients_a_exclure_car_sans_vues.txt'
     # patients_with_one_view_file = f'{files_path_on_graham}/patients_with_one_view.txt'
     # patients_with_two_or_more_views_file = f'{files_path_on_graham}/patients_with_two_or_more_views.txt'
     # patients_with_all_4_views_available_file = f'{files_path_on_graham}/patients_with_all_4_views_available.txt'
@@ -50,7 +50,7 @@ class FichierPath10K:
     protein_file = f'{files_path_on_graham}/protein_pancan_tcga_reduced_10000.h5'
     exon_file = f'{files_path_on_graham}/exon_pancan_tcga_reduced.h5'
     survival_file = f'{files_path_on_graham}/Survival_SupplementalTable_S1_20171025_xena_sp'
-    patients_without_view_file = f'{files_path_on_graham}/patients_without_view.txt'
+    patients_without_view_file = f'{files_path_on_graham}/patients_a_exclure_car_sans_vues.txt'
     # patients_with_one_view_file = f'{files_path_on_graham}/patients_with_one_view.txt'
     # patients_with_two_or_more_views_file = f'{files_path_on_graham}/patients_with_two_or_more_views.txt'
     # patients_with_all_4_views_available_file = f'{files_path_on_graham}/patients_with_all_4_views_available.txt'
@@ -119,9 +119,6 @@ def clean_patients_list_problem():
             f.write(f'{patient}\n')
 
 patients_without_view = read_file_txt(FichierPath.patients_without_view_file)
-# patients_with_one_view_file = read_file_txt(FichierPath.patients_with_one_view_file)
-# patients_with_two_or_more_views_file = read_file_txt(FichierPath.patients_with_two_or_more_views_file)
-# patients_with_all_4_views_available_file = read_file_txt(FichierPath.patients_with_all_4_views_available_file)
 
 class BuildViews(object):
     def __init__(self, data_size, view_name):
@@ -225,10 +222,14 @@ class MultiomicDataset(Dataset):
                 except ValueError:
                     data[i][:view['data'][view['patient_names'].get(patient_name, 0)].shape[0]] = view['data'][view['patient_names'].get(patient_name, 0)]
         mask = np.array([(patient_name in view['patient_names']) for view in self.views])
+        # The next 2 lines are just here for debug in the future: if we have a pb with the gradient it might be due to the fact there a exempales w/o views
+            # patient_name_with_matrix_vide = []
+            # if np.all((data == 0)): patient_name_with_matrix_vide.append([patient_name, patient_label])
         original_mask = deepcopy(mask)
         nb_views = np.sum(mask)
         if nb_views > 1:
-            n_views_to_drop = np.random.choice(nb_views - 1) # maybe le contraindre? Pk j'avais penser ca? je voulais probablement le contraindre à 1 vue mais bon why? 
+            # TODO: We might want or need to play here to 'turn off' a certain precise view...
+            n_views_to_drop = np.random.choice(nb_views - 1)
             if n_views_to_drop >= 1:
                 mask[np.random.choice(np.flatnonzero(mask), size=n_views_to_drop)] = 0
         original_data = deepcopy(data.astype(float))

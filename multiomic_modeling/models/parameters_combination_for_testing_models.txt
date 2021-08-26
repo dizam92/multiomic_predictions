@@ -1,0 +1,51 @@
+    data_size = 2000; dataset_views_to_consider = 'all'
+    d_input_enc=2000; nb_classes_dec=33; class_weights=[]; d_model_enc_dec=1024; d_ff_enc_dec=1024; n_heads_enc_dec=16; n_layers_enc=2; n_layers_dec=2; activation="relu"; dropout=0.1 
+    model_params = {
+        "d_input_enc": int(d_input_enc), 
+        "lr": 1e-6,
+        "nb_classes_dec": 33,
+        "early_stopping": True,
+        "dropout": 0.5,
+        "weight_decay": 1e-3,
+        "activation": "relu",
+        "optimizer": "Adam",
+        "lr_scheduler": "cosine_with_restarts",
+        "loss": "ce",
+        "n_epochs": 1, # augmenter ca since i have more data
+        "batch_size": 32,
+        "class_weights":[4.1472332 , 0.87510425, 0.30869373, 1.2229021 , 8.47878788,
+            0.7000834 , 7.94886364, 1.87032086, 0.63379644, 0.63169777,
+            4.19280719, 0.40417951, 1.08393595, 1.90772727, 0.72125795,
+            0.87110834, 0.59523472, 0.61243251, 4.38557994, 0.63169777,
+            1.94666048, 2.04035002, 0.67410858, 2.08494784, 1.40791681,
+            0.79654583, 0.74666429, 2.74493133, 0.65783699, 3.02813853,
+            0.65445189, 6.6937799 , 4.76931818],
+        "d_model_enc_dec": 32,
+        "n_heads_enc_dec": 8,
+        "n_layers_enc": 2,
+        "n_layers_dec": 1
+    }
+    d_ff_enc_dec_value = model_params["d_model_enc_dec"] * 4
+    model_params["d_ff_enc_dec"] = d_ff_enc_dec_value
+
+    fit_params = {
+        "nb_ckpts":1, 
+        "verbose":1
+    }
+
+    predict_params = {
+        "nb_ckpts":1, 
+        "scores_fname": "transformer_scores.json"
+    }
+
+    training_params = {
+        "model_params": model_params,
+        "fit_params": fit_params,
+        "predict_params": predict_params,
+        "data_size": int(data_size),
+        "dataset_views_to_consider": dataset_views_to_consider,
+        "seed": 42
+    }
+    
+# salloc --time=02:00:00 --nodes=1 --gres=gpu:1 --ntasks-per-node=32  --mem-per-cpu=127000M  --account=rrg-corbeilj-ac
+# salloc --time=02:00:00 --gres=gpu:1 --cpus-per-task=3 --mem=32000M --account=rrg-corbeilj-ac

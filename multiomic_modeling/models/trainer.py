@@ -177,11 +177,13 @@ class MultiomicTrainerMultiModal(MultiomicTrainer):
         xs, ys = batch # xs: (example, mask, original_data, mask_original)
         ys_pred, views_pred = self.network(xs)
         mask_cible = to_numpy(xs[3]).astype(int) -  to_numpy(xs[1]).astype(int)
+        mask_cible = totensor(mask_cible, gpu=True, device=None)
+        mask_cible = mask_cible.cuda()
         loss_metrics = self.network.compute_loss_metrics(preds=ys_pred, 
                                                          targets=ys, 
                                                          preds_views=views_pred, 
                                                          targets_views=xs[2],
-                                                         mask_cible=totensor(mask_cible))
+                                                         mask_cible=mask_cible)
         prefix = 'train_' if train else 'val_'
         for key, value in loss_metrics.items():
             self.log(prefix+key, value, prog_bar=True)

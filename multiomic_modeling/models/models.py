@@ -66,6 +66,7 @@ class MultiomicPredictionModelMultiModal(Model):
             raise f'The error {loss} is not supported yet'
         
     def forward(self, inputs) -> torch.Tensor:
+        print('inputs',  torch.isnan(inputs[0]).any())
         enc_res = self.encoder(inputs)
         output = self.decoder(enc_res)
         output_views = self.decoder_views(enc_res)
@@ -85,10 +86,10 @@ class MultiomicPredictionModelMultiModal(Model):
         # torch.sum((preds_views - targets_views)**2, dim=-1) # supposly batchsize * nb_views
         # inverse du mask aussi batchsize * nb_views
         # temp_preds_views = torch.sum((preds_views - targets_views)**2, dim=-1)
-        # temp_preds_views = temp_preds_views * ~original_mask
+        # temp_preds_views = temp_preds_views * ~mask_cible
         # mse_loss = temp_preds_views.sum() / mask_cible.sum()
         # This or that 
-        # original_mask = original_mask.reshape(original_mask.shape + (1,)) # [32, 5, 1]
+        # mask_cible = mask_cible.reshape(mask_cible.shape + (1,)) # [32, 5, 1]
         preds_views = preds_views * ~mask_cible.reshape(mask_cible.shape + (1,))
         targets_views = targets_views * ~mask_cible.reshape(mask_cible.shape + (1,))
         mse_loss = torch.nn.functional.mse_loss(preds_views.float(), targets_views.float()) 
