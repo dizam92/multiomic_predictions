@@ -54,38 +54,39 @@ class FichierPath10K:
     # patients_with_one_view_file = f'{files_path_on_graham}/patients_with_one_view.txt'
     # patients_with_two_or_more_views_file = f'{files_path_on_graham}/patients_with_two_or_more_views.txt'
     # patients_with_all_4_views_available_file = f'{files_path_on_graham}/patients_with_all_4_views_available.txt'
-    
-def read_h5py(fichier, normalization=False) -> dict:
-    d = h5py.File(fichier, 'r')
-    data = d['dataset'][()]
-    if normalization:
-        data = StandardScaler().fit_transform(data)
-        # data = MinMaxScaler().fit_transform(data)
-    feature_names = np.asarray([el.decode("utf-8") for el in d['features_names'][()]])
-    patient_names = np.asarray([el.decode("utf-8") for el in d['patients_names'][()]])
-    patient_names = dict(zip(patient_names, np.arange(len(patient_names))))
-    return {'data': data, 
-            'feature_names': feature_names, 
-            'patient_names': patient_names}
 
-def read_pandas_csv(fichier):
-    return pd.read_csv(fichier, sep='\t')
+class ReadFiles:
+    def read_h5py(self, fichier: str, normalization: bool = False) -> dict:
+        d = h5py.File(fichier, 'r')
+        data = d['dataset'][()]
+        if normalization:
+            data = StandardScaler().fit_transform(data)
+            # data = MinMaxScaler().fit_transform(data)
+        feature_names = np.asarray([el.decode("utf-8") for el in d['features_names'][()]])
+        patient_names = np.asarray([el.decode("utf-8") for el in d['patients_names'][()]])
+        patient_names = dict(zip(patient_names, np.arange(len(patient_names))))
+        return {'data': data, 
+                'feature_names': feature_names, 
+                'patient_names': patient_names}
 
-def read_file_txt(fichier) -> list:
-    with open(fichier, 'r') as f:
-        lines = [l.strip('\n') for l in f.readlines()] 
-    return lines
+    def read_pandas_csv(self, fichier: str):
+        return pd.read_csv(fichier, sep='\t')
+
+    def read_file_txt(self, fichier: str) -> list:
+        with open(fichier, 'r') as f:
+            lines = [l.strip('\n') for l in f.readlines()] 
+        return lines
 
 def clean_patients_list_problem():
     """
     Utility function used to build the file where all the aptients have at least 2 views in all the 4 
     [cnv, methyl450, mirna, rna_iso]
     """
-    cnv = read_h5py(fichier=FichierPath.cnv_file, normalization=False)
-    methyl = read_h5py(fichier=FichierPath.methyl450_file, normalization=False)
-    mirna = read_h5py(fichier=FichierPath.mirna_file, normalization=True)
-    rna = read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
-    survival_data = read_pandas_csv(fichier=FichierPath.survival_file)
+    cnv = ReadFiles().read_h5py(fichier=FichierPath.cnv_file, normalization=False)
+    methyl = ReadFiles().read_h5py(fichier=FichierPath.methyl450_file, normalization=False)
+    mirna = ReadFiles().read_h5py(fichier=FichierPath.mirna_file, normalization=True)
+    rna = ReadFiles().read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+    survival_data = ReadFiles().read_pandas_csv(fichier=FichierPath.survival_file)
     sample_to_labels = {survival_data['sample'].values[idx]: survival_data['cancer type abbreviation'].values[idx] 
                         for idx, _ in enumerate(survival_data['sample'].values)}
     sample_to_labels_keys = list(sample_to_labels.keys())  
@@ -118,10 +119,9 @@ def clean_patients_list_problem():
         for patient in patients_with_all_4_views_available:
             f.write(f'{patient}\n')
 
-patients_without_view = read_file_txt(FichierPath.patients_without_view_file)
 
 class BuildViews(object):
-    def __init__(self, data_size, view_name):
+    def __init__(self, data_size: int, view_name: str):
         super(BuildViews, self).__init__()
         if data_size == 2000: pass
         if data_size == 5000:
@@ -141,37 +141,50 @@ class BuildViews(object):
         if data_size not in [743, 2000, 5000, 10000]: raise ValueError(f'the data size {data_size} is not available in the dataset')
         if view_name == 'all':
             self.views = [
-                read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
-                read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
-                read_h5py(fichier=FichierPath.mirna_file, normalization=False),
-                read_h5py(fichier=FichierPath.rna_file, normalization=False),
-                read_h5py(fichier=FichierPath.protein_file, normalization=False)
+                ReadFiles().read_h5py(fichier=FichierPath.cnv_file, normalization=False), 
+                ReadFiles().read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
+                ReadFiles().read_h5py(fichier=FichierPath.mirna_file, normalization=False),
+                ReadFiles().read_h5py(fichier=FichierPath.rna_file, normalization=False),
+                ReadFiles().read_h5py(fichier=FichierPath.protein_file, normalization=False)
             ]
         elif view_name == 'cnv':
             self.views = [
-                read_h5py(fichier=FichierPath.cnv_file, normalization=False)
+                ReadFiles().read_h5py(fichier=FichierPath.cnv_file, normalization=False)
             ]
         elif view_name == 'methyl':
             self.views = [
-                read_h5py(fichier=FichierPath.methyl450_file, normalization=False)
+                ReadFiles().read_h5py(fichier=FichierPath.methyl450_file, normalization=False)
             ]
         elif view_name == 'mirna':
             self.views = [
-                read_h5py(fichier=FichierPath.mirna_file, normalization=False)
+                ReadFiles().read_h5py(fichier=FichierPath.mirna_file, normalization=False)
             ]
         elif view_name == 'rna_iso':
             self.views = [
-                read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
+                ReadFiles().read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
             ]
         elif view_name == 'rna':
             self.views = [
-                read_h5py(fichier=FichierPath.rna_file, normalization=False)
+                ReadFiles().read_h5py(fichier=FichierPath.rna_file, normalization=False)
             ]
         else:
             raise ValueError(f'The view {view_name} is not available in the dataset')
         
+class FilterPatientsDataset:
+    def filter_patients_with_info(self, views : list, sample_to_labels: dict) -> dict:
+        sample_to_labels_copy = deepcopy(sample_to_labels)
+        # print('original len is', len(list(sample_to_labels.keys())))
+        for name in sample_to_labels.keys():
+            cpt_name = 0
+            for view in views:
+                if name in view['patient_names']: cpt_name += 1
+            if cpt_name != 0: pass
+            else: sample_to_labels_copy.pop(name)
+        # print('final len is', len(list(sample_to_labels_copy.keys())))
+        return sample_to_labels_copy
+
 class MultiomicDataset(Dataset):
-    def __init__(self, data_size=2000, views_to_consider='all'):
+    def __init__(self, data_size : int =2000, views_to_consider : str = 'all'):
         super(MultiomicDataset, self).__init__()
         """
         Arguments:
@@ -185,8 +198,6 @@ class MultiomicDataset(Dataset):
                 rna, load just rna views
                 rna_iso, load just rna_iso views
                 protein, load just protein views
-            type_of_model: mlp or transformer (impact the get function to have it concatenated or not)
-            complete_dataset: to load the original view (complete version) or the selected features version
         """
         self.views = BuildViews(data_size=data_size, view_name=views_to_consider).views
         if views_to_consider == 'mirna': self.nb_features = data_size
@@ -194,11 +205,10 @@ class MultiomicDataset(Dataset):
         self.feature_names  = []
         for view in self.views:
             self.feature_names.extend(list(view['feature_names']))        
-        self.survival_data = read_pandas_csv(fichier=FichierPath.survival_file)
+        self.survival_data = ReadFiles().read_pandas_csv(fichier=FichierPath.survival_file)
         self.sample_to_labels = {self.survival_data['sample'].values[idx]: self.survival_data['cancer type abbreviation'].values[idx] 
                                  for idx, _ in enumerate(self.survival_data['sample'].values)}
-        for patient_name in patients_without_view: # On elimine les patients sans vue (0 vue) donc anyway on peut rien faire avec
-            self.sample_to_labels.pop(patient_name)       
+        self.sample_to_labels = FilterPatientsDataset().filter_patients_with_info(views=self.views, sample_to_labels=self.sample_to_labels)
         self.all_patient_names = np.asarray(list(self.sample_to_labels.keys()))
         self.all_patient_labels = np.asarray(list(self.sample_to_labels.values()))
         self.label_encoder = LabelEncoder() # i will need this to inverse_tranform afterward i think for the analysis downstream
@@ -245,7 +255,6 @@ def multiomic_dataset_builder(dataset, test_size=0.2, valid_size=0.1):
     n = len(dataset)
     idxs = np.arange(n)
     labels = dataset.all_patient_labels
-    # nb_of_times_len_data_was_multiplied = int(n / labels.shape[0])
     nb_of_times_len_data_was_multiplied = int(np.sqrt(math.factorial(len(dataset.views)))) 
     new_labels = []
     for _ in range(nb_of_times_len_data_was_multiplied): new_labels.extend(labels)
