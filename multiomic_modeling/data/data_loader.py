@@ -7,6 +7,7 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler, MinMaxScaler, No
 from sklearn.utils import class_weight, compute_class_weight
 from copy import deepcopy
 from scipy.stats import median_absolute_deviation
+import torch
 from torch.utils.data import Dataset, random_split, Subset, DataLoader, SubsetRandomSampler
 from torch.nn.utils.rnn import pad_sequence
 from itertools import combinations
@@ -77,49 +78,6 @@ class ReadFiles:
             lines = [l.strip('\n') for l in f.readlines()] 
         return lines
 
-def clean_patients_list_problem():
-    """
-    Utility function used to build the file where all the aptients have at least 2 views in all the 4 
-    [cnv, methyl450, mirna, rna_iso]
-    """
-    cnv = ReadFiles().read_h5py(fichier=FichierPath.cnv_file, normalization=False)
-    methyl = ReadFiles().read_h5py(fichier=FichierPath.methyl450_file, normalization=False)
-    mirna = ReadFiles().read_h5py(fichier=FichierPath.mirna_file, normalization=True)
-    rna = ReadFiles().read_h5py(fichier=FichierPath.rna_iso_file, normalization=True)
-    survival_data = ReadFiles().read_pandas_csv(fichier=FichierPath.survival_file)
-    sample_to_labels = {survival_data['sample'].values[idx]: survival_data['cancer type abbreviation'].values[idx] 
-                        for idx, _ in enumerate(survival_data['sample'].values)}
-    sample_to_labels_keys = list(sample_to_labels.keys())  
-    patients_cnv = list(cnv['patient_names'].keys())
-    patients_methyl = list(methyl['patient_names'].keys())
-    patients_mirna = list(mirna['patient_names'].keys())
-    patients_rna = list(rna['patient_names'].keys())
-    cnv_inter_methyl = list(set(patients_cnv).intersection(set(patients_methyl)))
-    cnv_inter_mirna = list(set(patients_cnv).intersection(set(patients_mirna)))
-    cnv_inter_rna = list(set(patients_cnv).intersection(set(patients_rna)))
-    methyl_inter_mirna = list(set(patients_methyl).intersection(set(patients_mirna)))
-    methyl_inter_rna = list(set(patients_methyl).intersection(set(patients_rna)))
-    mirna_inter_rna = list(set(patients_mirna).intersection(set(patients_rna)))
-    patients_with_two_or_more_views = []
-    for patient in sample_to_labels_keys:
-        cpt = 0
-        if patient in cnv_inter_methyl: cpt += 1
-        if patient in cnv_inter_mirna: cpt += 1
-        if patient in cnv_inter_rna: cpt += 1
-        if patient in methyl_inter_mirna: cpt += 1
-        if patient in methyl_inter_rna: cpt += 1
-        if patient in mirna_inter_rna: cpt += 1
-        if cpt >= 2 :
-            patients_with_two_or_more_views.append(patient)
-    with open('patients_with_two_or_more_views.txt', 'w') as f:
-        for patient in patients_with_two_or_more_views:
-            f.write(f'{patient}\n')
-    patients_with_all_4_views_available = list(set(sample_to_labels_keys).intersection(set(patients_cnv)).intersection(set(patients_methyl)).intersection(set(patients_mirna)).intersection(set(patients_rna)))
-    with open('patients_with_all_4_views_available.txt', 'w') as f:
-        for patient in patients_with_all_4_views_available:
-            f.write(f'{patient}\n')
-
-
 class BuildViews(object):
     def __init__(self, data_size: int, view_name: str):
         super(BuildViews, self).__init__()
@@ -171,7 +129,7 @@ class BuildViews(object):
             raise ValueError(f'The view {view_name} is not available in the dataset')
         
 class FilterPatientsDataset:
-    def filter_patients_with_info(self, views : list, sample_to_labels: dict) -> dict:
+    def filter_patients_with_info(self, views: list, sample_to_labels: dict) -> dict:
         sample_to_labels_copy = deepcopy(sample_to_labels)
         # print('original len is', len(list(sample_to_labels.keys())))
         for name in sample_to_labels.keys():
@@ -184,7 +142,7 @@ class FilterPatientsDataset:
         return sample_to_labels_copy
 
 class MultiomicDataset(Dataset):
-    def __init__(self, data_size : int =2000, views_to_consider : str = 'all'):
+    def __init__(self, data_size: int = 2000, views_to_consider: str = 'all'):
         super(MultiomicDataset, self).__init__()
         """
         Arguments:

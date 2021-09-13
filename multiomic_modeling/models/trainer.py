@@ -19,13 +19,7 @@ from torch.utils.data import DataLoader
 from transformers.optimization import Adafactor, AdamW, \
     get_cosine_schedule_with_warmup, get_cosine_with_hard_restarts_schedule_with_warmup
 
-import optuna
-from optuna.integration import PyTorchLightningPruningCallback
  
-from pytorch_lightning.tuner.tuning import Tuner
-from pytorch_lightning.loggers import TestTubeLogger
-from pytorch_lightning import Trainer, LightningModule
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 
 logger = logging.create_logger(__name__)
 
@@ -163,7 +157,7 @@ class MultiomicTrainer(BaseTrainer):
         return model
 
 
-class MultiomicTrainerMultiModal(MultiomicTrainer):
+class MultiomicTrainerMultiModal(BaseTrainer):
     name_map = dict(
         mo_model = MultiomicPredictionModelMultiModal
     )
