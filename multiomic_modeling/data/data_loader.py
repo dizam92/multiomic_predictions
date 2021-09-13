@@ -125,6 +125,10 @@ class BuildViews(object):
             self.views = [
                 ReadFiles().read_h5py(fichier=FichierPath.rna_file, normalization=False)
             ]
+        elif view_name == 'protein':
+            self.views = [
+                ReadFiles().read_h5py(fichier=FichierPath.protein_file, normalization=False)
+            ]
         else:
             raise ValueError(f'The view {view_name} is not available in the dataset')
         
