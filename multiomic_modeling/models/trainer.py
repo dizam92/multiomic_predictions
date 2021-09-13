@@ -157,7 +157,7 @@ class MultiomicTrainer(BaseTrainer):
         return model
 
 
-class MultiomicTrainerMultiModal(BaseTrainer):
+class MultiomicTrainerMultiModal(MultiomicTrainer):
     name_map = dict(
         mo_model = MultiomicPredictionModelMultiModal
     )
