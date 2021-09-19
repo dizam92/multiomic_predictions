@@ -1,5 +1,6 @@
 import argparse
 import sys
+from typing import Tuple
 from multiomic_modeling.models.trainer import *
 from multiomic_modeling.data.data_loader import MultiomicDataset, multiomic_dataset_builder, multiomic_dataset_loader
 from multiomic_modeling.torch_utils import to_numpy
@@ -40,7 +41,7 @@ class Inspect(object):
 # (data_augmentation, mask, original_data, original_mask), patient_label
 class AttentionWeightsAnalysis:    
     @staticmethod
-    def build_examples_per_cancer(data_size: int = 2000) -> tuple[list, list]:
+    def build_examples_per_cancer(data_size: int = 2000) -> Tuple[list, list]:
         dataset = MultiomicDataset(data_size=data_size, views_to_consider='all')
         _, test, _ = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
         test_data_loader =  multiomic_dataset_loader(dataset=test, batch_size=32, nb_cpus=2)
