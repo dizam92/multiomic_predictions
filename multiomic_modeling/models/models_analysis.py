@@ -117,16 +117,17 @@ def main_plot(config_file: str, algo_type: str = 'normal', output_path: str = '.
     elif algo_type == 'multimodal' : trainer_model = MultiomicTrainerMultiModal(Namespace(**all_params['model_params']))
     else: raise f'The algotype: {algo_type} is not implemented' 
     
-    for idx, cancer_list in enumerate(list_of_examples_per_cancer): 
+    for idx, cancer_list in enumerate(list_of_examples_per_cancer):
         cancer_name = list_of_cancer_names[idx]
-        attention_weights_per_layer_for_cancer_list = weights_analysis_object.get_attention_weights(trainer=trainer_model, inputs_list=cancer_list)
-        batch_examples_weigths_for_cancer_list = torch.mean(attention_weights_per_layer_for_cancer_list, dim=0) # matrice [len(cancer_list) * nb_view * nb_view]
-        print(cancer_name)
-        print(batch_examples_weigths_for_cancer_list.shape)
-        weights_analysis_object.plot_attentions_weights_per_batch(batch_weights=batch_examples_weigths_for_cancer_list, 
-                                                                output_path=output_path, 
-                                                                fig_name=cancer_name, 
-                                                                columns_names=['cnv', 'methyl_450', 'mirna', 'rna', 'protein'])
+        if not os.path.exists(f'/scratch/maoss2/{output_path}/new_plot_{cancer_name}.pdf'):
+            attention_weights_per_layer_for_cancer_list = weights_analysis_object.get_attention_weights(trainer=trainer_model, inputs_list=cancer_list)
+            batch_examples_weigths_for_cancer_list = torch.mean(attention_weights_per_layer_for_cancer_list, dim=0) # matrice [len(cancer_list) * nb_view * nb_view]
+            print(cancer_name)
+            print(batch_examples_weigths_for_cancer_list.shape) 
+            weights_analysis_object.plot_attentions_weights_per_batch(batch_weights=batch_examples_weigths_for_cancer_list, 
+                                                                      output_path=output_path, 
+                                                                      fig_name=cancer_name, 
+                                                                      columns_names=['cnv', 'methyl_450', 'mirna', 'rna', 'protein'])
         
 def test_trainer_models_on_different_views(config_file: str, algo_type: str = 'normal', data_size: int = 2000, save_file_name: str = 'naive_scores'):
     views_to_consider_list = ['all', 'cnv', 'methyl', 'rna_iso', 'mirna'] 
@@ -147,15 +148,15 @@ def test_trainer_models_on_different_views(config_file: str, algo_type: str = 'n
         scores_fname = os.path.join(all_params['fit_params']['output_path'], f'{save_file_name}_{views_to_consider}.txt')
         scores = trainer_model.score(dataset=test, artifact_dir=all_params['fit_params']['output_path'], nb_ckpts=all_params['predict_params'].get('nb_ckpts', 1), scores_fname=scores_fname)    
 
-best_config_file_path_data_aug_2000 = '/'
+best_config_file_path_data_aug_2000 = 'optuna_data_aug_output_2000/ca6d8d29acdba33accae3bcab8f62ddfe699cd11/config.json'
 best_config_file_path_data_aug_5000 = '/'
 best_config_file_path_data_aug_10000 = '/'
 
-best_config_file_path_multimodal_2000 = '/'
+best_config_file_path_multimodal_2000 = 'optuna_multimodal_output_2000/e4b1ba5abbeb3f2062245a335e4afc54b587a1a5/config.json'
 best_config_file_path_multimodal_5000 = '/'
 best_config_file_path_multimodal_10000 = '/'
 
-
+# to run this: salloc --time=03:00:00 --nodes=1  --ntasks-per-node=16 --mem=64G --account=rrg-corbeilj-ac
 main_plot(config_file=best_config_file_path_data_aug_2000, algo_type='normal', 
           output_path=best_config_file_path_data_aug_2000[:-12], data_size=2000)
 main_plot(config_file=best_config_file_path_data_aug_5000, algo_type='normal', 

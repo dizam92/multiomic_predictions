@@ -66,7 +66,7 @@ class MultiomicPredictionModelMultiModal(Model):
             raise f'The error {loss} is not supported yet'
         
     def forward(self, inputs) -> torch.Tensor:
-        print('inputs',  torch.isnan(inputs[0]).any())
+        # print('inputs',  torch.isnan(inputs[0]).any())
         enc_res = self.encoder(inputs)
         output = self.decoder(enc_res)
         output_views = self.decoder_views(enc_res)
