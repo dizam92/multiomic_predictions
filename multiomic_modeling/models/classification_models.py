@@ -1,6 +1,7 @@
 import numpy as np
 import pickle
 import logging
+import os
 from collections import defaultdict
 
 from sklearn.ensemble import RandomForestClassifier
@@ -135,9 +136,10 @@ def run_experiments(data_size: int = 2000, dataset_views_to_consider: str = 'all
 
 
 if __name__ == "__main__":
-    for view in ['all', 'cnv', 'methyl', 'rna', 'protein', 'mirna']:
-        for size in [2000, 5000]:
-            run_experiments(data_size=size, dataset_views_to_consider=view)
+    for dataset_views_to_consider in ['all', 'cnv', 'methyl', 'rna', 'protein', 'mirna']:
+        for data_size in [2000, 5000]:
+            if not os.path.exists(f'/home/maoss2/scratch/rf_{dataset_views_to_consider}_data_{data_size}_scores.pck'):
+                run_experiments(data_size=data_size, dataset_views_to_consider=dataset_views_to_consider)
     # bizare mais mirna n'est pas disponible pour le dernier type de cancer du coup en vaut-t-il la peine de faire cette expérimentation? 
     # Mais c'est du gros n'importe quoi. J'ai pas eu ce pb quand je faisais l'expérience avec optuna! Pk ici ca fait ca? c'est pas possible....
     # run_algo(data_size=743, dataset_views_to_consider='mirna')
