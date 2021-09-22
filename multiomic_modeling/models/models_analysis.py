@@ -1,6 +1,9 @@
 import argparse
 import sys
+from collections import defaultdict
 from typing import Tuple
+from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
+from torch.utils.data import Dataset, random_split, Subset, DataLoader, SubsetRandomSampler
 from multiomic_modeling.models.trainer import *
 from multiomic_modeling.data.data_loader import MultiomicDataset, multiomic_dataset_builder, multiomic_dataset_loader
 from multiomic_modeling.torch_utils import to_numpy
@@ -128,48 +131,137 @@ def main_plot(config_file: str, algo_type: str = 'normal', output_path: str = '.
                                                                       output_path=output_path, 
                                                                       fig_name=cancer_name, 
                                                                       columns_names=['cnv', 'methyl_450', 'mirna', 'rna', 'protein'])
-        
-def test_trainer_models_on_different_views(config_file: str, algo_type: str = 'normal', data_size: int = 2000, save_file_name: str = 'naive_scores'):
-    views_to_consider_list = ['all', 'cnv', 'methyl', 'rna_iso', 'mirna'] 
-    for views_to_consider in views_to_consider_list:
-        if views_to_consider == 'mirna': dataset = MultiomicDataset(data_size=743, views_to_consider=views_to_consider)
-        else: dataset = MultiomicDataset(data_size=int(data_size), views_to_consider=views_to_consider)
-        _, test, _ = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
-        test_data_loader =  multiomic_dataset_loader(dataset=test, batch_size=32, nb_cpus=2)
-        with open(config_file, 'r') as f:
-            all_params = json.load(f)
-        random.seed(all_params['seed'])
-        np.random.seed(all_params['seed'])
-        torch.manual_seed(all_params['seed'])
-        if algo_type == 'normal': trainer_model = MultiomicTrainer(Namespace(**all_params['model_params']))
-        elif algo_type == 'multimodal' : trainer_model = MultiomicTrainerMultiModal(Namespace(**all_params['model_params']))
-        else: raise f'The algotype: {algo_type} is not implemented'
-        # scores_fname = os.path.join(all_params['fit_params']['output_path'], all_params['predict_params'].get('scores_fname', "naive_scores.txt"))
-        scores_fname = os.path.join(all_params['fit_params']['output_path'], f'{save_file_name}_{views_to_consider}.txt')
-        scores = trainer_model.score(dataset=test, artifact_dir=all_params['fit_params']['output_path'], nb_ckpts=all_params['predict_params'].get('nb_ckpts', 1), scores_fname=scores_fname)    
 
-best_config_file_path_data_aug_2000 = 'optuna_data_aug_output_2000/ca6d8d29acdba33accae3bcab8f62ddfe699cd11/config.json'
+best_config_file_path_data_aug_2000 = '/scratch/maoss2/optuna_data_aug_output_2000/ca6d8d29acdba33accae3bcab8f62ddfe699cd11/config.json'
 best_config_file_path_data_aug_5000 = '/'
 best_config_file_path_data_aug_10000 = '/'
 
-best_config_file_path_multimodal_2000 = 'optuna_multimodal_output_2000/e4b1ba5abbeb3f2062245a335e4afc54b587a1a5/config.json'
+best_config_file_path_multimodal_2000 = '/scratch/maoss2/optuna_multimodal_output_2000/e4b1ba5abbeb3f2062245a335e4afc54b587a1a5/config.json'
 best_config_file_path_multimodal_5000 = '/'
 best_config_file_path_multimodal_10000 = '/'
 
 # to run this: salloc --time=03:00:00 --nodes=1  --ntasks-per-node=16 --mem=64G --account=rrg-corbeilj-ac
-main_plot(config_file=best_config_file_path_data_aug_2000, algo_type='normal', 
-          output_path=best_config_file_path_data_aug_2000[:-12], data_size=2000)
-main_plot(config_file=best_config_file_path_data_aug_5000, algo_type='normal', 
-          output_path=best_config_file_path_data_aug_5000[:-12], data_size=5000)
-main_plot(config_file=best_config_file_path_data_aug_10000, algo_type='normal', 
-          output_path=best_config_file_path_data_aug_10000[:-12], data_size=10000)
+# main_plot(config_file=best_config_file_path_data_aug_2000, algo_type='normal', 
+    #         output_path=best_config_file_path_data_aug_2000[:-12], data_size=2000)
+    # main_plot(config_file=best_config_file_path_data_aug_5000, algo_type='normal', 
+    #         output_path=best_config_file_path_data_aug_5000[:-12], data_size=5000)
+    # main_plot(config_file=best_config_file_path_data_aug_10000, algo_type='normal', 
+    #         output_path=best_config_file_path_data_aug_10000[:-12], data_size=10000)
 
-main_plot(config_file=best_config_file_path_multimodal_2000, algo_type='multimodal', 
-          output_path=best_config_file_path_multimodal_2000[:-12], data_size=2000)
-main_plot(config_file=best_config_file_path_multimodal_5000, algo_type='multimodal', 
-          output_path=best_config_file_path_multimodal_5000[:-12], data_size=5000)
-main_plot(config_file=best_config_file_path_multimodal_10000, algo_type='multimodal', 
-          output_path=best_config_file_path_multimodal_10000[:-12], data_size=10000)
+    # main_plot(config_file=best_config_file_path_multimodal_2000, algo_type='multimodal', 
+    #         output_path=best_config_file_path_multimodal_2000[:-12], data_size=2000)
+    # main_plot(config_file=best_config_file_path_multimodal_5000, algo_type='multimodal', 
+    #         output_path=best_config_file_path_multimodal_5000[:-12], data_size=5000)
+    # main_plot(config_file=best_config_file_path_multimodal_10000, algo_type='multimodal', 
+    #         output_path=best_config_file_path_multimodal_10000[:-12], data_size=10000)
+            
+class NewMultiomicDataset(MultiomicDataset):
+    def __init__(self, data_size: int = 2000, views_to_consider: str = 'all'):
+        super().__init__(data_size=data_size, views_to_consider=views_to_consider)
+    
+    # Essentiellement this is the same thing juste que ca retourne le nom du patient aussi
+    def __getitem__(self, idx): 
+        idx = idx % self.data_len_original  # pour contrer le fait que la longueur du dataset pourrait etre supérieure à l'idx samplé
+        patient_name = self.all_patient_names[idx]
+        patient_label = self.all_patient_labels[idx]
+        data = np.zeros((len(self.views), self.nb_features)) # nombre_views X nombre_features
+        for i, view in enumerate(self.views):
+            if patient_name in view['patient_names']:
+                try:
+                    data[i] = view['data'][view['patient_names'].get(patient_name, 0)]
+                except ValueError:
+                    data[i][:view['data'][view['patient_names'].get(patient_name, 0)].shape[0]] = view['data'][view['patient_names'].get(patient_name, 0)]
+        mask = np.array([(patient_name in view['patient_names']) for view in self.views])
+        # The next 2 lines are just here for debug in the future: if we have a pb with the gradient it might be due to the fact there a exempales w/o views
+            # patient_name_with_matrix_vide = []
+            # if np.all((data == 0)): patient_name_with_matrix_vide.append([patient_name, patient_label])
+        original_mask = deepcopy(mask)
+        nb_views = np.sum(mask)
+        if nb_views > 1:
+            # TODO: We might want or need to play here to 'turn off' a certain precise view...
+            n_views_to_drop = np.random.choice(nb_views - 1)
+            if n_views_to_drop >= 1:
+                mask[np.random.choice(np.flatnonzero(mask), size=n_views_to_drop)] = 0
+        original_data = deepcopy(data.astype(float))
+        data_augmentation = data.astype(float) * mask.reshape(-1, 1) # on met à zéro la vue ou les vues qu'on a dit de drop
+        return (data_augmentation, mask, original_data, original_mask), patient_label, patient_name
+    
+class TestModels:
+    def __init__(self, number_of_view_to_consider: int = 5, view_to_turn_off: str = 'aucune'):
+        super(TestModels).__init__()
+        self.number_of_view_to_consider = number_of_view_to_consider
+        self.view_to_turn_off = view_to_turn_off
+    
+    @property    
+    def number_of_view_to_consider(self):
+        return self._number_of_view_to_consider
+    
+    @number_of_view_to_consider.setter
+    def number_of_view_to_consider(self, value: int):
+        assert 2 <= value <= 5, f'cannot set a value {value} not in 2 <= value <= 5'
+        self._number_of_view_to_consider = value
+    
+    @property    
+    def view_to_turn_off(self):
+        return self._view_to_turn_off
+    
+    @view_to_turn_off.setter
+    def view_to_turn_off(self, value: str):
+        assert value in ['aucune', 'protein', 'methyl', 'mirna', 'rna', 'cnv'], f'the value {value} is not defined and must be in [protein, methyl, mirna, rna, cnv]'
+        self._view_to_turn_off = value
+    
+    def build_set_of_potential_patients_targets(self, nb_views_per_patients: int = 5) -> list:
+        assert nb_views_per_patients in [1,2,3,4,5], f'We should have 1,2,3,4 or 5 combined view per patients. This {nb_views_per_patients} is not correct'
+        temporaire_dict = defaultdict(dict)
+        for patient_name in self.dataset.all_patient_names:
+            cpt = 0; list_of_omics_per_patients = []
+            if patient_name in self.dataset.views[0]['patient_names']: cpt+=1; list_of_omics_per_patients.append('c')
+            if patient_name in self.dataset.views[1]['patient_names']: cpt+=1; list_of_omics_per_patients.append('me')
+            if patient_name in self.dataset.views[2]['patient_names']: cpt+=1; list_of_omics_per_patients.append('mi')
+            if patient_name in self.dataset.views[3]['patient_names']: cpt+=1; list_of_omics_per_patients.append('r')
+            if patient_name in self.dataset.views[4]['patient_names']: cpt+=1; list_of_omics_per_patients.append('p')
+            temporaire_dict[patient_name] = [cpt, list_of_omics_per_patients]
+        values_temporaire_dict = np.asarray(list(temporaire_dict.values()))
+        list_patients_with_nb_views = [patient_name for patient_name, value in temporaire_dict.items() if value[0] == nb_views_per_patients]
+        return list_patients_with_nb_views
+    
+    def initialisation(self, config_file: str = '', algo_type: str = 'normal', data_size: int = 2000, dataset_views_to_consider: str = 'all'):
+        self.dataset = MultiomicDataset(data_size=data_size, views_to_consider=dataset_views_to_consider)
+        _, self.test, _ = multiomic_dataset_builder(dataset=self.dataset, test_size=0.2, valid_size=0.1)
+        new_dataset = NewMultiomicDataset(data_size=data_size, views_to_consider=dataset_views_to_consider)
+        _, new_test, _ = multiomic_dataset_builder(dataset=new_dataset, test_size=0.2, valid_size=0.1)
+        self.list_patients_with_nb_views = self.build_set_of_potential_patients_targets(nb_views_per_patients=self.number_of_view_to_consider)
+        position_test_set_indices_to_retain = []
+        patients_name_to_retain = []
+        for idx in range(len(new_test.indices)):
+            original_mask_patient_in_test_set = new_test[idx][0][-1]
+            original_patient_name = new_test[idx][2]
+            if sum(original_mask_patient_in_test_set) == self.number_of_view_to_consider and original_patient_name in self.list_patients_with_nb_views: 
+                if original_patient_name not in patients_name_to_retain:
+                    position_test_set_indices_to_retain.append(idx)
+                    patients_name_to_retain.append(original_patient_name)
+        old_indices = deepcopy(new_test.indices)
+        self.test.indices = list(np.asarray(old_indices)[position_test_set_indices_to_retain])
+        assert config_file != '', 'must have a config file (from the best model ultimately'
+        with open(config_file, 'r') as f:
+            self.all_params = json.load(f)
+        random.seed(self.all_params['seed'])
+        np.random.seed(self.all_params['seed'])
+        torch.manual_seed(self.all_params['seed'])
+        if algo_type == 'normal': self.trainer_model = MultiomicTrainer(Namespace(**self.all_params['model_params']))
+        elif algo_type == 'multimodal' : self.trainer_model = MultiomicTrainerMultiModal(Namespace(**self.all_params['model_params']))
+        else: raise f'The algotype: {algo_type} is not implemented'
+    
+    def test_scores(self, save_file_name: str = 'naive_scores', views_to_consider: str = 'all'):
+        if self.view_to_turn_off == 'aucune': 
+            scores_fname = os.path.join(self.all_params['fit_params']['output_path'], f'{save_file_name}_{views_to_consider}.txt')
+            scores = self.trainer_model.score(dataset=self.test, artifact_dir=self.all_params['fit_params']['output_path'], nb_ckpts=self.all_params['predict_params'].get('nb_ckpts', 1), scores_fname=scores_fname)    
+            print('The scores on all the 5 views are', scores)
+
+    
+model_test = TestModels(number_of_view_to_consider=5, view_to_turn_off='aucune')
+model_test.initialisation(config_file=best_config_file_path_data_aug_2000, algo_type='normal', data_size=2000, dataset_views_to_consider='all')
+model_test.test_scores(save_file_name='naive_scores_temp', views_to_consider='all')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build the attention weights figure")
@@ -184,6 +276,8 @@ if __name__ == "__main__":
                                 If not specified, results are stored in the folder "results" at the same level as  .""")
     args = parser.parse_args()
     main_plot(config_file=args.config_file, data_size=args.data_size, output_path=args.output_path)
-    test_trainer_models_on_different_views(config_file=args.config_file, data_size=args.data_size, save_file_name='naive_scores')
+    # test_trainer_models_on_different_views(config_file=args.config_file, data_size=args.data_size, save_file_name='naive_scores')
     # A zero exit code causes the job to be marked a Succeeded.
     sys.exit(0)
+
+    
