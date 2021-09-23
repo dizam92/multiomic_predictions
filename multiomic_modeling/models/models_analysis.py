@@ -272,7 +272,7 @@ class TestModels:
     def test_scores(self, save_file_name: str = 'naive_scores', data_size: int = 2000, views_to_consider: str = 'all', view_to_turn_off: str = 'aucune'):
         assert view_to_turn_off in ['aucune', 'protein', 'methyl', 'mirna', 'rna', 'cnv'], f'the value {view_to_turn_off} is not defined and must be in [protein, methyl, mirna, rna, cnv]'
         test_dataset = TestMultiomicDataset(data_size=data_size, 
-                                            iews_to_consider=views_to_consider, 
+                                            views_to_consider=views_to_consider, 
                                             view_to_turn_off=view_to_turn_off)
         _, self.test, _ = multiomic_dataset_builder(dataset=test_dataset, test_size=0.2, valid_size=0.1)
         self.test.indices = self.new_test_indices
