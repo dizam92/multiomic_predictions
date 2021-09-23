@@ -117,8 +117,8 @@ class MultiomicTrainer(BaseTrainer):
         
         if scores_fname is not None:
             clf_report_fname = f'{scores_fname[:-5]}_clf_report.json'
-            print(scores)
-            print(clf_report)
+            #print(scores)
+            #print(clf_report)
             with open(scores_fname, 'w') as fd:
                 json.dump(scores, fd)
             with open(clf_report_fname, 'w') as fd:

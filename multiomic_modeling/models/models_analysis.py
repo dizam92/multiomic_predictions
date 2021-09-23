@@ -1,6 +1,7 @@
 import argparse
 import sys
 from collections import defaultdict
+from itertools import combinations
 from typing import Tuple
 from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
 from torch.utils.data import Dataset, random_split, Subset, DataLoader, SubsetRandomSampler
@@ -164,32 +165,14 @@ class NewMultiomicDataset(MultiomicDataset):
         idx = idx % self.data_len_original  # pour contrer le fait que la longueur du dataset pourrait etre supérieure à l'idx samplé
         patient_name = self.all_patient_names[idx]
         patient_label = self.all_patient_labels[idx]
-        data = np.zeros((len(self.views), self.nb_features)) # nombre_views X nombre_features
-        for i, view in enumerate(self.views):
-            if patient_name in view['patient_names']:
-                try:
-                    data[i] = view['data'][view['patient_names'].get(patient_name, 0)]
-                except ValueError:
-                    data[i][:view['data'][view['patient_names'].get(patient_name, 0)].shape[0]] = view['data'][view['patient_names'].get(patient_name, 0)]
-        mask = np.array([(patient_name in view['patient_names']) for view in self.views])
-        # The next 2 lines are just here for debug in the future: if we have a pb with the gradient it might be due to the fact there a exempales w/o views
-            # patient_name_with_matrix_vide = []
-            # if np.all((data == 0)): patient_name_with_matrix_vide.append([patient_name, patient_label])
-        original_mask = deepcopy(mask)
-        nb_views = np.sum(mask)
-        if nb_views > 1:
-            # TODO: We might want or need to play here to 'turn off' a certain precise view...
-            n_views_to_drop = np.random.choice(nb_views - 1)
-            if n_views_to_drop >= 1:
-                mask[np.random.choice(np.flatnonzero(mask), size=n_views_to_drop)] = 0
-        original_data = deepcopy(data.astype(float))
-        data_augmentation = data.astype(float) * mask.reshape(-1, 1) # on met à zéro la vue ou les vues qu'on a dit de drop
-        return (data_augmentation, mask, original_data, original_mask), patient_label, patient_name
+        temp_value = MultiomicDataset.__getitem__(self, idx=idx)
+        return temp_value[0], temp_value[1], patient_name
 
 class TestMultiomicDataset(MultiomicDataset):
-    def __init__(self, data_size: int = 2000, views_to_consider: str = 'all', view_to_turn_off: str = 'aucune'):
+    def __init__(self, data_size: int = 2000, views_to_consider: str = 'all', view_to_turn_off: list = ['aucune']):
         super().__init__(data_size=data_size, views_to_consider=views_to_consider)
         self.view_to_turn_off =  view_to_turn_off
+        self._dict_of_the_combinations = {'aucune': 0, 'protein': 1, 'methyl': 2, 'mirna': 3, 'rna': 4, 'cnv': 5}
         
     def __getitem__(self, idx): 
         idx = idx % self.data_len_original  # pour contrer le fait que la longueur du dataset pourrait etre supérieure à l'idx samplé
@@ -205,13 +188,13 @@ class TestMultiomicDataset(MultiomicDataset):
         mask = np.array([(patient_name in view['patient_names']) for view in self.views])
         original_mask = deepcopy(mask)
         original_data = deepcopy(data.astype(float))
-        #TODO: faire les combination de views pour turn off les views......
-        if self.view_to_turn_off == 'aucune': pass
-        if self.view_to_turn_off == 'cnv': mask[0] = False
-        if self.view_to_turn_off == 'methyl': mask[1] = False
-        if self.view_to_turn_off == 'mirna': mask[2] = False
-        if self.view_to_turn_off == 'rna': mask[3] = False
-        if self.view_to_turn_off == 'protein': mask[4] = False
+        for el in self.view_to_turn_off: mask[self._dict_of_the_combinations[el]] = False
+        # if self.view_to_turn_off == 'aucune': pass
+            # if self.view_to_turn_off == 'cnv': mask[0] = False
+            # if self.view_to_turn_off == 'methyl': mask[1] = False
+            # if self.view_to_turn_off == 'mirna': mask[2] = False
+            # if self.view_to_turn_off == 'rna': mask[3] = False
+            # if self.view_to_turn_off == 'protein': mask[4] = False
         return (original_data, mask, original_data, original_mask), patient_label
 
 class TestModels:
@@ -269,8 +252,8 @@ class TestModels:
         elif algo_type == 'multimodal' : self.trainer_model = MultiomicTrainerMultiModal(Namespace(**self.all_params['model_params']))
         else: raise f'The algotype: {algo_type} is not implemented'
     
-    def test_scores(self, save_file_name: str = 'naive_scores', data_size: int = 2000, views_to_consider: str = 'all', view_to_turn_off: str = 'aucune'):
-        assert view_to_turn_off in ['aucune', 'protein', 'methyl', 'mirna', 'rna', 'cnv'], f'the value {view_to_turn_off} is not defined and must be in [protein, methyl, mirna, rna, cnv]'
+    def test_scores(self, save_file_name: str = 'naive_scores', data_size: int = 2000, views_to_consider: str = 'all', view_to_turn_off: list = ['aucune']):
+        # assert view_to_turn_off in ['aucune', 'protein', 'methyl', 'mirna', 'rna', 'cnv'], f'the value {view_to_turn_off} is not defined and must be in [protein, methyl, mirna, rna, cnv]'
         test_dataset = TestMultiomicDataset(data_size=data_size, 
                                             views_to_consider=views_to_consider, 
                                             view_to_turn_off=view_to_turn_off)
@@ -280,13 +263,20 @@ class TestModels:
         scores = self.trainer_model.score(dataset=self.test, artifact_dir=self.all_params['fit_params']['output_path'], nb_ckpts=self.all_params['predict_params'].get('nb_ckpts', 1), scores_fname=scores_fname)    
         print('The scores on all the 5 views are', scores)
         
+list_of_views_to_turn_of = ['protein', 'methyl', 'mirna', 'rna', 'cnv']
+list_of_views_to_turn_of_copy = deepcopy(list_of_views_to_turn_of)
+for i in range(2, 5):
+    list_of_views_to_turn_of.extend(list(combinations(list_of_views_to_turn_of_copy, i)))
+list_of_views_to_turn_of.insert(0, 'aucune')
+list_of_views_to_turn_of = [[el] if type(el) == str else list(el) for el in list_of_views_to_turn_of]
+
 data_aug_model_test = TestModels(number_of_view_to_consider=5)
 data_aug_model_test.initialisation(config_file=best_config_file_path_data_aug_2000, 
                                    algo_type='normal', data_size=2000, dataset_views_to_consider='all')
-for view_off in ['aucune', 'protein', 'methyl', 'mirna', 'rna', 'cnv']:
+for view_off in list_of_views_to_turn_of:
     print(f'view to be off is: {view_off}')
     data_aug_model_test.test_scores(save_file_name='naive_scores_temp', data_size=2000, 
-                       views_to_consider='all', view_to_turn_off=view_off)
+                                    views_to_consider='all', view_to_turn_off=view_off)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build the attention weights figure")
