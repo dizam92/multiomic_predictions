@@ -185,13 +185,40 @@ class NewMultiomicDataset(MultiomicDataset):
         original_data = deepcopy(data.astype(float))
         data_augmentation = data.astype(float) * mask.reshape(-1, 1) # on met à zéro la vue ou les vues qu'on a dit de drop
         return (data_augmentation, mask, original_data, original_mask), patient_label, patient_name
-    
+
+class TestMultiomicDataset(MultiomicDataset):
+    def __init__(self, data_size: int = 2000, views_to_consider: str = 'all', view_to_turn_off: str = 'aucune'):
+        super().__init__(data_size=data_size, views_to_consider=views_to_consider)
+        self.view_to_turn_off =  view_to_turn_off
+        
+    def __getitem__(self, idx): 
+        idx = idx % self.data_len_original  # pour contrer le fait que la longueur du dataset pourrait etre supérieure à l'idx samplé
+        patient_name = self.all_patient_names[idx]
+        patient_label = self.all_patient_labels[idx]
+        data = np.zeros((len(self.views), self.nb_features)) # nombre_views X nombre_features
+        for i, view in enumerate(self.views):
+            if patient_name in view['patient_names']:
+                try:
+                    data[i] = view['data'][view['patient_names'].get(patient_name, 0)]
+                except ValueError:
+                    data[i][:view['data'][view['patient_names'].get(patient_name, 0)].shape[0]] = view['data'][view['patient_names'].get(patient_name, 0)]
+        mask = np.array([(patient_name in view['patient_names']) for view in self.views])
+        original_mask = deepcopy(mask)
+        original_data = deepcopy(data.astype(float))
+        #TODO: faire les combination de views pour turn off les views......
+        if self.view_to_turn_off == 'aucune': pass
+        if self.view_to_turn_off == 'cnv': mask[0] = False
+        if self.view_to_turn_off == 'methyl': mask[1] = False
+        if self.view_to_turn_off == 'mirna': mask[2] = False
+        if self.view_to_turn_off == 'rna': mask[3] = False
+        if self.view_to_turn_off == 'protein': mask[4] = False
+        return (original_data, mask, original_data, original_mask), patient_label
+
 class TestModels:
-    def __init__(self, number_of_view_to_consider: int = 5, view_to_turn_off: str = 'aucune'):
+    def __init__(self, number_of_view_to_consider: int = 5):
         super(TestModels).__init__()
         self.number_of_view_to_consider = number_of_view_to_consider
-        self.view_to_turn_off = view_to_turn_off
-    
+        
     @property    
     def number_of_view_to_consider(self):
         return self._number_of_view_to_consider
@@ -200,15 +227,6 @@ class TestModels:
     def number_of_view_to_consider(self, value: int):
         assert 2 <= value <= 5, f'cannot set a value {value} not in 2 <= value <= 5'
         self._number_of_view_to_consider = value
-    
-    @property    
-    def view_to_turn_off(self):
-        return self._view_to_turn_off
-    
-    @view_to_turn_off.setter
-    def view_to_turn_off(self, value: str):
-        assert value in ['aucune', 'protein', 'methyl', 'mirna', 'rna', 'cnv'], f'the value {value} is not defined and must be in [protein, methyl, mirna, rna, cnv]'
-        self._view_to_turn_off = value
     
     def build_set_of_potential_patients_targets(self, nb_views_per_patients: int = 5) -> list:
         assert nb_views_per_patients in [1,2,3,4,5], f'We should have 1,2,3,4 or 5 combined view per patients. This {nb_views_per_patients} is not correct'
@@ -227,7 +245,6 @@ class TestModels:
     
     def initialisation(self, config_file: str = '', algo_type: str = 'normal', data_size: int = 2000, dataset_views_to_consider: str = 'all'):
         self.dataset = MultiomicDataset(data_size=data_size, views_to_consider=dataset_views_to_consider)
-        _, self.test, _ = multiomic_dataset_builder(dataset=self.dataset, test_size=0.2, valid_size=0.1)
         new_dataset = NewMultiomicDataset(data_size=data_size, views_to_consider=dataset_views_to_consider)
         _, new_test, _ = multiomic_dataset_builder(dataset=new_dataset, test_size=0.2, valid_size=0.1)
         self.list_patients_with_nb_views = self.build_set_of_potential_patients_targets(nb_views_per_patients=self.number_of_view_to_consider)
@@ -241,7 +258,7 @@ class TestModels:
                     position_test_set_indices_to_retain.append(idx)
                     patients_name_to_retain.append(original_patient_name)
         old_indices = deepcopy(new_test.indices)
-        self.test.indices = list(np.asarray(old_indices)[position_test_set_indices_to_retain])
+        self.new_test_indices = list(np.asarray(old_indices)[position_test_set_indices_to_retain])
         assert config_file != '', 'must have a config file (from the best model ultimately'
         with open(config_file, 'r') as f:
             self.all_params = json.load(f)
@@ -252,16 +269,24 @@ class TestModels:
         elif algo_type == 'multimodal' : self.trainer_model = MultiomicTrainerMultiModal(Namespace(**self.all_params['model_params']))
         else: raise f'The algotype: {algo_type} is not implemented'
     
-    def test_scores(self, save_file_name: str = 'naive_scores', views_to_consider: str = 'all'):
-        if self.view_to_turn_off == 'aucune': 
-            scores_fname = os.path.join(self.all_params['fit_params']['output_path'], f'{save_file_name}_{views_to_consider}.txt')
-            scores = self.trainer_model.score(dataset=self.test, artifact_dir=self.all_params['fit_params']['output_path'], nb_ckpts=self.all_params['predict_params'].get('nb_ckpts', 1), scores_fname=scores_fname)    
-            print('The scores on all the 5 views are', scores)
-
-    
-model_test = TestModels(number_of_view_to_consider=5, view_to_turn_off='aucune')
-model_test.initialisation(config_file=best_config_file_path_data_aug_2000, algo_type='normal', data_size=2000, dataset_views_to_consider='all')
-model_test.test_scores(save_file_name='naive_scores_temp', views_to_consider='all')
+    def test_scores(self, save_file_name: str = 'naive_scores', data_size: int = 2000, views_to_consider: str = 'all', view_to_turn_off: str = 'aucune'):
+        assert view_to_turn_off in ['aucune', 'protein', 'methyl', 'mirna', 'rna', 'cnv'], f'the value {view_to_turn_off} is not defined and must be in [protein, methyl, mirna, rna, cnv]'
+        test_dataset = TestMultiomicDataset(data_size=data_size, 
+                                            iews_to_consider=views_to_consider, 
+                                            view_to_turn_off=view_to_turn_off)
+        _, self.test, _ = multiomic_dataset_builder(dataset=test_dataset, test_size=0.2, valid_size=0.1)
+        self.test.indices = self.new_test_indices
+        scores_fname = os.path.join(self.all_params['fit_params']['output_path'], f'{save_file_name}_{views_to_consider}.txt')
+        scores = self.trainer_model.score(dataset=self.test, artifact_dir=self.all_params['fit_params']['output_path'], nb_ckpts=self.all_params['predict_params'].get('nb_ckpts', 1), scores_fname=scores_fname)    
+        print('The scores on all the 5 views are', scores)
+        
+data_aug_model_test = TestModels(number_of_view_to_consider=5)
+data_aug_model_test.initialisation(config_file=best_config_file_path_data_aug_2000, 
+                                   algo_type='normal', data_size=2000, dataset_views_to_consider='all')
+for view_off in ['aucune', 'protein', 'methyl', 'mirna', 'rna', 'cnv']:
+    print(f'view to be off is: {view_off}')
+    data_aug_model_test.test_scores(save_file_name='naive_scores_temp', data_size=2000, 
+                       views_to_consider='all', view_to_turn_off=view_off)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Build the attention weights figure")
