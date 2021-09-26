@@ -172,7 +172,7 @@ class TestMultiomicDataset(MultiomicDataset):
     def __init__(self, data_size: int = 2000, views_to_consider: str = 'all', view_to_turn_off: list = ['aucune']):
         super().__init__(data_size=data_size, views_to_consider=views_to_consider)
         self.view_to_turn_off =  view_to_turn_off
-        self._dict_of_the_combinations = {'aucune': 0, 'protein': 1, 'methyl': 2, 'mirna': 3, 'rna': 4, 'cnv': 5}
+        self._dict_of_the_combinations = {'cnv': 0, 'methyl': 1, 'mirna': 2, 'rna': 3, 'protein': 4}
         
     def __getitem__(self, idx): 
         idx = idx % self.data_len_original  # pour contrer le fait que la longueur du dataset pourrait etre supérieure à l'idx samplé
@@ -188,7 +188,9 @@ class TestMultiomicDataset(MultiomicDataset):
         mask = np.array([(patient_name in view['patient_names']) for view in self.views])
         original_mask = deepcopy(mask)
         original_data = deepcopy(data.astype(float))
-        for el in self.view_to_turn_off: mask[self._dict_of_the_combinations[el]] = False
+        if self.view_to_turn_off == ['aucune']: pass
+        else: 
+            for el in self.view_to_turn_off: mask[self._dict_of_the_combinations[el]] = False
         # if self.view_to_turn_off == 'aucune': pass
             # if self.view_to_turn_off == 'cnv': mask[0] = False
             # if self.view_to_turn_off == 'methyl': mask[1] = False
@@ -261,38 +263,45 @@ class TestModels:
         self.test.indices = self.new_test_indices
         scores_fname = os.path.join(self.all_params['fit_params']['output_path'], f'{save_file_name}_{views_to_consider}.txt')
         scores = self.trainer_model.score(dataset=self.test, artifact_dir=self.all_params['fit_params']['output_path'], nb_ckpts=self.all_params['predict_params'].get('nb_ckpts', 1), scores_fname=scores_fname)    
-        print('The scores on all the 5 views are', scores)
-        
-list_of_views_to_turn_of = ['protein', 'methyl', 'mirna', 'rna', 'cnv']
-list_of_views_to_turn_of_copy = deepcopy(list_of_views_to_turn_of)
-for i in range(2, 5):
-    list_of_views_to_turn_of.extend(list(combinations(list_of_views_to_turn_of_copy, i)))
-list_of_views_to_turn_of.insert(0, 'aucune')
-list_of_views_to_turn_of = [[el] if type(el) == str else list(el) for el in list_of_views_to_turn_of]
+        #print('The scores on all the 5 views are', scores)
+        self.write_results_to_file(save_file_name=save_file_name, view_to_turn_off=view_to_turn_off, scores=scores)
 
-data_aug_model_test = TestModels(number_of_view_to_consider=5)
-data_aug_model_test.initialisation(config_file=best_config_file_path_data_aug_2000, 
-                                   algo_type='normal', data_size=2000, dataset_views_to_consider='all')
-for view_off in list_of_views_to_turn_of:
-    print(f'view to be off is: {view_off}')
-    data_aug_model_test.test_scores(save_file_name='naive_scores_temp', data_size=2000, 
-                                    views_to_consider='all', view_to_turn_off=view_off)
+    def write_results_to_file(self, save_file_name, view_to_turn_off, scores):
+        save_file_name = f'{save_file_name}_saving_version'
+        name_of_view_to_be_turned_off = '_'.join(view_to_turn_off) 
+        with open(f'{save_file_name}.md', 'a+') as fd:
+            fd.write(f'|__{name_of_view_to_be_turned_off}__| {scores} |\n')
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Build the attention weights figure")
-    parser.add_argument('-p', '--config_file', type=str, default='',
-                        help="""The name/path of the config file (in json format) that contains all the
-                            parameters for the experiment. This config file should be at the same
-                            location as the current train file""")
-    parser.add_argument('-ds', '--data_size', type=str, default='2000',
-                        help="""Data size for loading the right data""")
-    parser.add_argument('-o', '--output_path', type=str, default='',
-                        help="""location for saving the training results (model artifacts and output files).
-                                If not specified, results are stored in the folder "results" at the same level as  .""")
-    args = parser.parse_args()
-    main_plot(config_file=args.config_file, data_size=args.data_size, output_path=args.output_path)
-    # test_trainer_models_on_different_views(config_file=args.config_file, data_size=args.data_size, save_file_name='naive_scores')
-    # A zero exit code causes the job to be marked a Succeeded.
-    sys.exit(0)
+    list_of_views_to_turn_of = ['protein', 'methyl', 'mirna', 'rna', 'cnv']
+    list_of_views_to_turn_of_copy = deepcopy(list_of_views_to_turn_of)
+    for i in range(2, 5):
+        list_of_views_to_turn_of.extend(list(combinations(list_of_views_to_turn_of_copy, i)))
+    list_of_views_to_turn_of.insert(0, 'aucune')
+    list_of_views_to_turn_of = [[el] if type(el) == str else list(el) for el in list_of_views_to_turn_of]
+
+    data_aug_model_test = TestModels(number_of_view_to_consider=5)
+    data_aug_model_test.initialisation(config_file=best_config_file_path_data_aug_2000, 
+                                    algo_type='normal', data_size=2000, dataset_views_to_consider='all')
+    for view_off in list_of_views_to_turn_of:
+        print(f'view to be off is: {view_off}')
+        data_aug_model_test.test_scores(save_file_name='naive_scores_temp', data_size=2000, 
+                                        views_to_consider='all', view_to_turn_off=view_off)
+        
+    # parser = argparse.ArgumentParser(description="Build the attention weights figure")
+        # parser.add_argument('-p', '--config_file', type=str, default='',
+        #                     help="""The name/path of the config file (in json format) that contains all the
+        #                         parameters for the experiment. This config file should be at the same
+        #                         location as the current train file""")
+        # parser.add_argument('-ds', '--data_size', type=str, default='2000',
+        #                     help="""Data size for loading the right data""")
+        # parser.add_argument('-o', '--output_path', type=str, default='',
+        #                     help="""location for saving the training results (model artifacts and output files).
+        #                             If not specified, results are stored in the folder "results" at the same level as  .""")
+        # args = parser.parse_args()
+        # main_plot(config_file=args.config_file, data_size=args.data_size, output_path=args.output_path)
+        # # test_trainer_models_on_different_views(config_file=args.config_file, data_size=args.data_size, save_file_name='naive_scores')
+        # # A zero exit code causes the job to be marked a Succeeded.
+        # sys.exit(0)
 
     
