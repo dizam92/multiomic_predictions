@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 nb_jobs = 16
 cv_fold = KFold(n_splits=5)
 
-parameters_dt = {'max_depth': np.arange(1, 5),  # Moins de profondeur pour toujours eviter l'overfitting
-                 'min_samples_split': np.arange(2, 15),  # Eviter les small value pour eviter l'overfitting
+parameters_dt = {'max_depth': np.arange(1, 5),
+                 'min_samples_split': np.arange(2, 15),
                  'criterion': ['gini', 'entropy']
                  }
 parameters_rf = {'max_depth': np.arange(1, 5),
@@ -34,9 +34,10 @@ balanced_weights = {0: 4.03557312, 1: 0.85154295, 2: 0.30184775, 3: 1.18997669,
                     8: 0.62294082, 9: 0.61468995,10: 4.07992008, 11: 0.49969411, 
                     12: 1.07615283, 13: 1.85636364, 14: 0.7018388 ,15: 0.84765463, 
                     16: 0.60271547, 17: 0.62398778, 18: 4.26750261, 19: 0.61878788,
-                    20: 1.89424861, 21: 1.98541565, 22: 0.65595888, 23: 2.05123054, 24: 1.37001006,
-                    25: 0.77509964, 26: 0.76393565, 27: 2.67102681, 28: 0.64012539, 29: 2.94660895,
-                    30: 0.64012539, 31: 6.51355662, 32: 4.64090909
+                    20: 1.89424861, 21: 1.98541565, 22: 0.65595888, 23: 2.05123054, 
+                    24: 1.37001006, 25: 0.77509964, 26: 0.76393565, 27: 2.67102681, 
+                    28: 0.64012539, 29: 2.94660895, 30: 0.64012539, 31: 6.51355662, 
+                    32: 4.64090909
             }
 
 class BaseAlgoTemplate():
@@ -99,7 +100,7 @@ class BaseAlgoTemplate():
 
     @staticmethod
     def reload_dataset(data_size=2000, dataset_views_to_consider='all'): 
-        dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
+        dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider='all')
         train_dataset, test_dataset, valid_dataset = MultiomicDatasetBuilder().multiomic_data_normal_builder(dataset, test_size=0.2, valid_size=0.1)
         train_loader = DataLoader(train_dataset, batch_size=len(train_dataset))
         train_dataset_array = next(iter(train_loader))[0][0].numpy()
@@ -115,10 +116,22 @@ class BaseAlgoTemplate():
         
         x_train = np.vstack((train_dataset_array, valid_dataset_array))
         y_train = np.hstack((train_dataset_array_labels, valid_dataset_array_labels))
-        
+        ['all', 'cnv', 'methyl_450', 'mirna', 'rna', 'protein']
         feature_names = train_dataset.dataset.feature_names
-        # they are 3D models so i have to reshape them!
-        return x_train[:,0,:], y_train, x_test[:,0,:], y_test, feature_names
+
+        if dataset_views_to_consider == 'all':
+            return x_train.reshape(len(x_train), -1), y_train, x_test.reshape(len(x_test), -1), y_test, feature_names
+        if dataset_views_to_consider == 'cnv':
+            return x_train.reshape(len(x_train), -1)[:,:2000], y_train, x_test.reshape(len(x_test), -1)[:,:2000], y_test, feature_names[:2000]
+        if dataset_views_to_consider == 'methyl':
+            return x_train.reshape(len(x_train), -1)[:,2000:4000], y_train, x_test.reshape(len(x_test), -1)[:,2000:4000], y_test, feature_names[2000:4000]
+        if dataset_views_to_consider == 'mirna':
+            return x_train.reshape(len(x_train), -1)[:,4000:4743], y_train, x_test.reshape(len(x_test), -1)[:,4000:4743], y_test, feature_names[4000:4743]
+        if dataset_views_to_consider == 'rna':
+            return x_train.reshape(len(x_train), -1)[:,4743:6743], y_train, x_test.reshape(len(x_test), -1)[:,4743:6743], y_test, feature_names[4743:6743]
+        if dataset_views_to_consider == 'protein':
+            return x_train.reshape(len(x_train), -1)[:,6743:], y_train, x_test.reshape(len(x_test), -1)[:,6743:], y_test, feature_names[6743:]
+        
 
 def run_experiments(data_size: int = 2000, dataset_views_to_consider: str = 'all'):
     dt_base_model = BaseAlgoTemplate(algo='tree')
@@ -135,8 +148,9 @@ def run_experiments(data_size: int = 2000, dataset_views_to_consider: str = 'all
 
 
 if __name__ == "__main__":
-    for dataset_views_to_consider in ['all', 'cnv', 'methyl', 'rna', 'protein', 'mirna']:
-        if dataset_views_to_consider in ['protein', 'mirna']: balanced_weights.pop(32) # Apparament UVM n'a pas de protein, ni miRNA
-        for data_size in [2000, 5000]:
-            if not os.path.exists(f'/home/maoss2/scratch/rf_{dataset_views_to_consider}_data_{data_size}_scores.pck') or not os.path.exists(f'/home/maoss2/scratch/dt_{dataset_views_to_consider}_data_{data_size}_scores.pck'):
-                run_experiments(data_size=data_size, dataset_views_to_consider=dataset_views_to_consider)
+    data_size = 2000
+    for dataset_views_to_consider in ['all', 'cnv', 'methyl', 'mirna', 'rna', 'protein']:
+        # if dataset_views_to_consider in ['protein', 'mirna']: balanced_weights.pop(32) # Apparament UVM n'a pas de protein, ni miRNA
+        # for data_size in [2000, 5000]:
+        if not os.path.exists(f'/home/maoss2/scratch/rf_{dataset_views_to_consider}_data_{data_size}_scores.pck') or not os.path.exists(f'/home/maoss2/scratch/dt_{dataset_views_to_consider}_data_{data_size}_scores.pck'):
+            run_experiments(data_size=data_size, dataset_views_to_consider=dataset_views_to_consider)
