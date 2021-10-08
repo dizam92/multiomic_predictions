@@ -21,7 +21,6 @@ def objective(trial: optuna.trial.Trial, d_input_enc: int, dataset_views_to_cons
     """ Main fonction to poptimize with Optuna """
     model_params = {
         "d_input_enc": int(d_input_enc), 
-        "original_mask": True, 
         "lr": trial.suggest_float("lr", 1e-6, 1e-2, log=True),
         "nb_classes_dec": 33,
         "early_stopping": True,
