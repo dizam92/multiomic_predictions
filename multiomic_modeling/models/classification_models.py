@@ -11,7 +11,7 @@ from sklearn.tree import DecisionTreeClassifier
 
 from torch.utils.data import DataLoader
 from multiomic_modeling.loss_and_metrics import ClfMetrics
-from multiomic_modeling.data.data_loader import MultiomicDataset, SubsetRandomSampler, multiomic_dataset_builder
+from multiomic_modeling.data.data_loader import MultiomicDatasetDataAug, MultiomicDatasetNormal, MultiomicDatasetBuilder, SubsetRandomSampler
 
 logging.getLogger('parso.python.diff').disabled = True
 logging.basicConfig(level=logging.INFO)
@@ -29,15 +29,14 @@ parameters_rf = {'max_depth': np.arange(1, 5),
                  'n_estimators': [25, 50, 75, 100]
                  }
 
-balanced_weights = {0: 4.1472332, 1: 0.87510425, 2: 0.30869373, 3: 1.2229021 , 
-                    4: 8.47878788, 5: 0.7000834, 6: 7.94886364, 7: 1.87032086, 
-                    8: 0.63379644, 9: 0.63169777, 10: 4.19280719, 11: 0.40417951, 
-                    12: 1.08393595, 13: 1.90772727, 14: 0.72125795, 15: 0.87110834, 
-                    16: 0.59523472, 17: 0.61243251, 18: 4.38557994, 19: 0.63169777,
-                    20: 1.94666048, 21: 2.04035002, 22: 0.67410858, 23: 2.08494784, 
-                    24: 1.40791681, 25: 0.79654583, 26: 0.74666429, 27: 2.74493133, 
-                    28: 0.65783699, 29: 3.02813853, 30: 0.65445189, 31: 6.6937799, 
-                    32: 4.76931818
+balanced_weights = {0: 4.03557312, 1: 0.85154295, 2: 0.30184775, 3: 1.18997669, 
+                    4: 8.25050505, 5: 0.72372851, 6: 7.73484848, 7: 1.81996435, 
+                    8: 0.62294082, 9: 0.61468995,10: 4.07992008, 11: 0.49969411, 
+                    12: 1.07615283, 13: 1.85636364, 14: 0.7018388 ,15: 0.84765463, 
+                    16: 0.60271547, 17: 0.62398778, 18: 4.26750261, 19: 0.61878788,
+                    20: 1.89424861, 21: 1.98541565, 22: 0.65595888, 23: 2.05123054, 24: 1.37001006,
+                    25: 0.77509964, 26: 0.76393565, 27: 2.67102681, 28: 0.64012539, 29: 2.94660895,
+                    30: 0.64012539, 31: 6.51355662, 32: 4.64090909
             }
 
 class BaseAlgoTemplate():
@@ -100,8 +99,8 @@ class BaseAlgoTemplate():
 
     @staticmethod
     def reload_dataset(data_size=2000, dataset_views_to_consider='all'): 
-        dataset = MultiomicDataset(data_size=data_size, views_to_consider=dataset_views_to_consider)
-        train_dataset, test_dataset, valid_dataset = multiomic_dataset_builder(dataset, test_size=0.2, valid_size=0.1)
+        dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
+        train_dataset, test_dataset, valid_dataset = MultiomicDatasetBuilder().multiomic_data_normal_builder(dataset, test_size=0.2, valid_size=0.1)
         train_loader = DataLoader(train_dataset, batch_size=len(train_dataset))
         train_dataset_array = next(iter(train_loader))[0][0].numpy()
         train_dataset_array_labels = next(iter(train_loader))[1].numpy()

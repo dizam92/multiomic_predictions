@@ -1,28 +1,28 @@
     data_size = 2000; dataset_views_to_consider = 'all'
     d_input_enc=2000; nb_classes_dec=33; class_weights=[]; d_model_enc_dec=1024; d_ff_enc_dec=1024; n_heads_enc_dec=16; n_layers_enc=2; n_layers_dec=2; activation="relu"; dropout=0.1 
     model_params = {
-        "d_input_enc": int(d_input_enc), 
-        "lr": 1e-6,
+        "d_input_enc": 2000, 
+        "lr": 6.033193735866575e-05,
         "nb_classes_dec": 33,
         "early_stopping": True,
-        "dropout": 0.5,
-        "weight_decay": 1e-3,
+        "dropout": 0.16171970479206027,
+        "weight_decay": 5.4598394312421854e-05,
         "activation": "relu",
         "optimizer": "Adam",
         "lr_scheduler": "cosine_with_restarts",
         "loss": "ce",
-        "n_epochs": 1, # augmenter ca since i have more data
-        "batch_size": 32,
-        "class_weights":[4.1472332 , 0.87510425, 0.30869373, 1.2229021 , 8.47878788,
-            0.7000834 , 7.94886364, 1.87032086, 0.63379644, 0.63169777,
-            4.19280719, 0.40417951, 1.08393595, 1.90772727, 0.72125795,
-            0.87110834, 0.59523472, 0.61243251, 4.38557994, 0.63169777,
-            1.94666048, 2.04035002, 0.67410858, 2.08494784, 1.40791681,
-            0.79654583, 0.74666429, 2.74493133, 0.65783699, 3.02813853,
-            0.65445189, 6.6937799 , 4.76931818],
-        "d_model_enc_dec": 32,
-        "n_heads_enc_dec": 8,
-        "n_layers_enc": 2,
+        "n_epochs": 500, 
+        "batch_size": 256,
+        "class_weights":[4.03557312, 0.85154295, 0.30184775, 1.18997669, 8.25050505,
+                0.72372851, 7.73484848, 1.81996435, 0.62294082, 0.61468995,
+                4.07992008, 0.49969411, 1.07615283, 1.85636364, 0.7018388 ,
+                0.84765463, 0.60271547, 0.62398778, 4.26750261, 0.61878788,
+                1.89424861, 1.98541565, 0.65595888, 2.05123054, 1.37001006,
+                0.77509964, 0.76393565, 2.67102681, 0.64012539, 2.94660895,
+                0.64012539, 6.51355662, 4.64090909],
+        "d_model_enc_dec": 512,
+        "n_heads_enc_dec": 16,
+        "n_layers_enc": 10,
         "n_layers_dec": 1
     }
     d_ff_enc_dec_value = model_params["d_model_enc_dec"] * 4
@@ -42,10 +42,10 @@
         "model_params": model_params,
         "fit_params": fit_params,
         "predict_params": predict_params,
-        "data_size": int(data_size),
-        "dataset_views_to_consider": dataset_views_to_consider,
+        "data_size": int('2000'),
+        "dataset_views_to_consider": 'all',
         "seed": 42
     }
     
 # salloc --time=02:00:00 --nodes=1 --gres=gpu:1 --ntasks-per-node=32  --mem-per-cpu=127000M  --account=rrg-corbeilj-ac
-# salloc --time=02:00:00 --gres=gpu:1 --cpus-per-task=3 --mem=32000M --account=rrg-corbeilj-ac
+# salloc --time=06:00:00 --gres=gpu:v100:1 --cpus-per-task=3 --mem=32000M --account=rrg-corbeilj-ac

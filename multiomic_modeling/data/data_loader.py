@@ -145,9 +145,9 @@ class FilterPatientsDataset:
         # print('final len is', len(list(sample_to_labels_copy.keys())))
         return sample_to_labels_copy
 
-class MultiomicDataset(Dataset):
+class MultiomicDatasetDataAug(Dataset):
     def __init__(self, data_size: int = 2000, views_to_consider: str = 'all'):
-        super(MultiomicDataset, self).__init__()
+        super(MultiomicDatasetDataAug, self).__init__()
         """
         Arguments:
             data_size: int, 2k; 5k or 10k for the specific patch file to load
@@ -213,24 +213,60 @@ class MultiomicDataset(Dataset):
         # return len(self.all_patient_names) 
         return len(self.all_patient_names) * int(np.sqrt(math.factorial(len(self.views)))) 
                
-def multiomic_dataset_builder(dataset, test_size=0.2, valid_size=0.1):
-    n = len(dataset)
-    idxs = np.arange(n)
-    labels = dataset.all_patient_labels
-    nb_of_times_len_data_was_multiplied = int(np.sqrt(math.factorial(len(dataset.views)))) 
-    new_labels = []
-    for _ in range(nb_of_times_len_data_was_multiplied): new_labels.extend(labels)
-    labels = new_labels
-    X_train, X_test, y_train, y_test = train_test_split(idxs, labels, test_size=test_size, random_state=42)
-    X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=valid_size, random_state=42)
-    train_dataset = Subset(dataset, indices=X_train)
-    test_dataset = Subset(dataset, indices=X_test)
-    valid_dataset =  Subset(dataset, indices=X_valid)
-    return train_dataset, test_dataset, valid_dataset
+class MultiomicDatasetNormal(MultiomicDatasetDataAug):
+    def __init__(self, data_size: int = 2000, views_to_consider: str = 'all'):
+        super().__init__(data_size=data_size, views_to_consider=views_to_consider)
+        
+    def __getitem__(self, idx): 
+        patient_name = self.all_patient_names[idx]
+        patient_label = self.all_patient_labels[idx]
+        data = np.zeros((len(self.views), self.nb_features)) # nombre_views X nombre_features
+        for i, view in enumerate(self.views):
+            if patient_name in view['patient_names']:
+                try:
+                    data[i] = view['data'][view['patient_names'].get(patient_name, 0)]
+                except ValueError:
+                    data[i][:view['data'][view['patient_names'].get(patient_name, 0)].shape[0]] = view['data'][view['patient_names'].get(patient_name, 0)]
+        mask = np.array([(patient_name in view['patient_names']) for view in self.views])
+        original_data = data.astype(float)
+        return (original_data, mask), patient_label
+    
+    def __len__(self):
+        return len(self.all_patient_names) 
 
-def multiomic_dataset_loader(dataset, batch_size=32, nb_cpus=2):
-    n = len(dataset)
-    idx = np.arange(n)
-    data_sampler = SubsetRandomSampler(idx)
-    data_loader = DataLoader(dataset, batch_size=batch_size, sampler=data_sampler, num_workers=nb_cpus)
-    return data_loader #next(iter(test_data))[0]
+class MultiomicDatasetBuilder:
+    @staticmethod        
+    def multiomic_data_aug_builder(dataset, test_size=0.2, valid_size=0.1):
+        n = len(dataset)
+        idxs = np.arange(n)
+        labels = dataset.all_patient_labels
+        nb_of_times_len_data_was_multiplied = int(np.sqrt(math.factorial(len(dataset.views)))) 
+        new_labels = []
+        for _ in range(nb_of_times_len_data_was_multiplied): new_labels.extend(labels)
+        labels = new_labels
+        X_train, X_test, y_train, y_test = train_test_split(idxs, labels, test_size=test_size, random_state=42)
+        X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=valid_size, random_state=42)
+        train_dataset = Subset(dataset, indices=X_train)
+        test_dataset = Subset(dataset, indices=X_test)
+        valid_dataset =  Subset(dataset, indices=X_valid)
+        return train_dataset, test_dataset, valid_dataset
+    
+    @staticmethod        
+    def multiomic_data_normal_builder(dataset, test_size=0.2, valid_size=0.1):
+        n = len(dataset)
+        idxs = np.arange(n)
+        labels = dataset.all_patient_labels
+        X_train, X_test, y_train, y_test = train_test_split(idxs, labels, test_size=test_size, random_state=42)
+        X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=valid_size, random_state=42)
+        train_dataset = Subset(dataset, indices=X_train)
+        test_dataset = Subset(dataset, indices=X_test)
+        valid_dataset =  Subset(dataset, indices=X_valid)
+        return train_dataset, test_dataset, valid_dataset
+    
+    @staticmethod 
+    def multiomic_dataset_loader(dataset, batch_size=32, nb_cpus=2):
+        n = len(dataset)
+        idx = np.arange(n)
+        data_sampler = SubsetRandomSampler(idx)
+        data_loader = DataLoader(dataset, batch_size=batch_size, sampler=data_sampler, num_workers=nb_cpus)
+        return data_loader #next(iter(test_data))[0]

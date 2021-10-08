@@ -8,6 +8,7 @@ from torch.utils.data import Dataset, random_split, Subset, DataLoader, SubsetRa
 from multiomic_modeling.models.trainer import *
 from multiomic_modeling.data.data_loader import MultiomicDataset, multiomic_dataset_builder, multiomic_dataset_loader
 from multiomic_modeling.torch_utils import to_numpy
+from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 import numpy as np
 from copy import deepcopy
@@ -97,17 +98,68 @@ class AttentionWeightsAnalysis:
         return torch.stack(res, dim=0) # return [number_of_layer * batch_size * number_of_views * number_of_views]
 
     @staticmethod
-    def plot_attentions_weights_per_batch(batch_weights, 
+    def plot_attentions_weights_per_cancer(cancer_weights, 
                                         output_path: str = './', 
-                                        fig_name: str = 'batch_', 
+                                        fig_name: str = 'cancer', 
                                         columns_names: list = ['cnv', 'methyl_450', 'mirna', 'rna', 'protein']):
-        final_array = to_numpy(torch.nn.functional.softmax(batch_weights * 100, dim=-1).mean(dim=0))
+        final_array = to_numpy(torch.nn.functional.softmax(cancer_weights * 100, dim=-1).mean(dim=0))
         fig, axes = plt.subplots(figsize=(11.69, 8.27))
         sns.heatmap(final_array, vmin=0, vmax=1, annot=True, linewidths=0.1, 
                         xticklabels=columns_names, yticklabels=columns_names)
         fig.savefig(f'{output_path}/new_plot_{fig_name}.pdf')
         plt.close(fig)
     
+    @staticmethod
+    def plot_tsne(list_of_examples_per_cancer: list,
+                  list_of_cancer_names: list,
+                  trainer_model, 
+                  plot_for_all_cancer: bool = True,
+                  plot_for_all_examples_for_all_cancer: bool= True,
+                  output_path: str = './', 
+                  fig_name: str = 'tsne_cancer'):
+                  #, columns_names: list = ['cnv', 'methyl_450', 'mirna', 'rna', 'protein']
+        if plot_for_all_cancer:
+            X = []; y = []
+            for idx, cancer_list in enumerate(list_of_examples_per_cancer):
+                cancer_name = list_of_cancer_names[idx]
+                attention_weights_per_layer_for_cancer_list = AttentionWeightsAnalysis().get_attention_weights(trainer=trainer_model, inputs_list=cancer_list)
+                # examples_weigths_per_cancer = torch.mean(attention_weights_per_layer_for_cancer_list, dim=0) 
+                    # final_array = to_numpy(torch.nn.functional.softmax(examples_weigths_per_cancer * 100, dim=-1)
+                    # # la moyenne est nécessaire car on fait la moyenne sur les layers de l'output: ainsi on obtient une "seule layer"
+                    # X.append(to_numpy(torch.flatten(attention_weights_per_layer_for_cancer_list)))
+                    # y.append(cancer_name)
+                    # X.append(np.sum(final_array, axis=0)) # devient 1d vector (1, 5)
+                examples_weigths_per_cancer = torch.mean(attention_weights_per_layer_for_cancer_list, dim=0)
+                final_array = to_numpy(torch.flatten((torch.nn.functional.softmax(examples_weigths_per_cancer * 100, dim=-1).mean(dim=0))))
+                X.append(final_array)
+                y.append(cancer_name)
+            X = np.asarray(X)
+            y = np.asarray(y)
+            tsne = TSNE()
+            X_embedded = tsne.fit_transform(X)
+            palette = sns.color_palette("bright", len(y))
+            fig, axes = plt.subplots(figsize=(11.69, 8.27))
+            sns.scatterplot(X_embedded[:,0], X_embedded[:,1], hue=y, legend='full', palette=palette)
+            fig.savefig(f'{output_path}/{fig_name}') if fig_name.endswith('pdf') else fig.savefig(f'{output_path}/{fig_name}.pdf')
+            plt.close(fig)
+        if plot_for_all_examples_for_all_cancer:
+            X = []; y = []
+            for idx, cancer_list in enumerate(list_of_examples_per_cancer):
+                cancer_name = list_of_cancer_names[idx]
+                attention_weights_per_layer_for_cancer_list = AttentionWeightsAnalysis().get_attention_weights(trainer=trainer_model, inputs_list=cancer_list)
+                examples_weigths_per_cancer = torch.mean(attention_weights_per_layer_for_cancer_list, dim=0)
+                # X.extend(to_numpy(torch.sum(examples_weigths_per_cancer, (1))))
+                X.extend(to_numpy(torch.flatten(examples_weigths_per_cancer, start_dim=1, end_dim=2)))
+                y.extend([cancer_name] * examples_weigths_per_cancer.shape[0])
+            X = np.asarray(X)
+            y = np.asarray(y)
+            tsne = TSNE()
+            X_embedded = tsne.fit_transform(X)
+            palette = sns.color_palette("bright", len(y))
+            fig, axes = plt.subplots(figsize=(11.69, 8.27))
+            sns.scatterplot(X_embedded[:,0], X_embedded[:,1], hue=y, legend='full') #, palette=palette
+            fig.savefig(f'{output_path}/{fig_name}') if fig_name.endswith('pdf') else fig.savefig(f'{output_path}/{fig_name}.pdf')
+            plt.close(fig)
 
 def main_plot(config_file: str, algo_type: str = 'normal', output_path: str = './', data_size: int = 2000):
     weights_analysis_object = AttentionWeightsAnalysis()
@@ -125,15 +177,31 @@ def main_plot(config_file: str, algo_type: str = 'normal', output_path: str = '.
         cancer_name = list_of_cancer_names[idx]
         if not os.path.exists(f'/scratch/maoss2/{output_path}/new_plot_{cancer_name}.pdf'):
             attention_weights_per_layer_for_cancer_list = weights_analysis_object.get_attention_weights(trainer=trainer_model, inputs_list=cancer_list)
-            batch_examples_weigths_for_cancer_list = torch.mean(attention_weights_per_layer_for_cancer_list, dim=0) # matrice [len(cancer_list) * nb_view * nb_view]
+            examples_weigths_per_cancer = torch.mean(attention_weights_per_layer_for_cancer_list, dim=0) # matrice [len(cancer_list) * nb_view * nb_view]:
+                # essentiellement on fait la moyenne sur les layer. the dim=0 qui veut dire 1ere dimension qui est le nombre de layer du dec en output. 
+                # du coup la matrice obtenu peut etre utilisée ici pour l'étape de clustering par eg (en associant) le label je suppose ca devrait passer
             print(cancer_name)
-            print(batch_examples_weigths_for_cancer_list.shape) 
-            weights_analysis_object.plot_attentions_weights_per_batch(batch_weights=batch_examples_weigths_for_cancer_list, 
+            print(examples_weigths_per_cancer.shape) 
+            weights_analysis_object.plot_attentions_weights_per_cancer(cancer_weights=examples_weigths_per_cancer, 
                                                                       output_path=output_path, 
                                                                       fig_name=cancer_name, 
                                                                       columns_names=['cnv', 'methyl_450', 'mirna', 'rna', 'protein'])
+    weights_analysis_object.plot_tsne(list_of_examples_per_cancer=list_of_examples_per_cancer,
+                                      list_of_cancer_names=list_of_cancer_names,
+                                      trainer_model=trainer_model,
+                                      plot_for_all_cancer=True,
+                                      plot_for_all_examples_for_all_cancer=False,
+                                      output_path=output_path,
+                                      fig_name='all_cancer_tsne')
+    weights_analysis_object.plot_tsne(list_of_examples_per_cancer=list_of_examples_per_cancer,
+                                      list_of_cancer_names=list_of_cancer_names,
+                                      trainer_model=trainer_model,
+                                      plot_for_all_cancer=False,
+                                      plot_for_all_examples_for_all_cancer=True,
+                                      output_path=output_path,
+                                      fig_name='all_examples_tsne')
 
-best_config_file_path_data_aug_2000 = '/scratch/maoss2/optuna_data_aug_output_2000/ca6d8d29acdba33accae3bcab8f62ddfe699cd11/config.json'
+best_config_file_path_data_aug_2000 = '/scratch/maoss2/new_results/optuna_data_aug_output_2000/ca6d8d29acdba33accae3bcab8f62ddfe699cd11/config.json'
 best_config_file_path_data_aug_5000 = '/'
 best_config_file_path_data_aug_10000 = '/'
 

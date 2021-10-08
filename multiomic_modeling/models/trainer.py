@@ -8,7 +8,7 @@ import pandas as pd
 from tqdm import tqdm
 from argparse import Namespace
 from multiomic_modeling.models.base import BaseTrainer
-from multiomic_modeling.data.data_loader import MultiomicDataset, SubsetRandomSampler, multiomic_dataset_builder
+from multiomic_modeling.data.data_loader import MultiomicDatasetDataAug, MultiomicDatasetNormal, MultiomicDatasetBuilder, SubsetRandomSampler
 from multiomic_modeling.models.models import MultiomicPredictionModel, MultiomicPredictionModelMultiModal
 from multiomic_modeling.models.utils import expt_params_formatter, c_collate
 from multiomic_modeling.loss_and_metrics import ClfMetrics
@@ -91,7 +91,7 @@ class MultiomicTrainer(BaseTrainer):
             state[key] = state[key] / num_weights
         self.load_state_dict(state)
         
-    def score(self, dataset: MultiomicDataset, artifact_dir=None, nb_ckpts=1, scores_fname=None):
+    def score(self, dataset, artifact_dir=None, nb_ckpts=1, scores_fname=None):
         ckpt_path = os.path.join(artifact_dir, 'checkpoints')
         ckpt_fnames = natsort.natsorted([os.path.join(ckpt_path, x) for x in os.listdir(ckpt_path)
                                          if x.endswith('.ckpt')])
@@ -105,20 +105,19 @@ class MultiomicTrainer(BaseTrainer):
         target_data, preds = map(list, zip(*res))
         target_data = to_numpy(target_data)
         preds = to_numpy(preds)
-        clf_metrics = ClfMetrics()
         new_preds = []
         for pred_batch in preds:
             new_preds.extend(pred_batch)
         new_target_data = []
         for target_data_batch in target_data:
             new_target_data.extend(target_data_batch)
-        scores = clf_metrics.score(y_test=new_target_data, y_pred=new_preds)
-        clf_report = clf_metrics.classif_report(y_test=new_target_data, y_pred=new_preds)
+        scores = ClfMetrics().score(y_test=new_target_data, y_pred=new_preds)
+        clf_report = ClfMetrics().classif_report(y_test=new_target_data, y_pred=new_preds)
         
         if scores_fname is not None:
             clf_report_fname = f'{scores_fname[:-5]}_clf_report.json'
-            #print(scores)
-            #print(clf_report)
+            # print(scores)
+            # print(clf_report)
             with open(scores_fname, 'w') as fd:
                 json.dump(scores, fd)
             with open(clf_report_fname, 'w') as fd:
@@ -126,7 +125,15 @@ class MultiomicTrainer(BaseTrainer):
         return scores
     
     @staticmethod
-    def run_experiment(model_params, fit_params, predict_params, data_size, dataset_views_to_consider, seed, output_path, outfmt_keys=None, **kwargs):
+    def run_experiment(model_params: dict, 
+                       fit_params: dict, 
+                       predict_params: dict, 
+                       data_size: int, 
+                       dataset_views_to_consider: str,
+                       exp_type: str, 
+                       seed: int, 
+                       output_path: str, 
+                       outfmt_keys=None, **kwargs):
         all_params = locals()
         random.seed(seed)
         np.random.seed(seed)
@@ -144,8 +151,14 @@ class MultiomicTrainer(BaseTrainer):
         with open(os.path.join(out_prefix, 'config.json'), 'w') as fd:
             json.dump(all_params, fd, sort_keys=True, indent=2)
         # data_size = 2000; dataset_views_to_consider = 'all'
-        dataset = MultiomicDataset(data_size=data_size, views_to_consider=dataset_views_to_consider)
-        train, test, valid = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1) 
+        if exp_type == 'normal':
+            dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
+            train, test, valid = MultiomicDatasetBuilder().multiomic_data_normal_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
+        elif exp_type == 'data_aug':
+            dataset = MultiomicDatasetDataAug(data_size=data_size, views_to_consider=dataset_views_to_consider)
+            train, test, valid = MultiomicDatasetBuilder().multiomic_data_aug_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
+        else: 
+            raise ValueError(f'The experiment type {exp_type} is not a valid option: choose between [normal and data_aug]')
         logger.info("Training")
         model = MultiomicTrainer(Namespace(**model_params))
         model.fit(train_dataset=train, valid_dataset=valid, **fit_params)
@@ -183,7 +196,7 @@ class MultiomicTrainerMultiModal(MultiomicTrainer):
             self.log(prefix+key, value, prog_bar=True)
         return loss_metrics.get('combined_loss') # pour afficher les 2 autres loss, peut etre les retourner toutes ici une à une
     
-    def score(self, dataset: MultiomicDataset, artifact_dir=None, nb_ckpts=1, scores_fname=None):
+    def score(self, dataset, artifact_dir=None, nb_ckpts=1, scores_fname=None):
         ckpt_path = os.path.join(artifact_dir, 'checkpoints')
         ckpt_fnames = natsort.natsorted([os.path.join(ckpt_path, x) for x in os.listdir(ckpt_path)
                                          if x.endswith('.ckpt')])
@@ -197,20 +210,19 @@ class MultiomicTrainerMultiModal(MultiomicTrainer):
         target_data, preds = map(list, zip(*res))
         target_data = to_numpy(target_data)
         preds = to_numpy(preds)
-        clf_metrics = ClfMetrics()
         new_preds = []
         for pred_batch in preds:
             new_preds.extend(pred_batch)
         new_target_data = []
         for target_data_batch in target_data:
             new_target_data.extend(target_data_batch)
-        scores = clf_metrics.score(y_test=new_target_data, y_pred=new_preds)
-        clf_report = clf_metrics.classif_report(y_test=new_target_data, y_pred=new_preds)
+        scores = ClfMetrics().score(y_test=new_target_data, y_pred=new_preds)
+        clf_report = ClfMetrics().classif_report(y_test=new_target_data, y_pred=new_preds)
         
         if scores_fname is not None:
             clf_report_fname = f'{scores_fname[:-5]}_clf_report.json'
-            print(scores)
-            print(clf_report)
+            # print(scores)
+            # print(clf_report)
             with open(scores_fname, 'w') as fd:
                 json.dump(scores, fd)
             with open(clf_report_fname, 'w') as fd:
@@ -235,7 +247,15 @@ class MultiomicTrainerMultiModal(MultiomicTrainer):
         self.load_state_dict(state)
         
     @staticmethod
-    def run_experiment(model_params, fit_params, predict_params, data_size, dataset_views_to_consider, seed, output_path, outfmt_keys=None, **kwargs):
+    def run_experiment(model_params: dict, 
+                       fit_params: dict, 
+                       predict_params: dict, 
+                       data_size: int, 
+                       dataset_views_to_consider: str,
+                       exp_type: str, 
+                       seed: int, 
+                       output_path: str, 
+                       outfmt_keys=None, **kwargs):
         all_params = locals()
         random.seed(seed)
         np.random.seed(seed)
@@ -253,8 +273,15 @@ class MultiomicTrainerMultiModal(MultiomicTrainer):
         with open(os.path.join(out_prefix, 'config.json'), 'w') as fd:
             json.dump(all_params, fd, sort_keys=True, indent=2)
         # data_size = 2000; dataset_views_to_consider = 'all'
-        dataset = MultiomicDataset(data_size=data_size, views_to_consider=dataset_views_to_consider)
-        train, test, valid = multiomic_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1) 
+        if exp_type == 'normal':
+            dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
+            train, test, valid = MultiomicDatasetBuilder().multiomic_data_normal_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
+        elif exp_type == 'data_aug':
+            dataset = MultiomicDatasetDataAug(data_size=data_size, views_to_consider=dataset_views_to_consider)
+            train, test, valid = MultiomicDatasetBuilder().multiomic_data_aug_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
+        else: 
+            raise ValueError(f'The experiment type {exp_type} is not a valid option: choose between [normal and data_aug]')
+
         logger.info("Training")
         model = MultiomicTrainerMultiModal(Namespace(**model_params))
         model.fit(train_dataset=train, valid_dataset=valid, **fit_params)

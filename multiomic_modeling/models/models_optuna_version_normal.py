@@ -32,14 +32,14 @@ def objective(trial: optuna.trial.Trial, d_input_enc: int, dataset_views_to_cons
         "lr_scheduler": "cosine_with_restarts",
         "loss": "ce",
         "n_epochs": 300,
-        "batch_size": trial.suggest_categorical("batch_size", [128, 256, 512]), # [128, 256, 512]
-        "class_weights":[4.1472332 , 0.87510425, 0.30869373, 1.2229021 , 8.47878788,
-            0.7000834 , 7.94886364, 1.87032086, 0.63379644, 0.63169777,
-            4.19280719, 0.40417951, 1.08393595, 1.90772727, 0.72125795,
-            0.87110834, 0.59523472, 0.61243251, 4.38557994, 0.63169777,
-            1.94666048, 2.04035002, 0.67410858, 2.08494784, 1.40791681,
-            0.79654583, 0.74666429, 2.74493133, 0.65783699, 3.02813853,
-            0.65445189, 6.6937799 , 4.76931818],
+        "batch_size": trial.suggest_categorical("batch_size", [256, 512]), # [128, 256, 512]
+        "class_weights":[4.03557312, 0.85154295, 0.30184775, 1.18997669, 8.25050505,
+                0.72372851, 7.73484848, 1.81996435, 0.62294082, 0.61468995,
+                4.07992008, 0.49969411, 1.07615283, 1.85636364, 0.7018388 ,
+                0.84765463, 0.60271547, 0.62398778, 4.26750261, 0.61878788,
+                1.89424861, 1.98541565, 0.65595888, 2.05123054, 1.37001006,
+                0.77509964, 0.76393565, 2.67102681, 0.64012539, 2.94660895,
+                0.64012539, 6.51355662, 4.64090909],
         "d_model_enc_dec": trial.suggest_categorical("d_model_enc_dec", [64, 128, 256, 512]), # [32, 64, 128, 256, 512]
         "n_heads_enc_dec": trial.suggest_categorical("n_heads_enc_dec", [8, 16]),
         "n_layers_enc": trial.suggest_categorical("n_layers_enc", [2, 4, 6, 8, 10, 12]), # [2, 4, 6, 8, 10, 12]
@@ -64,6 +64,7 @@ def objective(trial: optuna.trial.Trial, d_input_enc: int, dataset_views_to_cons
         "predict_params": predict_params,
         "data_size": int(data_size),
         "dataset_views_to_consider": dataset_views_to_consider,
+        "exp_type": "normal",
         "seed": 42
     }
 
@@ -101,7 +102,7 @@ if __name__ == "__main__":
                                            args.dataset_views_to_consider, 
                                            args.data_size, 
                                            args.output_path), 
-                   n_trials=50, timeout=259200)
+                   n_trials=25, timeout=259200)
     
     print("Number of finished trials: {}".format(len(study.trials)))
 
