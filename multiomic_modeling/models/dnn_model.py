@@ -50,11 +50,13 @@ class DNNDataset(Dataset):
 class DNN(Model):
     def __init__(self, 
                  input_size: int, 
+                 class_weights: list,
                  output_size: int = 33, 
                  # nb_layers: int = 3, 
                  hidden_sizes: list = [512, 128, 64],
                  activation: str = 'relu',
                  dropout: float = 0.1, 
+                 loss: str = 'ce', 
                  batch_norm: bool = True
                  ):  
         super(DNN, self).__init__()
@@ -67,23 +69,30 @@ class DNN(Model):
         self.__output_dim = output_size
         self.activation = get_activation(activation=activation)
         self._dropout = nn.Dropout(p=dropout)
+        if loss.lower() == 'ce':
+            if class_weights == [] or class_weights is None:
+                class_weights = torch.Tensor(np.ones(output_size))
+            assert len(class_weights) == output_size, 'They must be a weights per class_weights'
+            self.__loss = torch.nn.CrossEntropyLoss(weight=torch.Tensor(class_weights))
+        else:
+            raise f'The error {loss} is not supported yet'
         if batch_norm:
             # self._layers = [nn.Sequential(_layers[idx], self.activation, self._dropout, self._batch_norm[idx]) if idx!=0 else nn.Sequential(_layers[idx], self.activation, self._dropout) for idx in range(self.nb_layers)]
             self._batch_norm = [nn.BatchNorm1d(el) for el in hidden_sizes]
             self._layers = [nn.Sequential(_layers[idx], self.activation, self._dropout, self._batch_norm[idx]) for idx in range(self.nb_layers)]
             self._layers.append(output_layer)
-            self.dnn = nn.Sequential(*self._layers)
+            self.dnn = nn.Sequential(*self._layers).float()
         else:
             self._layers = [nn.Sequential(_layers[idx], self.activation, self._dropout) for idx in range(self.nb_layers)]
             self._layers.append(output_layer)
-            self.dnn = nn.Sequential(*self._layers)
-
+            self.dnn = nn.Sequential(*self._layers).float()
+        
     @property
     def output_dim(self):
         return self.__output_dim
        
     def forward(self, inputs) -> torch.Tensor:
-        output = self.dnn(inputs)
+        output = self.dnn(inputs).float()
         return output
     
     def predict(self, inputs):
@@ -111,7 +120,7 @@ class DNNTrainer(MultiomicTrainer):
             
     def train_val_step(self, batch, optimizer_idx=0, train=True):
         xs, ys = batch
-        ys_pred = self.network(xs)
+        ys_pred = self.network(xs.float())
         loss_metrics = self.network.compute_loss_metrics(ys_pred, ys)
         prefix = 'train_' if train else 'val_'
         for key, value in loss_metrics.items():
