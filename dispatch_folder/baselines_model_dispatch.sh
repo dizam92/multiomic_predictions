@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=16
-#SBATCH --mem=128G
+#SBATCH --mem=64G
 #SBATCH --account=rrg-corbeilj-ac
 #SBATCH --mail-user=mazid-abiodoun.osseni.1@ulaval.ca
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
-#SBATCH --time=20:00:00
+#SBATCH --time=10:00:00
 
 date
 SECONDS=0

@@ -1,6 +1,6 @@
 import numpy as np
 from collections import defaultdict
-from multiomic_modeling.data.data_loader import MultiomicDataset, SubsetRandomSampler, multiomic_dataset_builder
+from multiomic_modeling.data.data_loader import MultiomicDatasetDataAug, MultiomicDatasetNormal, MultiomicDatasetBuilder, SubsetRandomSampler
 import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_theme()
@@ -8,7 +8,7 @@ sns.set_theme()
 class DatasetPlotting:
     def __init__(self, data_size: int = 2000, dataset_views_to_consider: str = 'all'):
         super(DatasetPlotting, self).__init__()
-        self.dataset = MultiomicDataset(data_size=data_size, views_to_consider=dataset_views_to_consider)
+        self.dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
     
     @staticmethod    
     def bar_plot(x: np.array, 
