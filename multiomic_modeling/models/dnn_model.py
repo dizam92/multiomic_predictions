@@ -165,7 +165,7 @@ class DNNTrainer(MultiomicTrainer):
         self.load_average_weights(ckpt_fnames)
         batch_size = self.hparams.batch_size  
         ploader = DataLoader(dataset, collate_fn=c_collate, batch_size=batch_size, shuffle=False)
-        res = [(patient_label, torch.argmax(self.network.predict(inputs=x), dim=1))
+        res = [(patient_label, torch.argmax(self.network.predict(inputs=x.float()), dim=1))
                 for i, (x, patient_label) in tqdm(enumerate(ploader))] # classification multiclasse d'ou le argmax
         target_data, preds = map(list, zip(*res))
         target_data = to_numpy(target_data)
