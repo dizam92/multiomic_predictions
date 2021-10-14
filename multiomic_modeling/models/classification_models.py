@@ -3,15 +3,22 @@ import pickle
 import logging
 import os
 from collections import defaultdict
+from copy import deepcopy
 
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV, KFold, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
 
 from torch.utils.data import DataLoader
 from multiomic_modeling.loss_and_metrics import ClfMetrics
 from multiomic_modeling.data.data_loader import MultiomicDatasetDataAug, MultiomicDatasetNormal, MultiomicDatasetBuilder, SubsetRandomSampler
+from multiomic_modeling.models.base import Model, CustomModelCheckpoint
+from multiomic_modeling.torch_utils import get_activation
+
+import torch
+import torch.nn as nn
 
 logging.getLogger('parso.python.diff').disabled = True
 logging.basicConfig(level=logging.INFO)
@@ -28,6 +35,11 @@ parameters_rf = {'max_depth': np.arange(1, 5),
                  'criterion': ['gini', 'entropy'],
                  'n_estimators': [25, 50, 75, 100]
                  }
+parameters_svm = {
+    'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
+    'C': np.logspace(0.001, 1.0, 15),
+    'degree': [2, 3, 4, 5]
+}
 
 balanced_weights = {0: 4.03557312, 1: 0.85154295, 2: 0.30184775, 3: 1.18997669, 
                     4: 8.25050505, 5: 0.72372851, 6: 7.73484848, 7: 1.81996435, 
@@ -45,12 +57,14 @@ class BaseAlgoTemplate():
                  algo: str = 'tree', 
                  params_dt: dict = parameters_dt, 
                  params_rf: dict = parameters_rf,
+                 params_svm: dict = parameters_svm, 
                  nb_jobs: int = nb_jobs, 
                  cv=cv_fold):
         super(BaseAlgoTemplate, self).__init__()
         assert type(algo) == str, 'algo must be either tree, rf or scm'
         assert type(params_dt) == dict, 'params_dt must be a dictionary'
-        assert type(parameters_rf) == dict, 'parameters_rf must be a dictionary'
+        assert type(params_rf) == dict, 'params_rf must be a dictionary'
+        assert type(params_svm) == dict, 'params_svm must be a dictionary'
         self.nb_jobs = nb_jobs
         self.cv = cv
         if algo == 'tree':
@@ -60,6 +74,10 @@ class BaseAlgoTemplate():
         elif algo == 'rf':
             self.learner = RandomForestClassifier(random_state=42, class_weight=balanced_weights)
             self.params = params_rf
+            self.gs_clf = GridSearchCV(self.learner, param_grid=self.params, n_jobs=self.nb_jobs, cv=self.cv, verbose=1)
+        elif algo == 'svm':
+            self.learner = SVC(gamma='auto', class_weight=balanced_weights, decision_function_shape='ovo', random_state=42)
+            self.params = params_svm
             self.gs_clf = GridSearchCV(self.learner, param_grid=self.params, n_jobs=self.nb_jobs, cv=self.cv, verbose=1)
         else: raise ValueError(f'The algoritm {algo} is not supported')
             
@@ -101,7 +119,7 @@ class BaseAlgoTemplate():
     @staticmethod
     def reload_dataset(data_size=2000, dataset_views_to_consider='all'): 
         dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider='all')
-        train_dataset, test_dataset, valid_dataset = MultiomicDatasetBuilder().multiomic_data_normal_builder(dataset, test_size=0.2, valid_size=0.1)
+        train_dataset, test_dataset, valid_dataset = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset, test_size=0.2, valid_size=0.1)
         train_loader = DataLoader(train_dataset, batch_size=len(train_dataset))
         train_dataset_array = next(iter(train_loader))[0][0].numpy()
         train_dataset_array_labels = next(iter(train_loader))[1].numpy()
@@ -116,9 +134,12 @@ class BaseAlgoTemplate():
         
         x_train = np.vstack((train_dataset_array, valid_dataset_array))
         y_train = np.hstack((train_dataset_array_labels, valid_dataset_array_labels))
-        ['all', 'cnv', 'methyl_450', 'mirna', 'rna', 'protein']
-        feature_names = train_dataset.dataset.feature_names
-
+        # ['all', 'cnv', 'methyl_450', 'mirna', 'rna', 'protein']
+        originel_feature_names = train_dataset.dataset.feature_names
+        fake_feature_names_mirna = [f'mirna_{idx}' for idx in range(743, 2000)]
+        fake_feature_names_protein = [f'protein_{idx}' for idx in range(210, 2000)]
+        feature_names = originel_feature_names[:4743] + fake_feature_names_mirna + originel_feature_names[4743:] + fake_feature_names_protein
+        
         if dataset_views_to_consider == 'all':
             return x_train.reshape(len(x_train), -1), y_train, x_test.reshape(len(x_test), -1), y_test, feature_names
         if dataset_views_to_consider == 'cnv':
@@ -126,16 +147,17 @@ class BaseAlgoTemplate():
         if dataset_views_to_consider == 'methyl':
             return x_train.reshape(len(x_train), -1)[:,2000:4000], y_train, x_test.reshape(len(x_test), -1)[:,2000:4000], y_test, feature_names[2000:4000]
         if dataset_views_to_consider == 'mirna':
-            return x_train.reshape(len(x_train), -1)[:,4000:4743], y_train, x_test.reshape(len(x_test), -1)[:,4000:4743], y_test, feature_names[4000:4743]
+            return x_train.reshape(len(x_train), -1)[:,4000:6000], y_train, x_test.reshape(len(x_test), -1)[:,4000:6000], y_test, feature_names[4000:6000]
         if dataset_views_to_consider == 'rna':
-            return x_train.reshape(len(x_train), -1)[:,4743:6743], y_train, x_test.reshape(len(x_test), -1)[:,4743:6743], y_test, feature_names[4743:6743]
+            return x_train.reshape(len(x_train), -1)[:,6000:8000], y_train, x_test.reshape(len(x_test), -1)[:,6000:8000], y_test, feature_names[6000:8000]
         if dataset_views_to_consider == 'protein':
-            return x_train.reshape(len(x_train), -1)[:,6743:], y_train, x_test.reshape(len(x_test), -1)[:,6743:], y_test, feature_names[6743:]
+            return x_train.reshape(len(x_train), -1)[:,8000:], y_train, x_test.reshape(len(x_test), -1)[:,8000:], y_test, feature_names[8000:]
         
 
 def run_experiments(data_size: int = 2000, dataset_views_to_consider: str = 'all'):
     dt_base_model = BaseAlgoTemplate(algo='tree')
     rf_base_model = BaseAlgoTemplate(algo='rf')
+    svm_base_model = BaseAlgoTemplate(algo='svm')
     x_train, y_train, x_test, y_test, feature_names = dt_base_model.reload_dataset(data_size=data_size, dataset_views_to_consider=dataset_views_to_consider) 
     dt_base_model.learn(x_train=x_train, y_train=y_train,
                         x_test=x_test, y_test=y_test, 
@@ -145,12 +167,14 @@ def run_experiments(data_size: int = 2000, dataset_views_to_consider: str = 'all
                         x_test=x_test, y_test=y_test, 
                         feature_names=feature_names, 
                         saving_file=f'/home/maoss2/scratch/rf_{dataset_views_to_consider}_data_{data_size}_scores.pck')
+    svm_base_model.learn(x_train=x_train, y_train=y_train, 
+                        x_test=x_test, y_test=y_test, 
+                        feature_names=feature_names, 
+                        saving_file=f'/home/maoss2/scratch/svm_{dataset_views_to_consider}_data_{data_size}_scores.pck')
 
 
 if __name__ == "__main__":
     data_size = 2000
     for dataset_views_to_consider in ['all', 'cnv', 'methyl', 'mirna', 'rna', 'protein']:
-        # if dataset_views_to_consider in ['protein', 'mirna']: balanced_weights.pop(32) # Apparament UVM n'a pas de protein, ni miRNA
-        # for data_size in [2000, 5000]:
-        if not os.path.exists(f'/home/maoss2/scratch/rf_{dataset_views_to_consider}_data_{data_size}_scores.pck') or not os.path.exists(f'/home/maoss2/scratch/dt_{dataset_views_to_consider}_data_{data_size}_scores.pck'):
+        if not os.path.exists(f'/home/maoss2/scratch/rf_{dataset_views_to_consider}_data_{data_size}_scores.pck') or not os.path.exists(f'/home/maoss2/scratch/dt_{dataset_views_to_consider}_data_{data_size}_scores.pck') or not os.path.exists(f'/home/maoss2/scratch/svm_{dataset_views_to_consider}_data_{data_size}_scores.pck'):
             run_experiments(data_size=data_size, dataset_views_to_consider=dataset_views_to_consider)
