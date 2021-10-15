@@ -36,9 +36,9 @@ parameters_rf = {'max_depth': np.arange(1, 5),
                  'n_estimators': [25, 50, 75, 100]
                  }
 parameters_svm = {
-    'kernel': ['linear', 'poly', 'rbf', 'sigmoid'],
-    'C': np.logspace(0.001, 1.0, 15),
-    'degree': [2, 3, 4, 5]
+    # 'kernel': ['poly', 'rbf'],
+    'C': np.logspace(0.001, 1.0, 5),
+    # 'degree': [2, 3]
 }
 
 balanced_weights = {0: 4.03557312, 1: 0.85154295, 2: 0.30184775, 3: 1.18997669, 
@@ -76,7 +76,7 @@ class BaseAlgoTemplate():
             self.params = params_rf
             self.gs_clf = GridSearchCV(self.learner, param_grid=self.params, n_jobs=self.nb_jobs, cv=self.cv, verbose=1)
         elif algo == 'svm':
-            self.learner = SVC(gamma='auto', class_weight=balanced_weights, decision_function_shape='ovo', random_state=42)
+            self.learner = SVC(kernel='rbf', gamma='auto', class_weight=balanced_weights, decision_function_shape='ovo', random_state=42)
             self.params = params_svm
             self.gs_clf = GridSearchCV(self.learner, param_grid=self.params, n_jobs=self.nb_jobs, cv=self.cv, verbose=1)
         else: raise ValueError(f'The algoritm {algo} is not supported')

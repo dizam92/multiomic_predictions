@@ -215,7 +215,7 @@ if __name__ == "__main__":
     print('---------------Begining the Normal data exp---------------------------\n')
     
     data_normal_test = TestModels(number_of_view_to_consider=5, exp_type='normal')
-    data_normal_test.initialisation(config_file=best_config_file_path_normal_data_aug_2000, 
+    data_normal_test.initialisation(config_file=best_config_file_path_normal_normal_2000, 
                                        algo_type='normal', 
                                        data_size=2000, 
                                        dataset_views_to_consider='all')
