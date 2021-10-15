@@ -154,27 +154,49 @@ class BaseAlgoTemplate():
             return x_train.reshape(len(x_train), -1)[:,8000:], y_train, x_test.reshape(len(x_test), -1)[:,8000:], y_test, feature_names[8000:]
         
 
-def run_experiments(data_size: int = 2000, dataset_views_to_consider: str = 'all'):
-    dt_base_model = BaseAlgoTemplate(algo='tree')
-    rf_base_model = BaseAlgoTemplate(algo='rf')
-    svm_base_model = BaseAlgoTemplate(algo='svm')
-    x_train, y_train, x_test, y_test, feature_names = dt_base_model.reload_dataset(data_size=data_size, dataset_views_to_consider=dataset_views_to_consider) 
-    dt_base_model.learn(x_train=x_train, y_train=y_train,
-                        x_test=x_test, y_test=y_test, 
-                        feature_names=feature_names, 
-                        saving_file=f'/home/maoss2/scratch/dt_{dataset_views_to_consider}_data_{data_size}_scores.pck')
-    rf_base_model.learn(x_train=x_train, y_train=y_train, 
-                        x_test=x_test, y_test=y_test, 
-                        feature_names=feature_names, 
-                        saving_file=f'/home/maoss2/scratch/rf_{dataset_views_to_consider}_data_{data_size}_scores.pck')
-    svm_base_model.learn(x_train=x_train, y_train=y_train, 
-                        x_test=x_test, y_test=y_test, 
-                        feature_names=feature_names, 
-                        saving_file=f'/home/maoss2/scratch/svm_{dataset_views_to_consider}_data_{data_size}_scores.pck')
+class RunExperiments:
+    def __init__(self, data_size: int = 2000, dataset_views_to_consider: str = 'all'):
+        super().__init__()
+        self.dataset_views_to_consider = dataset_views_to_consider
+        self.data_size = data_size
+        
+    def run_dt(self):
+        dt_base_model = BaseAlgoTemplate(algo='tree')
+        x_train, y_train, x_test, y_test, feature_names = dt_base_model.reload_dataset(data_size=self.data_size, 
+                                                                                       dataset_views_to_consider=self.dataset_views_to_consider) 
+        dt_base_model.learn(x_train=x_train, 
+                            y_train=y_train,
+                            x_test=x_test, 
+                            y_test=y_test, 
+                            feature_names=feature_names, 
+                            saving_file=f'/home/maoss2/scratch/dt_{self.dataset_views_to_consider}_data_{self.data_size}_scores.pck')
 
+    def run_rf(self):
+        rf_base_model = BaseAlgoTemplate(algo='rf')
+        x_train, y_train, x_test, y_test, feature_names = rf_base_model.reload_dataset(data_size=self.data_size, 
+                                                                                       dataset_views_to_consider=self.dataset_views_to_consider) 
+        rf_base_model.learn(x_train=x_train, 
+                            y_train=y_train, 
+                            x_test=x_test, 
+                            y_test=y_test, 
+                            feature_names=feature_names, 
+                            saving_file=f'/home/maoss2/scratch/rf_{self.dataset_views_to_consider}_data_{self.data_size}_scores.pck')
+    
+    def run_svm(self):
+        svm_base_model = BaseAlgoTemplate(algo='svm')
+        x_train, y_train, x_test, y_test, feature_names = svm_base_model.reload_dataset(data_size=self.data_size, 
+                                                                                        dataset_views_to_consider=self.dataset_views_to_consider) 
+        svm_base_model.learn(x_train=x_train, 
+                             y_train=y_train, 
+                             x_test=x_test, 
+                             y_test=y_test, 
+                             feature_names=feature_names, 
+                             saving_file=f'/home/maoss2/scratch/svm_{self.dataset_views_to_consider}_data_{self.data_size}_scores.pck')
 
 if __name__ == "__main__":
     data_size = 2000
-    for dataset_views_to_consider in ['all', 'cnv', 'methyl', 'mirna', 'rna', 'protein']:
-        if not os.path.exists(f'/home/maoss2/scratch/rf_{dataset_views_to_consider}_data_{data_size}_scores.pck') or not os.path.exists(f'/home/maoss2/scratch/dt_{dataset_views_to_consider}_data_{data_size}_scores.pck') or not os.path.exists(f'/home/maoss2/scratch/svm_{dataset_views_to_consider}_data_{data_size}_scores.pck'):
-            run_experiments(data_size=data_size, dataset_views_to_consider=dataset_views_to_consider)
+    for view in ['all', 'cnv', 'methyl', 'mirna', 'rna', 'protein']:
+        run_expe_obj = RunExperiments(data_size=data_size, dataset_views_to_consider=view)
+        if not os.path.exists(f'/home/maoss2/scratch/rf_{view}_data_{data_size}_scores.pck'): run_expe_obj.run_rf()
+        if not os.path.exists(f'/home/maoss2/scratch/dt_{view}_data_{data_size}_scores.pck'): run_expe_obj.run_dt()
+        if not os.path.exists(f'/home/maoss2/scratch/svm_{view}_data_{data_size}_scores.pck'): run_expe_obj.run_svm()
