@@ -100,18 +100,18 @@ class BaseAlgoTemplate():
         self.saving_dict['train_metrics'] = train_scores
         self.saving_dict['cv_results'] = self.gs_clf.cv_results_
         self.saving_dict['best_params'] = self.gs_clf.best_params_
-        self.saving_dict['importances'] = []
-        self.saving_dict['rules'] = []
-        self.saving_dict['rules_str'] = []
-        importances = self.gs_clf.best_estimator_.feature_importances_
-        indices = np.argsort(importances)[::-1]
-        for f in range(100):
-            if importances[indices[f]] > 0:
-                logger.info("%d. feature %d (%f) %s" % (f + 1, indices[f], importances[indices[f]],
-                                                    feature_names[indices[f]]))
-        self.saving_dict['importances'].append(importances)
-        self.saving_dict['rules'] = [(f + 1, indices[f], importances[indices[f]], feature_names[indices[f]]) for f in
-                            range(100) if importances[indices[f]] > 0]
+        # self.saving_dict['importances'] = []
+        # self.saving_dict['rules'] = []
+        # self.saving_dict['rules_str'] = []
+        # importances = self.gs_clf.best_estimator_.feature_importances_
+        # indices = np.argsort(importances)[::-1]
+        # for f in range(100):
+        #     if importances[indices[f]] > 0:
+        #         logger.info("%d. feature %d (%f) %s" % (f + 1, indices[f], importances[indices[f]],
+        #                                             feature_names[indices[f]]))
+        # self.saving_dict['importances'].append(importances)
+        # self.saving_dict['rules'] = [(f + 1, indices[f], importances[indices[f]], feature_names[indices[f]]) for f in
+        #                     range(100) if importances[indices[f]] > 0]
         
         with open(saving_file, 'wb') as fd:
             pickle.dump(self.saving_dict, fd)
