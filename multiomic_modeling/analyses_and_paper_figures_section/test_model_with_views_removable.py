@@ -189,23 +189,20 @@ class TestModels:
         with open(f'{save_file_name}.md', 'a+') as fd:
             fd.write(f'|__{name_of_view_to_be_turned_off}__| {scores} |\n')
 
-# best_config_file_path_normal_data_aug_2000 = '/scratch/maoss2/'
-# best_config_file_path_normal_normal_2000 = '/scratch/maoss2/'
-
 if __name__ == "__main__":
-    list_of_views_to_turn_of = ['protein', 'methyl', 'mirna', 'rna', 'cnv']
-    list_of_views_to_turn_of_copy = deepcopy(list_of_views_to_turn_of)
+    list_of_views_to_turn_off = ['protein', 'methyl', 'mirna', 'rna', 'cnv']
+    list_of_views_to_turn_off_copy = deepcopy(list_of_views_to_turn_off)
     for i in range(2, 5):
-        list_of_views_to_turn_of.extend(list(combinations(list_of_views_to_turn_of_copy, i)))
-    list_of_views_to_turn_of.insert(0, 'aucune')
-    list_of_views_to_turn_of = [[el] if type(el) == str else list(el) for el in list_of_views_to_turn_of]
+        list_of_views_to_turn_off.extend(list(combinations(list_of_views_to_turn_off_copy, i)))
+    list_of_views_to_turn_off.insert(0, 'aucune')
+    list_of_views_to_turn_off = [[el] if type(el) == str else list(el) for el in list_of_views_to_turn_off]
 
     data_aug_model_test = TestModels(number_of_view_to_consider=5, exp_type='data_aug')
     data_aug_model_test.initialisation(config_file=best_config_file_path_normal_data_aug_2000, 
                                        algo_type='normal', 
                                        data_size=2000, 
                                        dataset_views_to_consider='all')
-    for view_off in list_of_views_to_turn_of:
+    for view_off in list_of_views_to_turn_off:
         print(f'view to be off is: {view_off}')
         data_aug_model_test.test_scores(save_file_name='naive_scores_temp', 
                                         data_size=2000, 
@@ -219,7 +216,7 @@ if __name__ == "__main__":
                                        algo_type='normal', 
                                        data_size=2000, 
                                        dataset_views_to_consider='all')
-    for view_off in list_of_views_to_turn_of:
+    for view_off in list_of_views_to_turn_off:
         print(f'view to be off is: {view_off}')
         data_normal_test.test_scores(save_file_name='naive_scores_temp', 
                                      data_size=2000, 

@@ -15,10 +15,10 @@ from copy import deepcopy
 import seaborn as sns
 sns.set_theme()
 
-best_config_file_path_normal_data_aug_2000 = '/scratch/maoss2/'
-best_config_file_path_normal_normal_2000 = '/scratch/maoss2/'
+best_config_file_path_normal_data_aug_2000 = '/scratch/maoss2/optuna_data_aug_output_2000/441d7ca4dbbb5e250ca41156b746f52d9436cb92/config.json' # for now this is the best
+best_config_file_path_normal_normal_2000 = '/scratch/maoss2/optuna_normal_output_2000/ec18a0b2ca27de64e673e9dc9dfb9596970c130d/config.json' 
 
-best_config_file_path_multimodal_data_aug_2000 = '/scratch/maoss2/'
+best_config_file_path_multimodal_data_aug_2000 = '/scratch/maoss2/optuna_multimodal_data_aug_output_2000/e4e38101b615967fa3fed7462ac08bc88ff1b116/config.json'
 
 
 class InspectedValues(object):
@@ -174,24 +174,25 @@ class AttentionWeightsAnalysis:
             X = []; y = []
             for idx, cancer_list in enumerate(list_of_examples_per_cancer):
                 cancer_name = list_of_cancer_names[idx]
-                attention_weights_per_layer_for_cancer_list = AttentionWeightsAnalysis().get_attention_weights(trainer=trainer_model, inputs_list=cancer_list)
+                attention_weights_per_layer_for_cancer_list = AttentionWeightsAnalysis.get_attention_weights(trainer=trainer_model, inputs_list=cancer_list)
                 examples_weigths_per_cancer = torch.mean(attention_weights_per_layer_for_cancer_list, dim=0)
+                # examples_weigths_per_cancer = attention_weights_per_layer_for_cancer_list[-1] #last layer
                 # X.extend(to_numpy(torch.sum(examples_weigths_per_cancer, (1))))
                 X.extend(to_numpy(torch.flatten(examples_weigths_per_cancer, start_dim=1, end_dim=2)))
                 y.extend([cancer_name] * examples_weigths_per_cancer.shape[0])
             X = np.asarray(X)
             y = np.asarray(y)
-            tsne = TSNE(n_components=2, perplexity=50.0, n_iter=1000, verbose=1, learning_rate=500, init='pca') #init='random'
+            tsne = TSNE(n_components=2, perplexity=30.0, n_iter=1000, verbose=1, learning_rate=250, init='pca') #init='random'
             X_embedded = tsne.fit_transform(X)
             palette = sns.color_palette("bright", len(y))
             # fig, axes = plt.subplots(figsize=(11.69, 8.27))
             # sns.scatterplot(X_embedded[:,0], X_embedded[:,1], hue=y, legend='full') #, palette=palette
-            df_subset = pd.dataframe.from_dict({'tsne_col_0': X_embedded[:,0], 
+            df_subset = pd.DataFrame.from_dict({'tsne_col_0': X_embedded[:,0], 
                                                 'tsne_col_1': X_embedded[:,1], })
             fig = plt.figure(figsize=(16,10))
             sns.scatterplot(
-                x="tsne-2d-one", y="tsne-2d-two",
-                hue="y",
+                x="tsne_col_0", y="tsne_col_1",
+                hue=y,
                 palette=sns.color_palette("hls", 33),
                 data=df_subset,
                 legend="full",
@@ -229,7 +230,7 @@ def main_plot(config_file: str,
             AttentionWeightsAnalysis.plot_attentions_weights_per_cancer(cancer_weights=examples_weigths_per_cancer,
                                                                         output_path=output_path, 
                                                                         fig_name=cancer_name, 
-                                                                        columns_names=['cnv', 'methyl_450', 'mirna', 'rna', 'protein'],
+                                                                        columns_names=['cnv', 'methyl', 'mirna', 'rna', 'protein'],
                                                                         exp_type=exp_type)
     # AttentionWeightsAnalysis.plot_tsne(list_of_examples_per_cancer=list_of_examples_per_cancer,
         #                                   list_of_cancer_names=list_of_cancer_names,
