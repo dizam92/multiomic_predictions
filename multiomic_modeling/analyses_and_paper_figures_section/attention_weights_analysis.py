@@ -15,7 +15,7 @@ from copy import deepcopy
 import seaborn as sns
 sns.set_theme()
 
-best_config_file_path_normal_data_aug_2000 = '/scratch/maoss2/optuna_data_aug_output_2000/441d7ca4dbbb5e250ca41156b746f52d9436cb92/config.json' # for now this is the best
+best_config_file_path_normal_data_aug_2000 = '/scratch/maoss2/optuna_data_aug_output_2000/441d7ca4dbbb5e250ca41156b746f52d9436cb92/config.json' 
 best_config_file_path_normal_normal_2000 = '/scratch/maoss2/optuna_normal_output_2000/ec18a0b2ca27de64e673e9dc9dfb9596970c130d/config.json' 
 
 best_config_file_path_multimodal_data_aug_2000 = '/scratch/maoss2/optuna_multimodal_data_aug_output_2000/e4e38101b615967fa3fed7462ac08bc88ff1b116/config.json'
@@ -248,21 +248,22 @@ def main_plot(config_file: str,
                                       fig_name=f'all_examples_tsne_{exp_type}')
 
 
-# to run this: salloc --time=03:00:00 --nodes=1  --ntasks-per-node=16 --mem=64G --account=rrg-corbeilj-ac
-main_plot(config_file=best_config_file_path_normal_normal_2000, 
-          algo_type='normal', 
-          exp_type='normal', 
-          output_path=best_config_file_path_normal_normal_2000[:-12], 
-          data_size=2000)
+if __name__ == "__main__":
+    # to run this: salloc --time=03:00:00 --nodes=1  --ntasks-per-node=16 --mem=64G --account=rrg-corbeilj-ac
+    main_plot(config_file=best_config_file_path_normal_normal_2000, 
+            algo_type='normal', 
+            exp_type='normal', 
+            output_path=best_config_file_path_normal_normal_2000[:-12], 
+            data_size=2000)
 
-main_plot(config_file=best_config_file_path_normal_data_aug_2000, 
-          algo_type='normal', 
-          exp_type='data_aug', 
-          output_path=best_config_file_path_normal_data_aug_2000[:-12], 
-          data_size=2000)
+    main_plot(config_file=best_config_file_path_normal_data_aug_2000, 
+            algo_type='normal', 
+            exp_type='data_aug', 
+            output_path=best_config_file_path_normal_data_aug_2000[:-12], 
+            data_size=2000)
 
-main_plot(config_file=best_config_file_path_multimodal_data_aug_2000, 
-          algo_type='multimodal', 
-          exp_type='data_aug', 
-          output_path=best_config_file_path_multimodal_data_aug_2000[:-12], 
-          data_size=2000)
+    main_plot(config_file=best_config_file_path_multimodal_data_aug_2000, 
+            algo_type='multimodal', 
+            exp_type='data_aug', 
+            output_path=best_config_file_path_multimodal_data_aug_2000[:-12], 
+            data_size=2000)

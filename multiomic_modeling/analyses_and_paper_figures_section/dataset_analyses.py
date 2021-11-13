@@ -23,7 +23,7 @@ class DatasetPlotting:
         axes = sns.barplot(x=x, y=y)
         axes.set_xlabel(x_label, fontweight='bold', loc="center") # fontsize=16, 
         axes.set_ylabel(y_label, fontweight='bold', loc="center") # fontsize=16, 
-        if title != '': axes.set_title(f'{title}', size=15)
+        if title != '': axes.set_title(f'{title}', size=15, fontweight="bold")
         # axes.set(xlabel=x_label, ylabel=y_label)
         if rotate_xticks_labels: plt.xticks(fontsize=8, rotation=315) #-225
         if write_on_bars: 
@@ -51,7 +51,7 @@ class DatasetPlotting:
         x_comptes_list_of_omics_per_patients = np.array(['_'.join(el) for el in x_comptes_list_of_omics_per_patients])
         self.bar_plot(x=x_comptes, 
                     y=y_comptes,
-                    title='', 
+                    title='Samples number with n views', 
                     write_on_bars=True,
                     rotate_xticks_labels=False,
                     fig_name='plot_number_of_samples_with_n_omics', 
@@ -59,7 +59,7 @@ class DatasetPlotting:
                     y_label='Number of samples')
         self.bar_plot(x=x_comptes_list_of_omics_per_patients, 
                     y=y_comptes_list_of_omics_per_patients, 
-                    title='',
+                    title='Samples number for each omic combination',
                     write_on_bars=False,
                     rotate_xticks_labels=True,
                     fig_name='plot_number_of_samples_for_each_combination_available', 
@@ -69,7 +69,7 @@ class DatasetPlotting:
         x_cancer_names_arrays, y_cancer_names_arrays = np.unique(cancer_names_arrays, return_counts=True)
         self.bar_plot(x=x_cancer_names_arrays, 
                       y=y_cancer_names_arrays, 
-                      title='',
+                      title='Samples Number for each cancer type',
                       write_on_bars=False,
                       rotate_xticks_labels=True,
                       fig_name='plot_number_of_samples_per_cancer', 

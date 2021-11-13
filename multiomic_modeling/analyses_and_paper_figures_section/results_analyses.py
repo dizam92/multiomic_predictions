@@ -74,13 +74,15 @@ class BuildMetricsComparisonBar:
         base_value = dict_view_off['aucune'][f'{targeted_metric}']
         values_to_plot = [el[f'{targeted_metric}'] - base_value for el in dict_view_off.values()] 
         classes = list(dict_view_off.keys())
-        classes[0] = 'none/baseline'
+        classes[0] = 'none(baseline)'
         fig, axes = plt.subplots(figsize=(16, 10))
         axes = sns.barplot(x=values_to_plot, y=classes)
-        axes.set(xlabel=f'Difference in value from baseline {targeted_metric} metric', 
-                 ylabel='Views turned off')
+        axes.set_xlabel(f'Difference in value from baseline model {targeted_metric} metric value', fontweight='bold', loc="center") 
+        axes.set_ylabel('Views turned off', fontweight='bold', loc="center")
+        # axes.set(xlabel=f'Difference in value from baseline model {targeted_metric} metric value', 
+        #          ylabel='Views turned off')
         axes.set_xlim([-100, 5])
-        if title != '': axes.set_title(f'{title}', size=15)
+        if title != '': axes.set_title(f'{title}', size=15, fontweight="bold")
         fig.savefig(f'{output_path}/{fig_name}') if fig_name.endswith('pdf') else fig.savefig(f'{output_path}/{fig_name}.pdf')
         plt.close(fig)
 
@@ -123,17 +125,21 @@ class BuildMetricsComparisonBar:
         cles_liste = [all_cle, cnv_cle, methyl_cle, rna_cle, mirna_cle, protein_cle]
         values_liste = [all_values_cibles, cnv_values_cibles, methyl_values_cibles, rna_values_cibles, mirna_values_cibles, protein_values_cibles]
         fig, axes = plt.subplots(figsize=(16, 10), nrows=2, ncols=3)
-        fig.suptitle(f'Baseline Metrics Comparison {targeted_metric} for DT, RF, SVM and DNN')
+        fig.suptitle(f'Baseline algorithms (DT, RF, SVM and DNN) metrics perfomance evalution', size=15, fontweight='bold')
         palette = sns.color_palette(n_colors=4)
         
         for idx, ax in enumerate(axes.flat): 
-            if idx == 0: ax.bar(x=cles_liste[0], height=values_liste[0], width=0.5, color=palette); ax.set_title("ALL")
-            if idx == 1: ax.bar(x=cles_liste[1], height=values_liste[1], width=0.5, color=palette); ax.set_title("CNV")
-            if idx == 2: ax.bar(x=cles_liste[2], height=values_liste[2], width=0.5, color=palette); ax.set_title("METHYL")
-            if idx == 3: ax.bar(x=cles_liste[3], height=values_liste[3], width=0.5, color=palette); ax.set_title("RNA")
-            if idx == 4: ax.bar(x=cles_liste[4], height=values_liste[4], width=0.5, color=palette); ax.set_title("MIRNA")
-            if idx == 5: ax.bar(x=cles_liste[5], height=values_liste[5], width=0.5, color=palette); ax.set_title("PROTEIN")
-            ax.set(xlabel='Algorithms', ylabel=f'{targeted_metric}')
+            if idx == 0: ax.bar(x=cles_liste[0], height=values_liste[0], width=0.5, color=palette); ax.set_title("ALL", fontweight="bold")
+            if idx == 1: ax.bar(x=cles_liste[1], height=values_liste[1], width=0.5, color=palette); ax.set_title("CNV", fontweight="bold")
+            if idx == 2: ax.bar(x=cles_liste[2], height=values_liste[2], width=0.5, color=palette); ax.set_title("METHYL", fontweight="bold")
+            if idx == 3: ax.bar(x=cles_liste[3], height=values_liste[3], width=0.5, color=palette); ax.set_title("RNA", fontweight="bold")
+            if idx == 4: ax.bar(x=cles_liste[4], height=values_liste[4], width=0.5, color=palette); ax.set_title("MIRNA", fontweight="bold")
+            if idx == 5: ax.bar(x=cles_liste[5], height=values_liste[5], width=0.5, color=palette); ax.set_title("PROTEIN", fontweight="bold")
+            # ax.set(xlabel='Algorithms', ylabel=f'{targeted_metric}')
+            # axes.set_xlabel(f'Difference in value from baseline model {targeted_metric} metric value', fontweight='bold', loc="center") 
+            ax.set_ylabel(f'{targeted_metric}', fontweight="bold")
+            ax.set_ylim([0, 100])
+            ax.bar_label(ax.containers[0])
         # More a note to myself: I can't put the legend" I spent too much time on this BS i give up
             # labels = ['dt', 'rf', 'svm', 'dnn']; fig.legend(labels, loc='upper right', prop={'size': 10}, labelcolor=palette, edgecolor=palette) 
         fig.savefig(f'{output_path}/{fig_name}') if fig_name.endswith('pdf') else fig.savefig(f'{output_path}/{fig_name}.pdf')
@@ -157,12 +163,53 @@ class BuildMetricsComparisonBar:
         fig, axes = plt.subplots(figsize=(16, 10))
         palette = sns.color_palette(n_colors=3)
         axes.bar(x=classes, height=values_to_plot, width=0.5, color=palette)
-        # axes = sns.barplot(x=classes, y=values_to_plot)
-        axes.set(xlabel=f'Our model metric comparison: metric {targeted_metric} ', ylabel='')
-        if title != '': axes.set_title(f'{title}', size=15)
+        axes.set_xlabel(f'MutiOmicTransformerModel (MOTM) and  MutiOmicTransformerModelMultimodal (MOTMM)', fontweight='bold', loc="center") 
+        axes.set_ylabel('Metric value in %', fontweight='bold', loc="center")
+        axes.bar_label(axes.containers[0])
+        # axes.set(xlabel=f'Our model metric comparison: metric {targeted_metric} ', ylabel='')
+        if title != '': axes.set_title(f'{title}', size=15, fontweight='bold')
         fig.savefig(f'{output_path}/{fig_name}') if fig_name.endswith('pdf') else fig.savefig(f'{output_path}/{fig_name}.pdf')
         plt.close(fig)
+
+    @staticmethod
+    def plot_all_metrics_together(fichier_our_model: str,
+                                  fichier_baseline_model: str, 
+                                  targeted_metric: str, 
+                                  title: str,
+                                  output_path: str, 
+                                  fig_name: str):
+        with open(fichier_our_model) as f: 
+            lines = f.readlines()
+            lines = [el.split('|') for el in lines] # [['', cle, value, '\n'], []]
+            dict_view_off =  {
+                line[1].strip(' '): json.loads(line[2].strip(' ').replace('\'', '\"')) for line in lines
+            }
+        values_to_plot = [el[f'{targeted_metric}'] for el in dict_view_off.values()] 
+        classes = ['motm_on_normal', 'motm_on_data_aug', 'mtom_mm_on_data_aug']
         
+        with open(fichier_baseline_model) as f: 
+            lines = f.readlines()
+            lines = [el.split('|') for el in lines] # [['', cle, value, '\n'], []]
+            dict_view_off_base =  {
+                '_'.join(line[1].strip(' ').split('_')[:2]): json.loads(line[2].strip(' ').replace('\'', '\"')) for line in lines[2:]
+            }
+        all_cle = [el for el in dict_view_off_base.keys() if el.endswith('all')]; all_values = [dict_view_off_base[el] for el in all_cle]
+        all_values_cibles = [dico[targeted_metric] for dico in all_values]
+      
+        final_values_to_plot = []; final_values_to_plot.extend(all_values_cibles); final_values_to_plot.extend(values_to_plot)
+        final_classes = []; final_classes.extend(all_cle); final_classes.extend(classes)
+    
+        fig, axes = plt.subplots(figsize=(16, 10))
+        palette = sns.color_palette(n_colors=7)
+        axes.bar(x=final_classes, height=final_values_to_plot, width=0.5, color=palette)
+        axes.set_xlabel(f'Algorithms', fontweight='bold', loc="center") 
+        axes.set_ylabel(f'{targeted_metric} value in %', fontweight='bold', loc="center")
+        axes.bar_label(axes.containers[0])
+        
+        if title != '': axes.set_title(f'{title}', size=15, fontweight='bold')
+        fig.savefig(f'{output_path}/{fig_name}') if fig_name.endswith('pdf') else fig.savefig(f'{output_path}/{fig_name}.pdf')
+        plt.close(fig)
+
 if __name__ == '__main__':
     base_lines_analyses = BaseLinesAnalysis()
     base_lines_analyses.build_results_baselines_file_output()
@@ -177,6 +224,18 @@ if __name__ == '__main__':
                                                                   title='Metrics evolution per view turned off', 
                                                                   output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
                                                                   fig_name='model_data_aug_rec')
+    
+    BuildMetricsComparisonBar.compute_diverging_stacked_bar_chart(fichier='/Users/maoss2/PycharmProjects/multiomic_predictions/results/naive_scores_temp_normal_saving_version.md', 
+                                                                  targeted_metric='acc', 
+                                                                  title='Metrics evolution per view turned off', 
+                                                                  output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
+                                                                  fig_name='model_normal_acc')
+    BuildMetricsComparisonBar.compute_diverging_stacked_bar_chart(fichier='/Users/maoss2/PycharmProjects/multiomic_predictions/results/naive_scores_temp_data_aug_saving_version.md', 
+                                                                  targeted_metric='acc', 
+                                                                  title='Metrics evolution per view turned off', 
+                                                                  output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
+                                                                  fig_name='model_data_aug_acc')
+    
     # BuildMetricsComparisonBar.compute_diverging_stacked_bar_chart(fichier='/Users/maoss2/PycharmProjects/multiomic_predictions/results/naive_scores_temp_normal_saving_version.md', 
         #                                                               targeted_metric='mcc_score', 
         #                                                               title='Metrics evolution per view turned off', 
@@ -211,6 +270,46 @@ if __name__ == '__main__':
     
     BuildMetricsComparisonBar.compute_our_models_comparison_bar_chart_figure(fichier='/Users/maoss2/PycharmProjects/multiomic_predictions/results/our_model_comparison.md', 
                                                                                targeted_metric='rec',
-                                                                               title='Metric evaluation for our model on the 3 experiments type', 
+                                                                               title='MOTM and MOTMM evaluation performamce', 
                                                                                output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
                                                                                fig_name='our_models_recall')
+    BuildMetricsComparisonBar.compute_our_models_comparison_bar_chart_figure(fichier='/Users/maoss2/PycharmProjects/multiomic_predictions/results/our_model_comparison.md', 
+                                                                               targeted_metric='f1_score',
+                                                                               title='MOTM and MOTMM evaluation performamce', 
+                                                                               output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
+                                                                               fig_name='our_models_f1_score')
+    BuildMetricsComparisonBar.compute_our_models_comparison_bar_chart_figure(fichier='/Users/maoss2/PycharmProjects/multiomic_predictions/results/our_model_comparison.md', 
+                                                                               targeted_metric='prec',
+                                                                               title='MOTM and MOTMM evaluation performamce', 
+                                                                               output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
+                                                                               fig_name='our_models_precision')
+    BuildMetricsComparisonBar.compute_our_models_comparison_bar_chart_figure(fichier='/Users/maoss2/PycharmProjects/multiomic_predictions/results/our_model_comparison.md', 
+                                                                               targeted_metric='acc',
+                                                                               title='MOTM and MOTMM evaluation performamce', 
+                                                                               output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
+                                                                               fig_name='our_models_accuracy')
+    
+    BuildMetricsComparisonBar.plot_all_metrics_together(fichier_our_model='/Users/maoss2/PycharmProjects/multiomic_predictions/results/our_model_comparison.md', 
+                                                        fichier_baseline_model='/Users/maoss2/PycharmProjects/multiomic_predictions/results/baselines_results.md', 
+                                                        targeted_metric='acc', 
+                                                        title='Baselines and MOTM models metrics (Accuracy) perfomance evalution', 
+                                                        output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
+                                                        fig_name='baseline_vs_motm_models_comparison_accuracy')
+    BuildMetricsComparisonBar.plot_all_metrics_together(fichier_our_model='/Users/maoss2/PycharmProjects/multiomic_predictions/results/our_model_comparison.md', 
+                                                        fichier_baseline_model='/Users/maoss2/PycharmProjects/multiomic_predictions/results/baselines_results.md', 
+                                                        targeted_metric='prec', 
+                                                        title='Baselines and MOTM models metrics (Precision) perfomance evalution', 
+                                                        output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
+                                                        fig_name='baseline_vs_motm_models_comparison_precision')
+    BuildMetricsComparisonBar.plot_all_metrics_together(fichier_our_model='/Users/maoss2/PycharmProjects/multiomic_predictions/results/our_model_comparison.md', 
+                                                        fichier_baseline_model='/Users/maoss2/PycharmProjects/multiomic_predictions/results/baselines_results.md', 
+                                                        targeted_metric='rec', 
+                                                        title='Baselines and MOTM models metrics (Recall) perfomance evalution', 
+                                                        output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
+                                                        fig_name='baseline_vs_motm_models_comparison_recall')
+    BuildMetricsComparisonBar.plot_all_metrics_together(fichier_our_model='/Users/maoss2/PycharmProjects/multiomic_predictions/results/our_model_comparison.md', 
+                                                        fichier_baseline_model='/Users/maoss2/PycharmProjects/multiomic_predictions/results/baselines_results.md', 
+                                                        targeted_metric='f1_score', 
+                                                        title='Baselines and MOTM models metrics (F1_score) perfomance evalution', 
+                                                        output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
+                                                        fig_name='baseline_vs_motm_models_comparison_f1_score')
