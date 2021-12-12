@@ -120,7 +120,7 @@ class ClfMetrics:
             'prec': np.round(precision_score(y_test, y_pred, average='weighted') * 100, 3),
             'rec': np.round(recall_score(y_test, y_pred, average='weighted') * 100, 3),
             'f1_score': np.round(f1_score(y_test, y_pred, average='weighted') * 100, 3),
-            'mcc_score': np.round(matthews_corrcoef(y_test, y_pred), 3)
+            'mcc_score': np.round(matthews_corrcoef(y_test, y_pred) * 100, 3)
         }
         
     @staticmethod  
