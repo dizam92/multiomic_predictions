@@ -245,7 +245,9 @@ class MultiomicDatasetBuilder:
     @staticmethod
     def multiomic_data_aug_builder(augmented_dataset):
         labels = [augmented_dataset[i][-1] for i in augmented_dataset.train_indices]
-        nb_of_times_len_data_was_multiplied = int(np.sqrt(math.factorial(len(augmented_dataset.views)))) 
+        # It's taking an astronomical much of time so imma switch up. It's supposed to be 10 for the next opération
+        # nb_of_times_len_data_was_multiplied = int(np.sqrt(math.factorial(len(augmented_dataset.views)))) 
+        nb_of_times_len_data_was_multiplied = 3
         new_labels = []
         for _ in range(nb_of_times_len_data_was_multiplied): new_labels.extend(labels)
         labels = new_labels
