@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=32
+#SBATCH --cpus-per-task=16
 ##SBATCH --gres=gpu:v100:1
 #SBATCH --mem=32G
 #SBATCH --account=rrg-corbeilj-ac
