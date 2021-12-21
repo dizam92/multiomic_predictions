@@ -71,7 +71,7 @@ class BuildMetricsComparisonBar:
             dict_view_off =  {
                 line[1].strip('__'): json.loads(line[2].strip(' ').replace('\'', '\"')) for line in lines
             }
-        base_value = dict_view_off['aucune'][f'{targeted_metric}']
+        base_value = dict_view_off['none'][f'{targeted_metric}']
         values_to_plot = [el[f'{targeted_metric}'] - base_value for el in dict_view_off.values()] 
         classes = list(dict_view_off.keys())
         classes[0] = 'none(baseline)'
