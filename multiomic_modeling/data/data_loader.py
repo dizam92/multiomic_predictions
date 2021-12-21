@@ -192,7 +192,7 @@ class MultiomicDatasetNormal(Dataset):
                     data[i][:view['data'][view['patient_names'].get(patient_name, 0)].shape[0]] = view['data'][view['patient_names'].get(patient_name, 0)]
         mask = np.array([(patient_name in view['patient_names']) for view in self.views])
         original_data = data.astype(float)
-        return (original_data, mask), patient_label
+        return (original_data, mask), patient_label, patient_name # i add the patient_name because we need it for an analysis downstream
     
     def __len__(self):
         return len(self.all_patient_names) 
@@ -234,18 +234,20 @@ class MultiomicDatasetDataAug(MultiomicDatasetNormal):
                 mask[np.random.choice(np.flatnonzero(mask), size=n_views_to_drop)] = 0
         original_data = deepcopy(data.astype(float))
         data_augmentation = data.astype(float) * mask.reshape(-1, 1) # on met à zéro la vue ou les vues qu'on a dit de drop
-        return (data_augmentation, mask, original_data, original_mask), patient_label
+        return (data_augmentation, mask, original_data, original_mask), patient_label, patient_name # i add the patient_name because we need it for an analysis downstream
     
     def __len__(self):
         # Estimation de la longueur du dataset equivaut à factorial(nbre_de_vues)
         # return len(self.all_patient_names) 
-        return len(self.train_patient_names) * int(np.sqrt(math.factorial(len(self.views)))) 
+        # return len(self.train_patient_names) * int(np.sqrt(math.factorial(len(self.views)))) 
+        return len(self.train_patient_names) * 3
                               
 class MultiomicDatasetBuilder:
     @staticmethod
     def multiomic_data_aug_builder(augmented_dataset):
         labels = [augmented_dataset[i][-1] for i in augmented_dataset.train_indices]
-        # It's taking an astronomical much of time so imma switch up. It's supposed to be 10 for the next opération
+        # It's taking an astronomical much of time so i choose 3 to accelerate the code and see the results. 
+        # It's supposed to be 10 for the next opération
         # nb_of_times_len_data_was_multiplied = int(np.sqrt(math.factorial(len(augmented_dataset.views)))) 
         nb_of_times_len_data_was_multiplied = 3
         new_labels = []

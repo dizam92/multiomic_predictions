@@ -15,10 +15,10 @@ from copy import deepcopy
 import seaborn as sns
 sns.set_theme()
 
-best_config_file_path_normal_data_aug_2000 = '/scratch/maoss2/optuna_data_aug_output_2000/441d7ca4dbbb5e250ca41156b746f52d9436cb92/config.json' 
-best_config_file_path_normal_normal_2000 = '/scratch/maoss2/optuna_normal_output_2000/ec18a0b2ca27de64e673e9dc9dfb9596970c130d/config.json' 
+best_config_file_path_normal_data_aug_2000 = '/scratch/maoss2/optuna_data_aug_output_2000/64c01d9cc9220b7fb39c2740272c1a02faff77e0/config.json' # 96.042
+best_config_file_path_normal_normal_2000 = '/scratch/maoss2/optuna_normal_output_2000/ec18a0b2ca27de64e673e9dc9dfb9596970c130d/config.json' # 91.595
 
-best_config_file_path_multimodal_data_aug_2000 = '/scratch/maoss2/optuna_multimodal_data_aug_output_2000/e4e38101b615967fa3fed7462ac08bc88ff1b116/config.json'
+# best_config_file_path_multimodal_data_aug_2000 = '/scratch/maoss2/optuna_multimodal_data_aug_output_2000/e4e38101b615967fa3fed7462ac08bc88ff1b116/config.json'
 
 
 class InspectedValues(object):
@@ -52,15 +52,9 @@ class Inspect(object):
 # (data_augmentation, mask, original_data, original_mask), patient_label
 class AttentionWeightsAnalysis:    
     @staticmethod
-    def build_examples_per_cancer(data_size: int = 2000, exp_type: str = 'normal') -> Tuple[list, list]:
-        if exp_type == 'normal':
-            dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider='all')
-            _, test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
-        elif exp_type == 'data_aug':
-            dataset = MultiomicDatasetDataAug(data_size=data_size, views_to_consider='all')
-            _, test, _ = MultiomicDatasetBuilder.multiomic_data_aug_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
-        else: 
-            raise ValueError(f'The experiment type {exp_type} is not a valid option: choose between [normal and data_aug]')
+    def build_examples_per_cancer(data_size: int = 2000) -> Tuple[list, list]:
+        dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider='all')
+        _, test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
         
         test_data_loader =  MultiomicDatasetBuilder.multiomic_dataset_loader(dataset=test, batch_size=32, nb_cpus=2)
         list_of_cancer_names = [test.dataset.label_encoder.inverse_transform([i])[0] for i in range(33)]
@@ -68,20 +62,13 @@ class AttentionWeightsAnalysis:
         for test_data in iter(test_data_loader):
             batch_examples = test_data[0]
             batch_examples_labels = test_data[1]
-            if exp_type == 'normal':
-                for sub_idx, cancer_label in enumerate(batch_examples_labels):
-                    list_of_examples[int(cancer_label)].append([batch_examples[0][sub_idx], 
-                                                                batch_examples[1][sub_idx]])
-            else:
-                for sub_idx, cancer_label in enumerate(batch_examples_labels):
-                    list_of_examples[int(cancer_label)].append([batch_examples[0][sub_idx], 
-                                                                batch_examples[1][sub_idx], 
-                                                                batch_examples[2][sub_idx],
-                                                                batch_examples[3][sub_idx]])
+            for sub_idx, cancer_label in enumerate(batch_examples_labels):
+                list_of_examples[int(cancer_label)].append([batch_examples[0][sub_idx], 
+                                                            batch_examples[1][sub_idx]])
         return list_of_examples, list_of_cancer_names
 
     @staticmethod        
-    def get_attention_weights(trainer, inputs_list: list, exp_type: str = 'normal') -> list:
+    def get_attention_weights(trainer, inputs_list: list) -> list:
         """
         Args:
             trainer, MultiomicTrainer or MultiomicTrainerMultimodal
@@ -91,19 +78,10 @@ class AttentionWeightsAnalysis:
             output with this shape [number_of_layer * batch_size * number_of_views * number_of_views]
         """
         inputs_list_copy = deepcopy(inputs_list)
-        if exp_type == 'normal':
-            original_data = torch.Tensor([np.asarray(el[0]) for el in inputs_list_copy]).float()
-            mask = torch.Tensor([np.asarray(el[1]) for el in inputs_list_copy]).bool()
-            inputs = [original_data, mask]
-        elif exp_type == 'data_aug':
-            data_augmentation = torch.Tensor([np.asarray(el[0]) for el in inputs_list_copy]).float()
-            mask = torch.Tensor([np.asarray(el[1]) for el in inputs_list_copy]).bool()
-            original_data = torch.Tensor([np.asarray(el[2]) for el in inputs_list_copy]).bool()
-            original_mask = torch.Tensor([np.asarray(el[3]) for el in inputs_list_copy]).bool()
-            inputs = [data_augmentation, mask, original_data, original_mask]
-        else: 
-            raise ValueError(f'The experiment type {exp_type} is not a valid option: choose between [normal and data_aug]')
-        
+        original_data = torch.Tensor([np.asarray(el[0]) for el in inputs_list_copy]).float()
+        mask = torch.Tensor([np.asarray(el[1]) for el in inputs_list_copy]).bool()
+        inputs = [original_data, mask]
+       
         res = []
         for layer in range(trainer.network.encoder.n_layers):
             try:
@@ -262,8 +240,8 @@ if __name__ == "__main__":
             output_path=best_config_file_path_normal_data_aug_2000[:-12], 
             data_size=2000)
 
-    main_plot(config_file=best_config_file_path_multimodal_data_aug_2000, 
-            algo_type='multimodal', 
-            exp_type='data_aug', 
-            output_path=best_config_file_path_multimodal_data_aug_2000[:-12], 
-            data_size=2000)
+    # main_plot(config_file=best_config_file_path_multimodal_data_aug_2000, 
+    #         algo_type='multimodal', 
+    #         exp_type='data_aug', 
+    #         output_path=best_config_file_path_multimodal_data_aug_2000[:-12], 
+    #         data_size=2000)
