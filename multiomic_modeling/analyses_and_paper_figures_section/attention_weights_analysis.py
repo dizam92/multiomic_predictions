@@ -184,7 +184,7 @@ def main_plot(config_file: str,
               exp_type: str = 'normal', 
               output_path: str = './', 
               data_size: int = 2000):
-    list_of_examples_per_cancer, list_of_cancer_names = AttentionWeightsAnalysis.build_examples_per_cancer(data_size=int(data_size), exp_type=str(exp_type)) # length of 33
+    list_of_examples_per_cancer, list_of_cancer_names = AttentionWeightsAnalysis.build_examples_per_cancer(data_size=int(data_size)) # length of 33
     with open(config_file, 'r') as f:
         all_params = json.load(f)
     random.seed(all_params['seed'])

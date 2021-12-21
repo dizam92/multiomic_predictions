@@ -101,7 +101,7 @@ class MultiomicTrainer(BaseTrainer):
         batch_size = self.hparams.batch_size  
         ploader = DataLoader(dataset, collate_fn=c_collate, batch_size=batch_size, shuffle=False)
         res = [(patient_label, torch.argmax(self.network.predict(inputs=x), dim=1))
-                for i, (x, patient_label) in tqdm(enumerate(ploader))] # classification multiclasse d'ou le argmax
+                for i, (x, patient_label, patient_name) in tqdm(enumerate(ploader))] # classification multiclasse d'ou le argmax
         target_data, preds = map(list, zip(*res))
         target_data = to_numpy(target_data)
         preds = to_numpy(preds)

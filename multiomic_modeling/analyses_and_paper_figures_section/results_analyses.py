@@ -221,7 +221,7 @@ if __name__ == '__main__':
                                                                   fig_name='model_normal_rec')
     BuildMetricsComparisonBar.compute_diverging_stacked_bar_chart(fichier='/Users/maoss2/PycharmProjects/multiomic_predictions/results/naive_scores_temp_data_aug_saving_version.md', 
                                                                   targeted_metric='rec', 
-                                                                  title='Metrics evolution per view turned off', 
+                                                                  title='Metric scores divergence per omic view turned off', 
                                                                   output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
                                                                   fig_name='model_data_aug_rec')
     
@@ -232,7 +232,7 @@ if __name__ == '__main__':
                                                                   fig_name='model_normal_acc')
     BuildMetricsComparisonBar.compute_diverging_stacked_bar_chart(fichier='/Users/maoss2/PycharmProjects/multiomic_predictions/results/naive_scores_temp_data_aug_saving_version.md', 
                                                                   targeted_metric='acc', 
-                                                                  title='Metrics evolution per view turned off', 
+                                                                  title='Metric scores divergence per omic view turned off', 
                                                                   output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
                                                                   fig_name='model_data_aug_acc')
     
