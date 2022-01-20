@@ -15,19 +15,26 @@ import numpy as np
 from copy import deepcopy
 import seaborn as sns
 sns.set_theme()
-             
+
+# TODO: La meme classe mais au test set on met les vues de caque cancer à off?              
 class TurnOffViewsDatasetNormal(MultiomicDatasetNormal):
     """ This class create a test dataset specialize for the experiment of testing the model of views turned off. 
         It just change the mask boolean to False for the omics to be turned off. 
         Since it just on the test set it can be used for both models learned on normal and data_aug datasets
     """
     def __init__(self, data_size: int = 2000, 
-                 views_to_consider: str = 'all', 
-                 view_to_turn_off: list = ['none']):
+                 views_to_consider: str = 'all',
+                 cancer_targeted: int = 0):
         super().__init__(data_size=data_size, views_to_consider=views_to_consider)
-        self.view_to_turn_off =  view_to_turn_off
+        self.cancer_targeted = cancer_targeted
         self._dict_of_the_combinations = {'cnv': 0, 'methyl': 1, 'mirna': 2, 'rna': 3, 'protein': 4}
-        
+        self.dict_cancer_to_views = {0:['cnv','rna'], 1:['rna'], 2:['rna'],  3:['cnv', 'rna'], 4:['rna'], 5:['rna'], 
+                            6:['mirna','rna'], 7:['rna'], 8:['cnv'], 9:['cnv','rna'], 10:['mirna','rna'], 
+                            11:['methyl','rna'], 12:['mirna','rna'], 13:['mirna','rna'], 14:['rna'], 15:['cnv','mirna','rna'], 
+                            16:['cnv','mirna','rna'], 17:['cnv','mirna','rna'], 18:['cnv','rna'], 19:['cnv','mirna','rna'],
+                            20:['cnv','rna'], 21:['mirna','rna'], 22:['rna'], 23:['cnv','rna'], 24:['rna'], 25:['rna'], 
+                            26:['rna'], 27:['mirna','rna'], 28:['rna'], 29:['mirna','rna'], 30:['rna'], 31:['rna'], 32:['cnv','mirna','rna']
+                            }
     def __getitem__(self, idx): 
         patient_name = self.all_patient_names[idx]
         patient_label = self.all_patient_labels[idx]
@@ -41,9 +48,8 @@ class TurnOffViewsDatasetNormal(MultiomicDatasetNormal):
         mask = np.array([(patient_name in view['patient_names']) for view in self.views])
         original_mask = deepcopy(mask)
         original_data = data.astype(float)
-        if self.view_to_turn_off == ['none']: pass
-        else: 
-            for el in self.view_to_turn_off: mask[self._dict_of_the_combinations[el]] = False
+        if patient_label == self.cancer_targeted:
+            for el in self.dict_cancer_to_views[patient_label]: mask[self._dict_of_the_combinations[el]] = False
         return (original_data, mask, original_mask), patient_label, patient_name
 
         
@@ -149,63 +155,41 @@ class TestMOTOnEachCancerWithSpecificOmicsTurnedOff():
         np.random.seed(self.all_params['seed'])
         torch.manual_seed(self.all_params['seed'])
         self.trainer_model = MultiomicTrainer(Namespace(**self.all_params['model_params']))
-    
-    
+      
     def test_scores(self, 
                     save_file_name: str = 'naive_scores', 
                     data_size: int = 2000, 
                     views_to_consider: str = 'all', 
-                    view_to_turn_off: list = ['none'],
+                    # view_to_turn_off: list = ['none'],
                     targeted_cancer: int = 0):
-        # assert view_to_turn_off in ['none', 'protein', 'methyl', 'mirna', 'rna', 'cnv'], f'the value {view_to_turn_off} is not defined and must be in [protein, methyl, mirna, rna, cnv]'
-        #list_of_cancer_names = [test.dataset.label_encoder.inverse_transform([i])[0] for i in range(33)]
-        
         test_dataset = TurnOffViewsDatasetNormal(data_size=data_size,
                                                  views_to_consider=views_to_consider,
-                                                 view_to_turn_off=view_to_turn_off)
+                                                 cancer_targeted=targeted_cancer)
         _, self.test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=test_dataset, test_size=0.2, valid_size=0.1)
-        index_original_in_new_test = np.arange((len(self.test.indices)))
-        index_cancer_targeted = [idx for idx in index_original_in_new_test if self.test[idx][-2] == targeted_cancer]
-        self.new_test_indices = list(np.asarray(self.test.indices)[index_cancer_targeted])
-        self.test.indices = self.new_test_indices
+        # index_original_in_new_test = np.arange((len(self.test.indices)))
+        # index_cancer_targeted = [idx for idx in index_original_in_new_test if self.test[idx][-2] == targeted_cancer]
+        # self.new_test_indices = list(np.asarray(self.test.indices)[index_cancer_targeted])
+        # self.test.indices = self.new_test_indices
         cancer_name_targeted = self.test.dataset.label_encoder.inverse_transform([targeted_cancer])[0]
-        name_of_view_to_be_turned_off = '_'.join(view_to_turn_off)
-        scores_fname = os.path.join(self.all_params['fit_params']['output_path'], f'{save_file_name}_{views_to_consider}_{cancer_name_targeted}_off_view_{name_of_view_to_be_turned_off}.txt')
+        # name_of_view_to_be_turned_off = '_'.join(view_to_turn_off)
+        scores_fname = os.path.join(self.all_params['fit_params']['output_path'], f'{save_file_name}_{views_to_consider}_{cancer_name_targeted}.txt')
         scores = self.trainer_model.score(dataset=self.test, 
                                           artifact_dir=self.all_params['fit_params']['output_path'], 
                                           nb_ckpts=self.all_params['predict_params'].get('nb_ckpts', 1), 
                                           scores_fname=scores_fname)    
 
 def main_test_MOT_on_each_cancer_with_specific_omics_turned_off():
-    dict_cancer_to_views = {0:[['cnv'],['rna']], 1:[['rna']], 2:[['rna']],  3:[['cnv'],['rna']], 4:[['rna']], 5:[['rna']], 
-                            6:[['mirna'],['rna']], 7:[['rna']], 8:[['cnv']], 9:[['cnv'],['rna']], 10:[['mirna'],['rna']], 
-                            11:[['methyl'],['rna']], 12:[['mirna'],['rna']], 13:[['mirna'],['rna']], 14:[['rna']], 15:[['cnv'],['mirna'],['rna']], 
-                            16:[['cnv'],['mirna'],['rna']], 17:[['cnv'],['mirna'],['rna']], 18:[['cnv'],['rna']], 19:[['cnv'],['mirna'],['rna']],
-                            20:[['cnv'],['rna']], 21:[['mirna'],['rna']], 22:[['rna']], 23:[['cnv'],['rna']], 24:[['rna']], 25:[['rna']], 
-                            26:[['rna']], 27:[['mirna'],['rna']], 28:[['rna']], 29:[['mirna'],['rna']], 30:[['rna']], 31:[['rna']], 32:[['cnv'],['mirna'],['rna']] 
-                            }
-    
-    for cancer_number, list_omics_views_to_turn_off in dict_cancer_to_views.items():
-        for view_off in list_omics_views_to_turn_off:
-            data_aug_model_test = TestMOTOnEachCancerWithSpecificOmicsTurnedOff()
-            data_aug_model_test.initialisation(config_file=best_config_file_path_normal_data_aug_2000,
-                                       data_size=2000, 
-                                       dataset_views_to_consider='all')
-            data_aug_model_test.test_scores(save_file_name='scores', 
-                                            data_size=2000, 
-                                            views_to_consider='all', 
-                                            view_to_turn_off=view_off,
-                                            targeted_cancer=cancer_number)
-    for cancer_number, _ in dict_cancer_to_views.items():
+    for cancer_number in range(33):
         data_aug_model_test = TestMOTOnEachCancerWithSpecificOmicsTurnedOff()
         data_aug_model_test.initialisation(config_file=best_config_file_path_normal_data_aug_2000,
-                                       data_size=2000, 
-                                       dataset_views_to_consider='all')
+                                    data_size=2000, 
+                                    dataset_views_to_consider='all')
         data_aug_model_test.test_scores(save_file_name='scores', 
-                                            data_size=2000, 
-                                            views_to_consider='all', 
-                                            view_to_turn_off=['none'],
-                                            targeted_cancer=cancer_number)
+                                        data_size=2000, 
+                                        views_to_consider='all', 
+                                        # view_to_turn_off=view_off,
+                                        targeted_cancer=cancer_number)
+
 
 if __name__ == "__main__":
     main_test_MOT_on_samples_with_all_examples()
