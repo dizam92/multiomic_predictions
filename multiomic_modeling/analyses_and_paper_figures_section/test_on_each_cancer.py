@@ -23,10 +23,10 @@ class TurnOffViewsDatasetNormal(MultiomicDatasetNormal):
         Since it just on the test set it can be used for both models learned on normal and data_aug datasets
     """
     def __init__(self, data_size: int = 2000, 
-                 views_to_consider: str = 'all',
-                 cancer_targeted: int = 0):
+                 views_to_consider: str = 'all'
+                 ):
         super().__init__(data_size=data_size, views_to_consider=views_to_consider)
-        self.cancer_targeted = cancer_targeted
+        # self.cancer_targeted = cancer_targeted
         self._dict_of_the_combinations = {'cnv': 0, 'methyl': 1, 'mirna': 2, 'rna': 3, 'protein': 4}
         self.dict_cancer_to_views = {0:['cnv','rna'], 1:['rna'], 2:['rna'],  3:['cnv', 'rna'], 4:['rna'], 5:['rna'], 
                             6:['mirna','rna'], 7:['rna'], 8:['cnv'], 9:['cnv','rna'], 10:['mirna','rna'], 
@@ -48,8 +48,7 @@ class TurnOffViewsDatasetNormal(MultiomicDatasetNormal):
         mask = np.array([(patient_name in view['patient_names']) for view in self.views])
         original_mask = deepcopy(mask)
         original_data = data.astype(float)
-        if patient_label == self.cancer_targeted:
-            for el in self.dict_cancer_to_views[patient_label]: mask[self._dict_of_the_combinations[el]] = False
+        for el in self.dict_cancer_to_views[patient_label]: mask[self._dict_of_the_combinations[el]] = False
         return (original_data, mask, original_mask), patient_label, patient_name
 
         
@@ -146,7 +145,7 @@ class TestMOTOnEachCancerWithSpecificOmicsTurnedOff():
                        data_size: int = 2000, 
                        dataset_views_to_consider: str = 'all'):
         self.dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
-        _, new_test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=self.dataset, test_size=0.2, valid_size=0.1)
+        _, self.new_test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=self.dataset, test_size=0.2, valid_size=0.1)
 
         assert config_file != '', 'must have a config file (from the best model ultimately)'
         with open(config_file, 'r') as f:
@@ -159,38 +158,34 @@ class TestMOTOnEachCancerWithSpecificOmicsTurnedOff():
     def test_scores(self, 
                     save_file_name: str = 'naive_scores', 
                     data_size: int = 2000, 
-                    views_to_consider: str = 'all', 
-                    # view_to_turn_off: list = ['none'],
-                    targeted_cancer: int = 0):
+                    views_to_consider: str = 'all'
+                    ):
         test_dataset = TurnOffViewsDatasetNormal(data_size=data_size,
                                                  views_to_consider=views_to_consider,
-                                                 cancer_targeted=targeted_cancer)
+                                                 # cancer_targeted=targeted_cancer
+                                                 )
         _, self.test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=test_dataset, test_size=0.2, valid_size=0.1)
-        # index_original_in_new_test = np.arange((len(self.test.indices)))
-        # index_cancer_targeted = [idx for idx in index_original_in_new_test if self.test[idx][-2] == targeted_cancer]
-        # self.new_test_indices = list(np.asarray(self.test.indices)[index_cancer_targeted])
-        # self.test.indices = self.new_test_indices
-        cancer_name_targeted = self.test.dataset.label_encoder.inverse_transform([targeted_cancer])[0]
-        # name_of_view_to_be_turned_off = '_'.join(view_to_turn_off)
-        scores_fname = os.path.join(self.all_params['fit_params']['output_path'], f'{save_file_name}_{views_to_consider}_{cancer_name_targeted}.txt')
-        scores = self.trainer_model.score(dataset=self.test, 
+        scores_fname = os.path.join(self.all_params['fit_params']['output_path'], f'{save_file_name}_{views_to_consider}.txt')
+        scores = self.trainer_model.score(dataset=self.new_test, 
                                           artifact_dir=self.all_params['fit_params']['output_path'], 
                                           nb_ckpts=self.all_params['predict_params'].get('nb_ckpts', 1), 
                                           scores_fname=scores_fname)    
 
 def main_test_MOT_on_each_cancer_with_specific_omics_turned_off():
-    for cancer_number in range(33):
-        data_aug_model_test = TestMOTOnEachCancerWithSpecificOmicsTurnedOff()
-        data_aug_model_test.initialisation(config_file=best_config_file_path_normal_data_aug_2000,
+    data_aug_model_test = TestMOTOnEachCancerWithSpecificOmicsTurnedOff()
+    data_aug_model_test.initialisation(config_file=best_config_file_path_normal_data_aug_2000,
                                     data_size=2000, 
                                     dataset_views_to_consider='all')
-        data_aug_model_test.test_scores(save_file_name='scores', 
-                                        data_size=2000, 
-                                        views_to_consider='all', 
-                                        # view_to_turn_off=view_off,
-                                        targeted_cancer=cancer_number)
+    data_aug_model_test.test_scores(save_file_name='scores_all_together', 
+                                    data_size=2000, 
+                                    views_to_consider='all'
+                                    )
 
+cancer_labels=['ACC', 'BLCA', 'BRCA', 'CESC', 'CHOL', 'COAD', 'DLBC', 'ESCA', 'GBM', 
+               'HNSC', 'KICH', 'KIRC', 'KIRP', 'LAML', 'LGG', 'LIHC', 'LUAD', 'LUSC', 
+               'MESO', 'OV', 'PAAD', 'PCPG', 'PRAD', 'READ', 'SARC', 'SKCM', 'STAD', 
+               'TGCT', 'THCA', 'THYM', 'UCEC', 'UCS', 'UVM']
 
 if __name__ == "__main__":
     main_test_MOT_on_samples_with_all_examples()
-         
+    main_test_MOT_on_each_cancer_with_specific_omics_turned_off()

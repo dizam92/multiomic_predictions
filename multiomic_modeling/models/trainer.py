@@ -113,15 +113,19 @@ class MultiomicTrainer(BaseTrainer):
             new_target_data.extend(target_data_batch)
         scores = ClfMetrics().score(y_test=new_target_data, y_pred=new_preds)
         clf_report = ClfMetrics().classif_report(y_test=new_target_data, y_pred=new_preds)
-        
+        confusion_matrix = ClfMetrics().confusion_matric_report(y_test=new_target_data, y_pred=new_preds)
+        confusion_matrix_dumped = json.dumps(confusion_matrix, cls=NumpyEncoder)
         if scores_fname is not None:
             clf_report_fname = f'{scores_fname[:-5]}_clf_report.json'
+            confusion_matrix_fname = f'{scores_fname[:-5]}_confusion_report.json'
             # print(scores)
             # print(clf_report)
             with open(scores_fname, 'w') as fd:
                 json.dump(scores, fd)
             with open(clf_report_fname, 'w') as fd:
                 json.dump(clf_report, fd)
+            with open(confusion_matrix_fname, 'w') as fd:
+                json.dump(confusion_matrix_dumped, fd)
         return scores
     
     @staticmethod

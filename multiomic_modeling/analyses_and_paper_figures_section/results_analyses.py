@@ -60,11 +60,45 @@ class BaseLinesAnalysis:
 
 class BuildMetricsComparisonBar:
     @staticmethod
+    def compute_new_diverging_stacked_bar_chart(title: str = '', 
+                                                fig_name: str = '',
+                                                output_path: str = './', 
+                                                write_on_bars : bool = True):
+        # f1_scores
+        modified_values = [0.20,0.98,0.98,0.94,0.88,0.64,0.93,0.80,0.63,0.95,0.82,0.84,0.86,0.95,0.93,0.99,0.83,0.72,1.00,0.78,1.00,0.96,0.99,0.37,0.97,1.00,0.92,0.98,0.99,1.00,0.95,0.74,1.00]
+        original_values = [0.89,0.98,1.00,0.96,0.92,0.89,1.00,0.94,0.93,0.99,0.98,0.98,0.94,0.97,0.98,0.99,0.93,0.92,0.96,0.96,0.99,0.97,1.00,0.54,0.97,0.99,0.98,1.00,1.00,0.98,0.95,0.67,1.00]
+        modified_values = np.asarray(modified_values) * 100
+        original_values = np.asarray(original_values) * 100
+        # recall (most of the time it's equal accuracy here)
+        # modified_values = [1.00,0.96,0.96,0.93,1.00,0.50,1.00,0.82,0.47,0.95,0.73,0.78,0.79,1.00,0.99,0.99,0.74,0.65,1.00,0.66,1.00,0.92,0.98,0.67,0.97,1.00,0.94,0.96,1.00,1.00,0.97,0.88,1.00]
+        # original_values = [0.92,0.98,1.00,0.95,0.86,0.85,1.00,0.94,0.93,0.97,1.00,0.98,0.93,1.00,1.00,1.00,0.95,0.87,1.00,0.95,1.00,0.97,1.00,0.62,0.98,1.00,0.95,1.00,1.00,1.00,0.98,0.75,1.00]
+        # modified_values = np.asarray(modified_values) * 100
+        # original_values = np.asarray(original_values) * 100
+        
+        cancer_labels=['ACC', 'BLCA', 'BRCA', 'CESC', 'CHOL', 'COAD', 'DLBC', 'ESCA', 'GBM', 
+               'HNSC', 'KICH', 'KIRC', 'KIRP', 'LAML', 'LGG', 'LIHC', 'LUAD', 'LUSC', 
+               'MESO', 'OV', 'PAAD', 'PCPG', 'PRAD', 'READ', 'SARC', 'SKCM', 'STAD', 
+               'TGCT', 'THCA', 'THYM', 'UCEC', 'UCS', 'UVM']
+        values_to_plot = modified_values - original_values
+        classes = cancer_labels
+        fig, axes = plt.subplots(figsize=(16, 5))
+        axes = sns.barplot(x=values_to_plot, y=classes)
+        axes.set_xlabel(f'Scores variation', loc="center") 
+        axes.set_ylabel('Cancer Label', loc="center")
+        if write_on_bars: 
+            axes.bar_label(axes.containers[0]) 
+        axes.set_xlim([-50, 20])
+        if title != '': axes.set_title(f'{title}', size=10, fontweight="bold")
+        fig.savefig(f'{output_path}/{fig_name}') if fig_name.endswith('pdf') else fig.savefig(f'{output_path}/{fig_name}.pdf')
+        plt.close(fig)
+        
+    @staticmethod
     def compute_diverging_stacked_bar_chart(fichier: str, 
                                             targeted_metric: str, 
                                             title: str,
                                             output_path: str, 
-                                            fig_name: str):
+                                            fig_name: str,
+                                            write_on_bars: bool = False):
         with open(fichier) as f: 
             lines = f.readlines()
             lines = [el.split('|') for el in lines] # [['', cle, value, '\n'], []]
@@ -79,8 +113,8 @@ class BuildMetricsComparisonBar:
         axes = sns.barplot(x=values_to_plot, y=classes)
         axes.set_xlabel(f'Difference in value from baseline model {targeted_metric} metric value', fontweight='bold', loc="center") 
         axes.set_ylabel('Views turned off', fontweight='bold', loc="center")
-        # axes.set(xlabel=f'Difference in value from baseline model {targeted_metric} metric value', 
-        #          ylabel='Views turned off')
+        if write_on_bars: 
+            axes.bar_label(axes.containers[0]) 
         axes.set_xlim([-100, 5])
         if title != '': axes.set_title(f'{title}', size=15, fontweight="bold")
         fig.savefig(f'{output_path}/{fig_name}') if fig_name.endswith('pdf') else fig.savefig(f'{output_path}/{fig_name}.pdf')
@@ -210,10 +244,12 @@ class BuildMetricsComparisonBar:
         fig.savefig(f'{output_path}/{fig_name}') if fig_name.endswith('pdf') else fig.savefig(f'{output_path}/{fig_name}.pdf')
         plt.close(fig)
 
-if __name__ == '__main__':
+def main_base_lines_analyses():
     base_lines_analyses = BaseLinesAnalysis()
     base_lines_analyses.build_results_baselines_file_output()
     base_lines_analyses.build_results_optuna_models()
+    
+def main_compute_diverging_stacked_bar_chart():
     BuildMetricsComparisonBar.compute_diverging_stacked_bar_chart(fichier='/Users/maoss2/PycharmProjects/multiomic_predictions/results/naive_scores_temp_normal_saving_version.md', 
                                                                   targeted_metric='rec', 
                                                                   title='Metrics evolution per view turned off', 
@@ -234,7 +270,8 @@ if __name__ == '__main__':
                                                                   targeted_metric='acc', 
                                                                   title='Metric scores divergence per omic view turned off', 
                                                                   output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
-                                                                  fig_name='model_data_aug_acc')
+                                                                  fig_name='model_data_aug_acc',
+                                                                  write_on_bars=True)
     
     # BuildMetricsComparisonBar.compute_diverging_stacked_bar_chart(fichier='/Users/maoss2/PycharmProjects/multiomic_predictions/results/naive_scores_temp_normal_saving_version.md', 
         #                                                               targeted_metric='mcc_score', 
@@ -246,7 +283,8 @@ if __name__ == '__main__':
         #                                                               title='Metrics evolution per view turned off', 
         #                                                               output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
         #                                                               fig_name='model_data_aug_mcc')
-    
+
+def main_compute_baseline_models_comparison_bar_chart_figure():
     BuildMetricsComparisonBar.compute_baseline_models_comparison_bar_chart_figure(fichier='/Users/maoss2/PycharmProjects/multiomic_predictions/results/baselines_results.md',
                                                                                   targeted_metric='rec',
                                                                                   output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
@@ -288,7 +326,8 @@ if __name__ == '__main__':
                                                                                title='MOTM and MOTMM evaluation performamce', 
                                                                                output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
                                                                                fig_name='our_models_accuracy')
-    
+
+def main_plot_all_metrics_together():
     BuildMetricsComparisonBar.plot_all_metrics_together(fichier_our_model='/Users/maoss2/PycharmProjects/multiomic_predictions/results/our_model_comparison.md', 
                                                         fichier_baseline_model='/Users/maoss2/PycharmProjects/multiomic_predictions/results/baselines_results.md', 
                                                         targeted_metric='acc', 
@@ -313,3 +352,12 @@ if __name__ == '__main__':
                                                         title='Baselines and MOTM models metrics (F1_score) perfomance evalution', 
                                                         output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
                                                         fig_name='baseline_vs_motm_models_comparison_f1_score')
+
+def main_compute_new_diverging_stacked_bar_chart():
+    BuildMetricsComparisonBar.compute_new_diverging_stacked_bar_chart(title='F1 score score variations after important views removal', 
+                                                                      fig_name='new_fig_f1_score.pdf', 
+                                                                      output_path='./', 
+                                                                      write_on_bars=True)    
+    
+if __name__ == '__main__':
+    pass

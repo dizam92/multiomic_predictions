@@ -107,7 +107,11 @@ class AttentionWeightsAnalysis:
                                            fig_name: str = 'cancer', 
                                            columns_names: list = ['cnv', 'methyl', 'mirna', 'rna', 'protein'], 
                                            exp_type: str = 'normal'):
+        torch.manual_seed(42)
+        np.random.seed(42)
         final_array = to_numpy(torch.nn.functional.softmax(cancer_weights * 100, dim=-1).mean(dim=0))
+        final_array = np.round(final_array, 3)
+        print(final_array)
         fig, axes = plt.subplots(figsize=(11.69, 8.27))
         sns.heatmap(final_array, vmin=0, vmax=1, annot=True, linewidths=0.1, 
                         xticklabels=columns_names, yticklabels=columns_names)

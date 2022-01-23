@@ -126,3 +126,19 @@ class ClfMetrics:
     @staticmethod  
     def classif_report(y_test, y_pred):
         return classification_report(y_test, y_pred)
+    
+    @staticmethod
+    def confusion_matric_report(y_test, y_pred):
+        return confusion_matrix(y_true=y_test, y_pred=y_pred)
+    
+class NumpyEncoder(json.JSONEncoder):
+    """ Special json encoder for numpy types """
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+    
