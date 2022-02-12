@@ -82,12 +82,15 @@ class BuildMetricsComparisonBar:
         values_to_plot = modified_values - original_values
         classes = cancer_labels
         fig, axes = plt.subplots(figsize=(16, 5))
-        axes = sns.barplot(x=values_to_plot, y=classes)
+        # self.colors = [color_palette()[0]] * len(self.colors)
+        axes = sns.barplot(x=values_to_plot, y=classes, palette=sns.color_palette(n_colors = 33))
         axes.set_xlabel(f'Scores variation', loc="center") 
-        axes.set_ylabel('Cancer Label', loc="center")
+        # axes.set_ylabel('Cancer Label', loc="center")
+        axes.yaxis.set_visible(False)
+        axes.legend(labels=cancer_labels, labelcolor=sns.color_palette(n_colors = 33), fontsize='xx-small') # , labelcolor='linecolor'
         if write_on_bars: 
             axes.bar_label(axes.containers[0]) 
-        axes.set_xlim([-50, 20])
+        axes.set_xlim([-80, 10])
         if title != '': axes.set_title(f'{title}', size=10, fontweight="bold")
         fig.savefig(f'{output_path}/{fig_name}') if fig_name.endswith('pdf') else fig.savefig(f'{output_path}/{fig_name}.pdf')
         plt.close(fig)
@@ -110,12 +113,13 @@ class BuildMetricsComparisonBar:
         classes = list(dict_view_off.keys())
         classes[0] = 'none(baseline)'
         fig, axes = plt.subplots(figsize=(16, 10))
-        axes = sns.barplot(x=values_to_plot, y=classes)
+        # axes = sns.barplot(x=values_to_plot, y=classes, linewidth=2.5, facecolor=(1, 1, 1, 0), edgecolor=".2", color="black", saturation=.5)
+        axes = sns.barplot(x=values_to_plot, y=classes, color="black")
         axes.set_xlabel(f'Difference in value from baseline model {targeted_metric} metric value', fontweight='bold', loc="center") 
         axes.set_ylabel('Views turned off', fontweight='bold', loc="center")
         if write_on_bars: 
             axes.bar_label(axes.containers[0]) 
-        axes.set_xlim([-100, 5])
+        axes.set_xlim([-3, 1])
         if title != '': axes.set_title(f'{title}', size=15, fontweight="bold")
         fig.savefig(f'{output_path}/{fig_name}') if fig_name.endswith('pdf') else fig.savefig(f'{output_path}/{fig_name}.pdf')
         plt.close(fig)
