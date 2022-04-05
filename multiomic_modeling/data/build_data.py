@@ -114,22 +114,12 @@ else:
     protein_path = f'{graham_file_path_origin}/TCGA-RPPA-pancan-clean.xena'
 
 
-if __name__ == '__main__':
-    # TODO: Si la liste fichiers_path change, il faut update la liste saving_files_names car chaque nom a été écrit pour le fichier correspondant
-    
-    # saving_files_names = ['exon_pancan_tcga.h5', 'cnv_pancan_tcga.h5', 'methyl_27_pancan_tcga.h5', 'methyl_450_pancan_tcga.h5', 
-    #                       'rna_pancan_tcga.h5', 'rna_isoforms_pancan_tcga.h5', 'mirna_pancan_tcga.h5', 'protein_pancan_tcga.h5']
-    # saving_files_names_reduced = ['exon_pancan_tcga_reduced', 'cnv_pancan_tcga_reduced', 'methyl_27_pancan_tcga_reduced', 
-    #                               'methyl_450_pancan_tcga_reduced', 'rna_pancan_tcga_reduced', 'rna_isoforms_pancan_tcga_reduced', 
-    #                               'mirna_pancan_tcga_reduced', 'protein_pancan_tcga_reduced']
-
-    # fichiers_path = [cnv_path, methyl_450_path, rna_path, rna_isoforms_path, mirna_path]
-    # saving_files_names_reduced = ['cnv_pancan_tcga_reduced', 'methyl_450_pancan_tcga_reduced', 
-    #                               'rna_pancan_tcga_reduced', 'rna_isoforms_pancan_tcga_reduced', 
-    #                               'mirna_pancan_tcga_reduced']
-    fichiers_path = [cnv_path, protein_path]
-    saving_files_names_reduced = ['cnv_pancan_tcga_reduced', 'protein_pancan_tcga_reduced']
-    
+if __name__ == '__main__':   
+    fichiers_path = [cnv_path, methyl_450_path, rna_path, rna_isoforms_path, mirna_path, protein_path]
+    saving_files_names_reduced = ['cnv_pancan_tcga_reduced', 'methyl_450_pancan_tcga_reduced', 
+                                  'rna_pancan_tcga_reduced', 'rna_isoforms_pancan_tcga_reduced', 
+                                  'mirna_pancan_tcga_reduced', 'protein_pancan_tcga_reduced']
+   
     for idx, fichier in enumerate(fichiers_path):
         # read_chunk_file(fichier_path=fichier, saving_file_name=f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}', chunk_size=100000)
         if os.path.exists(f'{graham_file_path_origin}/data_hdf5/{saving_files_names_reduced[idx]}_2000.h5'):
