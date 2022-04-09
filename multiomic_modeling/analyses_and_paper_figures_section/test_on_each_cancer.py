@@ -15,8 +15,7 @@ import numpy as np
 from copy import deepcopy
 import seaborn as sns
 sns.set_theme()
-
-# TODO: La meme classe mais au test set on met les vues de caque cancer à off?              
+            
 class TurnOffViewsDatasetNormal(MultiomicDatasetNormal):
     """ This class create a test dataset specialize for the experiment of testing the model of views turned off. 
         It just change the mask boolean to False for the omics to be turned off. 
@@ -181,6 +180,75 @@ def main_test_MOT_on_each_cancer_with_specific_omics_turned_off():
                                     views_to_consider='all'
                                     )
 
+class DatasetWithOnly3omics(MultiomicDatasetNormal):
+    def __init__(self, data_size: int = 2000, 
+                 views_to_consider: str = 'all'
+                 ):
+        super().__init__(data_size=data_size, views_to_consider=views_to_consider)
+
+    def __getitem__(self, idx): 
+        patient_name = self.all_patient_names[idx]
+        patient_label = self.all_patient_labels[idx]
+        data = np.zeros((len(self.views), self.nb_features)) # nombre_views X nombre_features
+        for i, view in enumerate(self.views):
+            if patient_name in view['patient_names']:
+                try:
+                    data[i] = view['data'][view['patient_names'].get(patient_name, 0)]
+                except ValueError:
+                    data[i][:view['data'][view['patient_names'].get(patient_name, 0)].shape[0]] = view['data'][view['patient_names'].get(patient_name, 0)]
+        mask = np.array([(patient_name in view['patient_names']) for view in self.views])
+        original_mask = deepcopy(mask)
+        original_data = data.astype(float)
+        mask[[0, 4]] = False # we put cnv and protein at 0 no matter what
+        return (original_data, mask, original_mask), patient_label, patient_name
+        
+        
+class TestMOTOnOnlyThe3MainOMics():
+    def initialisation(self, 
+                       config_file: str = '', 
+                       data_size: int = 2000, 
+                       dataset_views_to_consider: str = 'all'):
+        dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
+        _, new_test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
+
+        assert config_file != '', 'must have a config file (from the best model ultimately)'
+        with open(config_file, 'r') as f:
+            self.all_params = json.load(f)
+        random.seed(self.all_params['seed'])
+        np.random.seed(self.all_params['seed'])
+        torch.manual_seed(self.all_params['seed'])
+        self.trainer_model = MultiomicTrainer(Namespace(**self.all_params['model_params']))
+        self.samples_idx_with_all_3_omics = []
+        for idx in range(len(new_test)):
+            # if list(new_test[idx][0][-1]) == [False, True, True, True, False]:
+            if list(new_test[idx][0][-1][1:4]) == [True, True, True]:
+                self.samples_idx_with_all_3_omics.append(idx)
+        # self.new_test_set = Subset(new_test, indices=samples_idx_with_all_3_omics)
+        
+    def test_scores(self, 
+                    save_file_name: str = 'naive_scores', 
+                    data_size: int = 2000, 
+                    views_to_consider: str = 'all'
+                    ):
+        test_dataset = DatasetWithOnly3omics(data_size=data_size, views_to_consider=views_to_consider)
+        _, self.test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=test_dataset, test_size=0.2, valid_size=0.1)
+        self.new_test_set = Subset(self.test, indices=self.samples_idx_with_all_3_omics)
+        scores_fname = os.path.join(self.all_params['fit_params']['output_path'], f'{save_file_name}_{views_to_consider}.txt')
+        scores = self.trainer_model.score(dataset=self.new_test_set, 
+                                          artifact_dir=self.all_params['fit_params']['output_path'], 
+                                          nb_ckpts=self.all_params['predict_params'].get('nb_ckpts', 1), 
+                                          scores_fname=scores_fname)    
+
+def main_test_MOT_on_only_3_omics():
+    data_aug_model_test = TestMOTOnOnlyThe3MainOMics()
+    data_aug_model_test.initialisation(config_file=best_config_file_path_normal_data_aug_2000,
+                                    data_size=2000, 
+                                    dataset_views_to_consider='all')
+    data_aug_model_test.test_scores(save_file_name='scores_3_omics_only', 
+                                    data_size=2000, 
+                                    views_to_consider='all'
+                                    )
+    
 cancer_labels=['ACC', 'BLCA', 'BRCA', 'CESC', 'CHOL', 'COAD', 'DLBC', 'ESCA', 'GBM', 
                'HNSC', 'KICH', 'KIRC', 'KIRP', 'LAML', 'LGG', 'LIHC', 'LUAD', 'LUSC', 
                'MESO', 'OV', 'PAAD', 'PCPG', 'PRAD', 'READ', 'SARC', 'SKCM', 'STAD', 
@@ -189,3 +257,4 @@ cancer_labels=['ACC', 'BLCA', 'BRCA', 'CESC', 'CHOL', 'COAD', 'DLBC', 'ESCA', 'G
 if __name__ == "__main__":
     main_test_MOT_on_samples_with_all_examples()
     main_test_MOT_on_each_cancer_with_specific_omics_turned_off()
+    main_test_MOT_on_only_3_omics()
