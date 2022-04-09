@@ -107,7 +107,7 @@ nbconvert @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/croo
 nbformat @ file:///tmp/build/80754af9/nbformat_1617383369282/work
 nest-asyncio @ file:///tmp/build/80754af9/nest-asyncio_1613680548246/work
 networkx==2.5
-nltk==3.6.5
+nltk==3.6.6
 nose @ file:///tmp/build/80754af9/nose_1606773131901/work
 notebook @ file:///opt/concourse/worker/volumes/live/04354d80-9f15-4db9-4bcd-195dc104f1c6/volume/notebook_1645002579570/work
 num2words==0.5.10
