@@ -11,7 +11,7 @@ from multiomic_modeling.models.base import BaseTrainer
 from multiomic_modeling.data.data_loader import MultiomicDatasetDataAug, MultiomicDatasetNormal, MultiomicDatasetBuilder, SubsetRandomSampler
 from multiomic_modeling.models.models import MultiomicPredictionModel, MultiomicPredictionModelMultiModal
 from multiomic_modeling.models.utils import expt_params_formatter, c_collate
-from multiomic_modeling.loss_and_metrics import ClfMetrics
+from multiomic_modeling.loss_and_metrics import ClfMetrics, NumpyEncoder
 from multiomic_modeling.utilities import params_to_hash
 from multiomic_modeling.torch_utils import to_numpy, totensor, get_optimizer
 from multiomic_modeling import logging
