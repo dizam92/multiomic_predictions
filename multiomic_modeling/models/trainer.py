@@ -54,7 +54,7 @@ class MultiomicTrainer(BaseTrainer):
         self.metrics = ()
     
     def train_val_step(self, batch, optimizer_idx=0, train=True):
-        xs, ys = batch
+        xs, ys, _ = batch
         ys_pred = self.network(xs)
         loss_metrics = self.network.compute_loss_metrics(ys_pred, ys)
         prefix = 'train_' if train else 'val_'
@@ -154,7 +154,7 @@ class MultiomicTrainer(BaseTrainer):
         fit_params.update(output_path=out_prefix, artifact_dir=out_prefix)
         with open(os.path.join(out_prefix, 'config.json'), 'w') as fd:
             json.dump(all_params, fd, sort_keys=True, indent=2)
-        # data_size = 2000; dataset_views_to_consider = 'all'
+        # data_size = 2000; dataset_views_to_consider = 'all'; seed = 42
         if exp_type == 'normal':
             dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
             train, test, valid = MultiomicDatasetBuilder().multiomic_data_normal_builder(dataset=dataset, 
