@@ -157,10 +157,16 @@ class MultiomicTrainer(BaseTrainer):
         # data_size = 2000; dataset_views_to_consider = 'all'
         if exp_type == 'normal':
             dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
-            train, test, valid = MultiomicDatasetBuilder().multiomic_data_normal_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
+            train, test, valid = MultiomicDatasetBuilder().multiomic_data_normal_builder(dataset=dataset, 
+                                                                                         test_size=0.2, 
+                                                                                         valid_size=0.1, 
+                                                                                         random_state=seed)
         elif exp_type == 'data_aug':            
             dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
-            train, test, valid = MultiomicDatasetBuilder().multiomic_data_normal_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
+            train, test, valid = MultiomicDatasetBuilder().multiomic_data_normal_builder(dataset=dataset, 
+                                                                                         test_size=0.2, 
+                                                                                         valid_size=0.1, 
+                                                                                         random_state=seed)
             dataset_augmented = MultiomicDatasetDataAug(train_dataset=train, data_size=data_size, views_to_consider=dataset_views_to_consider)
             train = MultiomicDatasetBuilder.multiomic_data_aug_builder(augmented_dataset=dataset_augmented)
         else: 

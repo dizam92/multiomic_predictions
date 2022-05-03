@@ -257,12 +257,12 @@ class MultiomicDatasetBuilder:
         return new_train_dataset
     
     @staticmethod        
-    def multiomic_data_normal_builder(dataset, test_size=0.2, valid_size=0.1):
+    def multiomic_data_normal_builder(dataset, test_size=0.2, valid_size=0.1, random_state=42):
         n = len(dataset)
         idxs = np.arange(n)
         labels = dataset.all_patient_labels
-        X_train, X_test, y_train, y_test = train_test_split(idxs, labels, test_size=test_size, random_state=42)
-        X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=valid_size, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(idxs, labels, test_size=test_size, random_state=random_state)
+        X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=valid_size, random_state=random_state)
         train_dataset = Subset(dataset, indices=X_train)
         test_dataset = Subset(dataset, indices=X_test)
         valid_dataset =  Subset(dataset, indices=X_valid)

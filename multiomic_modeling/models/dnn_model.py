@@ -32,14 +32,17 @@ class DNNDatasetBuilder:
         return train_dataset, test_dataset, valid_dataset
     
 class DNNDataset(Dataset):
-    def __init__(self, data_size: int = 2000, views_to_consider: str = 'all'):
+    def __init__(self, data_size: int = 2000, views_to_consider: str = 'all', random_state: int = 42):
         super().__init__()
-        x_train, y_train, x_test, y_test, feature_names = BaseAlgoTemplate.reload_dataset(data_size=data_size, dataset_views_to_consider=views_to_consider)
+        x_train, y_train, x_test, y_test, feature_names = BaseAlgoTemplate.reload_dataset(data_size=data_size, 
+                                                                                          dataset_views_to_consider=views_to_consider,
+                                                                                          random_state=random_state)
         self.data = np.vstack((x_train, x_test))
         self.labels = self.all_patient_labels = np.hstack((y_train, y_test))
         self._len_train = 8820
         self._len_test = 2451
         self._len_valid = 981
+        self.random_state = random_state
         
     def __getitem__(self, idx): 
         return self.data[idx], self.all_patient_labels[idx]
@@ -215,7 +218,7 @@ class DNNTrainer(MultiomicTrainer):
         with open(os.path.join(out_prefix, 'config.json'), 'w') as fd:
             json.dump(all_params, fd, sort_keys=True, indent=2)
         # data_size = 2000; dataset_views_to_consider = 'all'
-        dataset = DNNDataset(data_size=data_size, views_to_consider=dataset_views_to_consider)
+        dataset = DNNDataset(data_size=data_size, views_to_consider=dataset_views_to_consider, random_state=seed)
         train, test, valid = DNNDatasetBuilder.dnn_dataset_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
         logger.info("Training")
         model = DNNTrainer(Namespace(**model_params))

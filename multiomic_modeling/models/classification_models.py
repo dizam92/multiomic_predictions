@@ -2,6 +2,7 @@ import numpy as np
 import pickle
 import logging
 import os
+import random
 from collections import defaultdict
 from copy import deepcopy
 
@@ -101,25 +102,28 @@ class BaseAlgoTemplate():
         self.saving_dict['cv_results'] = self.gs_clf.cv_results_
         self.saving_dict['best_params'] = self.gs_clf.best_params_
         # self.saving_dict['importances'] = []
-        # self.saving_dict['rules'] = []
-        # self.saving_dict['rules_str'] = []
-        # importances = self.gs_clf.best_estimator_.feature_importances_
-        # indices = np.argsort(importances)[::-1]
-        # for f in range(100):
-        #     if importances[indices[f]] > 0:
-        #         logger.info("%d. feature %d (%f) %s" % (f + 1, indices[f], importances[indices[f]],
-        #                                             feature_names[indices[f]]))
-        # self.saving_dict['importances'].append(importances)
-        # self.saving_dict['rules'] = [(f + 1, indices[f], importances[indices[f]], feature_names[indices[f]]) for f in
-        #                     range(100) if importances[indices[f]] > 0]
+            # self.saving_dict['rules'] = []
+            # self.saving_dict['rules_str'] = []
+            # importances = self.gs_clf.best_estimator_.feature_importances_
+            # indices = np.argsort(importances)[::-1]
+            # for f in range(100):
+            #     if importances[indices[f]] > 0:
+            #         logger.info("%d. feature %d (%f) %s" % (f + 1, indices[f], importances[indices[f]],
+            #                                             feature_names[indices[f]]))
+            # self.saving_dict['importances'].append(importances)
+            # self.saving_dict['rules'] = [(f + 1, indices[f], importances[indices[f]], feature_names[indices[f]]) for f in
+            #                     range(100) if importances[indices[f]] > 0]
         
         with open(saving_file, 'wb') as fd:
             pickle.dump(self.saving_dict, fd)
 
     @staticmethod
-    def reload_dataset(data_size=2000, dataset_views_to_consider='all'): 
+    def reload_dataset(data_size=2000, dataset_views_to_consider='all', random_state=42): 
         dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider='all')
-        train_dataset, test_dataset, valid_dataset = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset, test_size=0.2, valid_size=0.1)
+        train_dataset, test_dataset, valid_dataset = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset, 
+                                                                                                           test_size=0.2, 
+                                                                                                           valid_size=0.1,
+                                                                                                           random_state=random_state)
         train_loader = DataLoader(train_dataset, batch_size=len(train_dataset))
         train_dataset_array = next(iter(train_loader))[0][0].numpy()
         train_dataset_array_labels = next(iter(train_loader))[1].numpy()
@@ -155,48 +159,59 @@ class BaseAlgoTemplate():
         
 
 class RunExperiments:
-    def __init__(self, data_size: int = 2000, dataset_views_to_consider: str = 'all'):
+    def __init__(self, data_size: int = 2000, dataset_views_to_consider: str = 'all', random_state: int = 42):
         super().__init__()
         self.dataset_views_to_consider = dataset_views_to_consider
         self.data_size = data_size
+        self.random_state = random_state
         
     def run_dt(self):
         dt_base_model = BaseAlgoTemplate(algo='tree')
         x_train, y_train, x_test, y_test, feature_names = dt_base_model.reload_dataset(data_size=self.data_size, 
-                                                                                       dataset_views_to_consider=self.dataset_views_to_consider) 
+                                                                                       dataset_views_to_consider=self.dataset_views_to_consider,
+                                                                                       random_state=self.random_state) 
         dt_base_model.learn(x_train=x_train, 
                             y_train=y_train,
                             x_test=x_test, 
                             y_test=y_test, 
                             feature_names=feature_names, 
-                            saving_file=f'/home/maoss2/scratch/dt_{self.dataset_views_to_consider}_data_{self.data_size}_scores.pck')
+                            saving_file=f'/home/maoss2/scratch/dt_{self.dataset_views_to_consider}_data_{self.data_size}_randomState_{self.random_state}_scores.pck')
 
     def run_rf(self):
         rf_base_model = BaseAlgoTemplate(algo='rf')
         x_train, y_train, x_test, y_test, feature_names = rf_base_model.reload_dataset(data_size=self.data_size, 
-                                                                                       dataset_views_to_consider=self.dataset_views_to_consider) 
+                                                                                       dataset_views_to_consider=self.dataset_views_to_consider,
+                                                                                       random_state=self.random_state) 
         rf_base_model.learn(x_train=x_train, 
                             y_train=y_train, 
                             x_test=x_test, 
                             y_test=y_test, 
                             feature_names=feature_names, 
-                            saving_file=f'/home/maoss2/scratch/rf_{self.dataset_views_to_consider}_data_{self.data_size}_scores.pck')
+                            saving_file=f'/home/maoss2/scratch/rf_{self.dataset_views_to_consider}_data_{self.data_size}_randomState_{self.random_state}_scores.pck')
     
     def run_svm(self):
         svm_base_model = BaseAlgoTemplate(algo='svm')
         x_train, y_train, x_test, y_test, feature_names = svm_base_model.reload_dataset(data_size=self.data_size, 
-                                                                                        dataset_views_to_consider=self.dataset_views_to_consider) 
+                                                                                        dataset_views_to_consider=self.dataset_views_to_consider,
+                                                                                       random_state=self.random_state) 
         svm_base_model.learn(x_train=x_train, 
                              y_train=y_train, 
                              x_test=x_test, 
                              y_test=y_test, 
                              feature_names=feature_names, 
-                             saving_file=f'/home/maoss2/scratch/svm_{self.dataset_views_to_consider}_data_{self.data_size}_scores.pck')
+                             saving_file=f'/home/maoss2/scratch/svm_{self.dataset_views_to_consider}_data_{self.data_size}_randomState_{self.random_state}_scores.pck')
 
 if __name__ == "__main__":
     data_size = 2000
-    for view in ['all', 'cnv', 'methyl', 'mirna', 'rna', 'protein']:
-        run_expe_obj = RunExperiments(data_size=data_size, dataset_views_to_consider=view)
-        if not os.path.exists(f'/home/maoss2/scratch/rf_{view}_data_{data_size}_scores.pck'): run_expe_obj.run_rf()
-        if not os.path.exists(f'/home/maoss2/scratch/dt_{view}_data_{data_size}_scores.pck'): run_expe_obj.run_dt()
-        if not os.path.exists(f'/home/maoss2/scratch/svm_{view}_data_{data_size}_scores.pck'): run_expe_obj.run_svm()
+    view = 'all'
+    # seed = 42
+    # random.seed(seed)
+    # torch.manual_seed(seed)
+    # np.random.seed(seed)
+    # random.sample(range(0, 1000), 4)
+    random_seed_list = [42, 78, 433, 966, 699] # that was randomly generate from the precedent code and we add the magic number 42
+    for r_s in random_seed_list:
+        run_expe_obj = RunExperiments(data_size=data_size, dataset_views_to_consider=view, random_state=r_s)
+        if not os.path.exists(f'/home/maoss2/scratch/rf_{view}_data_{data_size}_{r_s}_scores.pck'): run_expe_obj.run_rf()
+        if not os.path.exists(f'/home/maoss2/scratch/dt_{view}_data_{data_size}_{r_s}_scores.pck'): run_expe_obj.run_dt()
+        if not os.path.exists(f'/home/maoss2/scratch/svm_{view}_data_{data_size}_{r_s}_scores.pck'): run_expe_obj.run_svm()

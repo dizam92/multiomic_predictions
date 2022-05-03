@@ -17,21 +17,27 @@ if version.parse(pl.__version__) < version.parse("1.0.2"):
     raise RuntimeError("PyTorch Lightning>=1.0.2 is required for this example.")
 
 
-def objective(trial: optuna.trial.Trial, input_size: int, dataset_views_to_consider: str, data_size: int, output_path: str) -> float:
+def objective(trial: optuna.trial.Trial, 
+              input_size: int, 
+              dataset_views_to_consider: str,
+              data_size: int, 
+              output_path: str, 
+              random_seed: int) -> float:
     """ Main fonction to poptimize with Optuna """
     model_params = {
         "input_size": int(input_size), 
-        "lr": trial.suggest_float("lr", 1e-6, 1e-2, log=True),
+        "lr": trial.suggest_float("lr", 1e-3, 1e-2, log=True),
         "output_size": 33,
         "early_stopping": True,
-        "dropout": trial.suggest_float("dropout", 0.1, 0.5), # 0.1, 0.5
+        "dropout": trial.suggest_float("dropout", 0.2, 0.5), # 0.1, 0.5
         "weight_decay": trial.suggest_float("weight_decay", 1e-8, 1e-2, log=True), # 1e-8, 1e-2
         "activation": "relu",
         "optimizer": "Adam",
         "lr_scheduler": "cosine_with_restarts",
         "loss": "ce",
         "n_epochs": 300,
-        "batch_size": trial.suggest_categorical("batch_size", [256, 512]),
+        "batch_size": 256,
+        # "batch_size": trial.suggest_categorical("batch_size", [256, 512]),
         "class_weights":[4.03557312, 0.85154295, 0.30184775, 1.18997669, 8.25050505,
                 0.72372851, 7.73484848, 1.81996435, 0.62294082, 0.61468995,
                 4.07992008, 0.49969411, 1.07615283, 1.85636364, 0.7018388 ,
@@ -39,7 +45,8 @@ def objective(trial: optuna.trial.Trial, input_size: int, dataset_views_to_consi
                 1.89424861, 1.98541565, 0.65595888, 2.05123054, 1.37001006,
                 0.77509964, 0.76393565, 2.67102681, 0.64012539, 2.94660895,
                 0.64012539, 6.51355662, 4.64090909],
-        "batch_norm": trial.suggest_categorical("batch_norm", [True, False]),
+        "batch_norm": True,
+        # "batch_norm": trial.suggest_categorical("batch_norm", [True, False]),
         # "d_model_enc_dec": trial.suggest_categorical("d_model_enc_dec", [64, 128, 256, 512]), # [32, 64, 128, 256, 512]
         # "n_heads_enc_dec": trial.suggest_categorical("n_heads_enc_dec", [8, 16]),
         # "n_layers_enc": trial.suggest_categorical("n_layers_enc", [2, 4, 6, 8, 10, 12]), # [2, 4, 6, 8, 10, 12]
@@ -62,7 +69,7 @@ def objective(trial: optuna.trial.Trial, input_size: int, dataset_views_to_consi
         "predict_params": predict_params,
         "data_size": int(data_size),
         "dataset_views_to_consider": dataset_views_to_consider,
-        "seed": 42
+        "seed": int(random_seed)
     }
 
     model = DNNTrainer.run_experiment(**training_params, output_path=output_path)
@@ -77,6 +84,7 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--data_size', type=int, default=2000)
     parser.add_argument('-db_name', '--db_name', type=str, default='experiment_data_2000')
     parser.add_argument('-study_name', '--study_name', type=str, default='experiment_data_2000')
+    parser.add_argument('-seed', '--seed', type=int, default=42)
     args = parser.parse_args()
     # assert args.d_input_enc == args.data_size, 'must be the same size'
     if os.path.exists(args.output_path): pass
@@ -87,7 +95,7 @@ if __name__ == "__main__":
     # ) # i checked this so the MedianPruner is ok but i should add the minimum step parameter
     
     storage_db = optuna.storages.RDBStorage(
-                url=f"sqlite:///{args.output_path}/{args.db_name}.db" # url="sqlite:///:memory:" quand le lien est relatif
+                url=f"sqlite:///{args.output_path}/{args.db_name}_{args.seed}.db" # url="sqlite:///:memory:" quand le lien est relatif
             )
     study = optuna.create_study(study_name=args.study_name, 
                                 storage=storage_db, 
@@ -98,8 +106,9 @@ if __name__ == "__main__":
                                            args.input_size, 
                                            args.dataset_views_to_consider, 
                                            args.data_size, 
-                                           args.output_path), 
-                   n_trials=10, timeout=259200)
+                                           args.output_path,
+                                           args.seed), 
+                   n_trials=5, timeout=10800) # 5h: 18000; 3h: 10800; 4h: 14400
     
     print("Number of finished trials: {}".format(len(study.trials)))
 
