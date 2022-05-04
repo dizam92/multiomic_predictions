@@ -212,6 +212,6 @@ if __name__ == "__main__":
     random_seed_list = [42, 78, 433, 966, 699] # that was randomly generate from the precedent code and we add the magic number 42
     for r_s in random_seed_list:
         run_expe_obj = RunExperiments(data_size=data_size, dataset_views_to_consider=view, random_state=r_s)
-        if not os.path.exists(f'/home/maoss2/scratch/rf_{view}_data_{data_size}_{r_s}_scores.pck'): run_expe_obj.run_rf()
-        if not os.path.exists(f'/home/maoss2/scratch/dt_{view}_data_{data_size}_{r_s}_scores.pck'): run_expe_obj.run_dt()
-        if not os.path.exists(f'/home/maoss2/scratch/svm_{view}_data_{data_size}_{r_s}_scores.pck'): run_expe_obj.run_svm()
+        if not os.path.exists(f'/home/maoss2/scratch/rf_{view}_data_{data_size}_randomState_{r_s}_scores.pck'): run_expe_obj.run_rf()
+        if not os.path.exists(f'/home/maoss2/scratch/dt_{view}_data_{data_size}_randomState_{r_s}_scores.pck'): run_expe_obj.run_dt()
+        if not os.path.exists(f'/home/maoss2/scratch/svm_{view}_data_{data_size}_randomState_{r_s}_scores.pck'): run_expe_obj.run_svm()
