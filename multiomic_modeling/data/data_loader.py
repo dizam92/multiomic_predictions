@@ -154,11 +154,10 @@ class MultiomicDatasetNormal(Dataset):
             views_to_consider, str, 
                 all, load all the 4 views (cnv, methyl450, mirna, rna_iso )
                 cnv, load just cnv views
-                methyl, load just methyl27 and methyl450 views
+                methyl, load just methyl450 views
                 exon, load just exon views
                 mirna, load just mirna views
                 rna, load just rna views
-                rna_iso, load just rna_iso views
                 protein, load just protein views
         """
         self.views = BuildViews(data_size=data_size, view_name=views_to_consider).views

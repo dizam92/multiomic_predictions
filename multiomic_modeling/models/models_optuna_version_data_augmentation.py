@@ -110,7 +110,7 @@ if __name__ == "__main__":
                                            args.data_size, 
                                            args.output_path,
                                            args.seed), 
-                   n_trials=10, timeout=43200) #12h
+                   n_trials=20, timeout=86400) #12h  #24h
     
     print("Number of finished trials: {}".format(len(study.trials)))
 
