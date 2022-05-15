@@ -50,7 +50,6 @@ class MultiomicPredictionModelMultiModal(Model):
     def __init__(self, d_input_enc, nb_classes_dec, class_weights, d_model_enc_dec=1024, d_ff_enc_dec=1024, 
                  n_heads_enc_dec=16, n_layers_enc=2, n_layers_dec=2, activation="relu", dropout=0.1, loss: str = 'ce'):
         super(MultiomicPredictionModelMultiModal, self).__init__()
-        # d_input_enc=2000; nb_classes_dec=33; class_weights=[]; d_model_enc_dec=1024; d_ff_enc_dec=1024; n_heads_enc_dec=16; n_layers_enc=2; n_layers_dec=2; activation="relu"; dropout=0.1 
         self.encoder = TorchSeqTransformerEncoder(d_input=d_input_enc, d_model=d_model_enc_dec, d_ff=d_ff_enc_dec, 
                                                   n_heads=n_heads_enc_dec, n_layers=n_layers_enc, dropout=dropout)
         self.decoder = TorchSeqTransformerDecoder(nb_classes=nb_classes_dec, d_model=d_model_enc_dec, d_ff=d_ff_enc_dec, 
@@ -66,7 +65,6 @@ class MultiomicPredictionModelMultiModal(Model):
             raise f'The error {loss} is not supported yet'
         
     def forward(self, inputs) -> torch.Tensor:
-        # print('inputs',  torch.isnan(inputs[0]).any())
         enc_res = self.encoder(inputs)
         output = self.decoder(enc_res)
         output_views = self.decoder_views(enc_res)
@@ -84,12 +82,12 @@ class MultiomicPredictionModelMultiModal(Model):
         preds_views_shape = preds_views.shape
         preds_views = preds_views.reshape(preds_views_shape[1], preds_views_shape[0], -1) # on fait pas l abonne chose supposly (to be analyse)
         # torch.sum((preds_views - targets_views)**2, dim=-1) # supposly batchsize * nb_views
-        # inverse du mask aussi batchsize * nb_views
-        # temp_preds_views = torch.sum((preds_views - targets_views)**2, dim=-1)
-        # temp_preds_views = temp_preds_views * ~mask_cible
-        # mse_loss = temp_preds_views.sum() / mask_cible.sum()
-        # This or that 
-        # mask_cible = mask_cible.reshape(mask_cible.shape + (1,)) # [32, 5, 1]
+            # inverse du mask aussi batchsize * nb_views
+            # temp_preds_views = torch.sum((preds_views - targets_views)**2, dim=-1)
+            # temp_preds_views = temp_preds_views * ~mask_cible
+            # mse_loss = temp_preds_views.sum() / mask_cible.sum()
+            # This or that 
+            # mask_cible = mask_cible.reshape(mask_cible.shape + (1,)) # [32, 5, 1]
         preds_views = preds_views * ~mask_cible.reshape(mask_cible.shape + (1,))
         targets_views = targets_views * ~mask_cible.reshape(mask_cible.shape + (1,))
         mse_loss = torch.nn.functional.mse_loss(preds_views.float(), targets_views.float()) 

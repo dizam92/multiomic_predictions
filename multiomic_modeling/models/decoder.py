@@ -63,7 +63,6 @@ class TorchSeqTransformerDecoderViews(nn.Module):
         self.output = nn.Linear(d_model, self.d_input)
 
         init_params_xavier_uniform(self)
-        # init_params_xavier_normal(self)
         
     def forward(self, enc_state: EncoderState):
         target = torch.zeros((5, enc_state.memory.shape[1], self.d_model), device=enc_state.memory.device)
@@ -74,6 +73,5 @@ class TorchSeqTransformerDecoderViews(nn.Module):
             memory_mask=enc_state.mask_x,
             memory_key_padding_mask=enc_state.mask_padding_x,
         )
-        # x = self.output(x)[0]
         x = self.output(x)
         return x

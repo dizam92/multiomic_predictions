@@ -17,7 +17,7 @@ class TorchSeqTransformerEncoder(nn.Module):
         self.d_ff = d_ff
         self.dropout = dropout
         self.n_layers = n_layers
-        self.pos_encoding = PositionalEncoding(d_model, dropout)
+        # self.pos_encoding = PositionalEncoding(d_model, dropout)
         self.embedding = nn.Linear(self.d_input, self.d_model)
         
         encoder_layer = nn.TransformerEncoderLayer(self.d_model, self.n_heads, self.d_ff, self.dropout, activation="relu")
@@ -32,7 +32,7 @@ class TorchSeqTransformerEncoder(nn.Module):
         
         x = self.embedding(inputs)
         x = x.transpose(0, 1)
-        x = self.pos_encoding(x)
+        # x = self.pos_encoding(x)
         # print(x.device, self.embedding.lut.weight.device)
 
         memory = self.net(x, src_key_padding_mask=mask_padding_x)

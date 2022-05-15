@@ -248,12 +248,14 @@ class BuildMetricsComparisonBar:
         fig, axes = plt.subplots(figsize=(16, 10))
         # axes = sns.barplot(x=values_to_plot, y=classes, linewidth=2.5, facecolor=(1, 1, 1, 0), edgecolor=".2", color="black", saturation=.5)
         axes = sns.barplot(x=values_to_plot, y=classes, color="black")
-        axes.set_xlabel(f'Difference in value from baseline model {targeted_metric} metric value', fontweight='bold', loc="center") 
-        axes.set_ylabel('Views turned off', fontweight='bold', loc="center")
+        # axes.set_xlabel(f'Difference in value from baseline model {targeted_metric} metric value', fontweight='bold', loc="center", fontsize=20) 
+        # axes.set_ylabel('Views turned off', fontweight='bold', loc="center", fontsize=20)
+        axes.set_xlabel(f'Difference in value from baseline model {targeted_metric} metric value', fontweight='bold', loc="center", fontsize='xx-large') 
+        axes.set_ylabel('Views turned off', fontweight='bold', loc="center", fontsize='xx-large')
         if write_on_bars: 
             axes.bar_label(axes.containers[0]) 
         axes.set_xlim([-3, 1])
-        if title != '': axes.set_title(f'{title}', size=15, fontweight="bold")
+        if title != '': axes.set_title(f'{title}', fontsize='xx-large', fontweight="bold")
         fig.savefig(f'{output_path}/{fig_name}') if fig_name.endswith('pdf') else fig.savefig(f'{output_path}/{fig_name}.pdf')
         plt.close(fig)
 
@@ -599,10 +601,10 @@ def main_compute_diverging_stacked_bar_chart():
                                                                   title='Metrics evolution per view turned off', 
                                                                   output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
                                                                   fig_name='model_normal_acc')
-    BuildMetricsComparisonBar.compute_diverging_stacked_bar_chart(fichier='/Users/maoss2/PycharmProjects/multiomic_predictions/results/naive_scores_temp_data_aug_saving_version.md', 
+    BuildMetricsComparisonBar.compute_diverging_stacked_bar_chart(fichier='temp.md', 
                                                                   targeted_metric='acc', 
                                                                   title='Metric scores divergence per omic view turned off', 
-                                                                  output_path='/Users/maoss2/PycharmProjects/multiomic_predictions/results/', 
+                                                                  output_path='./', 
                                                                   fig_name='model_data_aug_acc',
                                                                   write_on_bars=True)
     
