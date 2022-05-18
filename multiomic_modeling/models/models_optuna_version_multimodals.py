@@ -7,7 +7,7 @@ from argparse import Namespace
 import optuna
 from optuna.study import StudyDirection
 from packaging import version
-from multiomic_modeling.models.trainer import MultiomicTrainer
+from multiomic_modeling.models.trainer import MultiomicTrainerMultiModal
 from multiomic_modeling.models.base import PatientPruner
 
 import pytorch_lightning as pl
@@ -26,17 +26,18 @@ def objective(trial: optuna.trial.Trial,
     """ Main fonction to poptimize with Optuna """
     model_params = {
         "d_input_enc": int(d_input_enc), 
-        "lr": 0.000388670623884558,
+        "lr": trial.suggest_float("lr", 1e-3, 1e-2, log=True),
         "nb_classes_dec": 33,
         "early_stopping": True,
-        "dropout": 0.13968749409625048,
-        "weight_decay": 0.008807626405326077, # 1e-8, 1e-2
+        "dropout": trial.suggest_float("dropout", 0.1, 0.5), # 0.1, 0.5
+        "weight_decay": trial.suggest_float("weight_decay", 1e-8, 1e-2, log=True), # 1e-8, 1e-2
         "activation": "relu",
         "optimizer": "Adam",
         "lr_scheduler": "cosine_with_restarts",
         "loss": "ce",
-        "n_epochs": 300, 
+        "n_epochs": 300, # augmenter ca since i have more data
         "batch_size": 256,
+        # "batch_size": trial.suggest_categorical("batch_size", [256, 512]), # [128, 256, 512]
         "class_weights":[4.03557312, 0.85154295, 0.30184775, 1.18997669, 8.25050505,
                 0.72372851, 7.73484848, 1.81996435, 0.62294082, 0.61468995,
                 4.07992008, 0.49969411, 1.07615283, 1.85636364, 0.7018388 ,
@@ -44,10 +45,10 @@ def objective(trial: optuna.trial.Trial,
                 1.89424861, 1.98541565, 0.65595888, 2.05123054, 1.37001006,
                 0.77509964, 0.76393565, 2.67102681, 0.64012539, 2.94660895,
                 0.64012539, 6.51355662, 4.64090909],
-        "d_model_enc_dec": 128, 
-        "n_heads_enc_dec": 8, 
-        "n_layers_enc": 6,
-        "n_layers_dec": 6
+        "d_model_enc_dec": trial.suggest_categorical("d_model_enc_dec", [128, 256, 512]), # [32, 64, 128, 256, 512]
+        "n_heads_enc_dec": 8, # fixed heads
+        "n_layers_enc": trial.suggest_categorical("n_layers_enc", [6, 8, 10]), # [2, 4, 6, 8, 10, 12]
+        "n_layers_dec": trial.suggest_categorical("n_layers_dec", [1, 2, 4, 6]) # [1, 2, 4, 6]
     }
     d_ff_enc_dec_value = model_params["d_model_enc_dec"] * 4
     model_params["d_ff_enc_dec"] = d_ff_enc_dec_value
@@ -72,7 +73,8 @@ def objective(trial: optuna.trial.Trial,
         "seed": int(random_seed)
     }
 
-    model = MultiomicTrainer.run_experiment(**training_params, output_path=output_path)
+    model = MultiomicTrainerMultiModal.run_experiment(**training_params, output_path=output_path)
+    # return model.trainer.callback_metrics["val_multi_acc"].item()
     return model.trainer.callback_metrics["val_ce"].item()
 
 
@@ -108,7 +110,7 @@ if __name__ == "__main__":
                                            args.data_size, 
                                            args.output_path,
                                            args.seed), 
-                   n_trials=20, timeout=86400) #12h  #24h
+                   n_trials=25, timeout=86400) #12h  #24h
     
     print("Number of finished trials: {}".format(len(study.trials)))
 
