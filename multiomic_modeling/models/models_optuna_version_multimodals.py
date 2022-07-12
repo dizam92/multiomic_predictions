@@ -74,8 +74,8 @@ def objective(trial: optuna.trial.Trial,
     }
 
     model = MultiomicTrainerMultiModal.run_experiment(**training_params, output_path=output_path)
-    # return model.trainer.callback_metrics["val_multi_acc"].item()
-    return model.trainer.callback_metrics["val_ce"].item()
+    return model.trainer.callback_metrics["combined_loss"].item()
+    # return model.trainer.callback_metrics["val_ce"].item()
 
 
 if __name__ == "__main__":

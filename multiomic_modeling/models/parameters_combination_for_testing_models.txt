@@ -1,4 +1,4 @@
-    data_size = 2000; dataset_views_to_consider = 'all'
+    data_size = 2000; dataset_views_to_consider = 'all'; seed = 42
     d_input_enc=2000; nb_classes_dec=33; class_weights=[]; d_model_enc_dec=1024; d_ff_enc_dec=1024; n_heads_enc_dec=16; n_layers_enc=2; n_layers_dec=2; activation="relu"; dropout=0.1 
     model_params = {
         "d_input_enc": 2000, 
@@ -44,6 +44,7 @@
         "predict_params": predict_params,
         "data_size": int('2000'),
         "dataset_views_to_consider": 'all',
+        "exp_type": "data_aug",
         "seed": 42
     }
     
