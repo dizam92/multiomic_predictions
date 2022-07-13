@@ -1,3 +1,10 @@
+# Installation procedure
+1. Create a virtualenv most likely like this " create -n name_of_your_env python==3.9 "
+2. Activate the env like this "conda activate name_of_your_env"
+3. Install the requirements: "pip install -R requirements.txt"
+4. Go to the multiomic repo "cd multiomic_predictions"
+5. pip install -e . 
+
 # multiomic_predictions
 This is a the implementation of the model (MOT) submited at BMC. The preprint is available here: [https://doi.org/10.21203/rs.3.rs-1348696/v1].
 MOT (Multi-Omic Transformer) is a deep learning based model using the transformer architecture, that discriminates complex phenotypes (herein cancers types) based on five omics data type regardless of their availability: transcriptomics (mRNA and miRNA), epigenomics (DNA methylation), copy number variations (CNVs), and proteomics. 
