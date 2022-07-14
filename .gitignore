@@ -134,3 +134,4 @@ dmypy.json
 results/*
 
 .vscode/
+notebook_dir/.ipynb_checkpoints/

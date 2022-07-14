@@ -218,22 +218,23 @@ class MultiomicTrainerMultiModal(BaseTrainer):
     def train_val_step(self, batch, optimizer_idx=0, train=True): 
         # target views c'est les views qui ont été éteinte par notre mask donc on fait bien de retourner le bail original: 
         # utiliser le mask pour simplifier l'acces à la vue cible et tout
-        print(batch)
-        print(len(batch))
         xs, ys, _  = batch # xs: (data_augmentation, mask, original_data, original_mask), ys: patient_label, patient_name
         ys_pred, views_pred = self.network(xs)
-        #TODO: Temporary
-        print(xs)
-        print(len(xs))
-        # TODO: END
-        mask_cible = to_numpy(xs[3]).astype(int) -  to_numpy(xs[1]).astype(int)
-        mask_cible = totensor(mask_cible, gpu=True, device=None)
-        mask_cible = mask_cible.cuda()
-        loss_metrics = self.network.compute_loss_metrics(preds=ys_pred, 
-                                                         targets=ys, 
-                                                         preds_views=views_pred, 
-                                                         targets_views=xs[2],
-                                                         mask_cible=mask_cible)
+        if train == True:
+            mask_cible = to_numpy(xs[3]).astype(int) -  to_numpy(xs[1]).astype(int)
+            mask_cible = totensor(mask_cible, gpu=True, device=None)
+            mask_cible = mask_cible.cuda()
+            loss_metrics = self.network.compute_loss_metrics(preds=ys_pred, 
+                                                             targets=ys, 
+                                                             preds_views=views_pred, 
+                                                             targets_views=xs[2],
+                                                             mask_cible=mask_cible)
+        else:
+            loss_metrics = self.network.compute_loss_metrics(preds=ys_pred, 
+                                                             targets=ys, 
+                                                             preds_views=views_pred, 
+                                                             targets_views=xs[0],
+                                                             mask_cible=xs[1])
         prefix = 'train_' if train else 'val_'
         for key, value in loss_metrics.items():
             self.log(prefix+key, value, prog_bar=True)
@@ -254,7 +255,7 @@ class MultiomicTrainerMultiModal(BaseTrainer):
     def load_average_weights(self, file_paths) -> None:
         state = {}
         for file_path in file_paths:
-            state_new = MultiomicTrainer.load_from_checkpoint(file_path, map_location=self.device).state_dict()
+            state_new = MultiomicTrainerMultiModal.load_from_checkpoint(file_path, map_location=self.device).state_dict()
             keys = state.keys()
 
             if len(keys) == 0:
@@ -276,9 +277,9 @@ class MultiomicTrainerMultiModal(BaseTrainer):
         ckpt_fnames = ckpt_fnames[:nb_ckpts]
         self.load_average_weights(ckpt_fnames)
         batch_size = self.hparams.batch_size  
-        ploader = DataLoader(dataset, collate_fn=c_collate, batch_size=batch_size, shuffle=False)
+        ploader = DataLoader(dataset, collate_fn=c_collate, batch_size=batch_size, shuffle=False)                  
         res = [(patient_label, torch.argmax(self.network.predict(inputs=x), dim=1))
-                for i, (x, patient_label, patient_name) in tqdm(enumerate(ploader))] # classification multiclasse d'ou le argmax
+                for i, (totensor(x), patient_label, patient_name) in tqdm(enumerate(ploader))] # classification multiclasse d'ou le argmax
         target_data, preds = map(list, zip(*res))
         target_data = to_numpy(target_data)
         preds = to_numpy(preds)

@@ -80,14 +80,7 @@ class MultiomicPredictionModelMultiModal(Model):
         
         ce_loss = self.__loss(preds, targets)
         preds_views_shape = preds_views.shape
-        preds_views = preds_views.reshape(preds_views_shape[1], preds_views_shape[0], -1) # on fait pas l abonne chose supposly (to be analyse)
-        # torch.sum((preds_views - targets_views)**2, dim=-1) # supposly batchsize * nb_views
-            # inverse du mask aussi batchsize * nb_views
-            # temp_preds_views = torch.sum((preds_views - targets_views)**2, dim=-1)
-            # temp_preds_views = temp_preds_views * ~mask_cible
-            # mse_loss = temp_preds_views.sum() / mask_cible.sum()
-            # This or that 
-            # mask_cible = mask_cible.reshape(mask_cible.shape + (1,)) # [32, 5, 1]
+        preds_views = preds_views.reshape(preds_views_shape[1], preds_views_shape[0], -1) 
         preds_views = preds_views * ~mask_cible.reshape(mask_cible.shape + (1,))
         targets_views = targets_views * ~mask_cible.reshape(mask_cible.shape + (1,))
         mse_loss = torch.nn.functional.mse_loss(preds_views.float(), targets_views.float()) 
