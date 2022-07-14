@@ -187,7 +187,7 @@ class BaseTrainer(LightningModule):
                 callbacks.append(checkpoint)
             else:
                 logger = verbose > 0
-            res = Trainer(gpus=(1 if torch.cuda.is_available() else 0),
+            res = Trainer(gpus=(-1 if torch.cuda.is_available() else None),
                           max_epochs=self.n_epochs,
                           # gradient_clip_val=1,
                           # profiler="advanced",

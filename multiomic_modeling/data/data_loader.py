@@ -105,6 +105,12 @@ class BuildViews(object):
                 ReadFiles().read_h5py(fichier=FichierPath.rna_file, normalization=False),
                 ReadFiles().read_h5py(fichier=FichierPath.protein_file, normalization=False)
             ]
+        elif view_name == '3_main_omics':
+            self.views = [
+                ReadFiles().read_h5py(fichier=FichierPath.methyl450_file, normalization=False),
+                ReadFiles().read_h5py(fichier=FichierPath.mirna_file, normalization=False),
+                ReadFiles().read_h5py(fichier=FichierPath.rna_file, normalization=False)
+            ]
         elif view_name == 'cnv':
             self.views = [
                 ReadFiles().read_h5py(fichier=FichierPath.cnv_file, normalization=False)

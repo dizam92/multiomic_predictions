@@ -1,0 +1,11 @@
+Thu Jul 14 16:47:45 EDT 2022
+/home/maoss2/jupyter_py3/bin/python
+/home/maoss2/jupyter_py3/bin/python
+Traceback (most recent call last):
+  File "/home/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/models/models_optuna_version_normal.py", line 10, in <module>
+    from multiomic_modeling.models.trainer import MultiomicTrainer
+  File "/home/maoss2/PycharmProjects/multiomic_predictions/multiomic_modeling/models/trainer.py", line 5, in <module>
+    import natsort
+ModuleNotFoundError: No module named 'natsort'
+0 minutes and 6 seconds elapsed.
+Thu Jul 14 16:47:51 EDT 2022

@@ -277,9 +277,10 @@ class MultiomicTrainerMultiModal(BaseTrainer):
         ckpt_fnames = ckpt_fnames[:nb_ckpts]
         self.load_average_weights(ckpt_fnames)
         batch_size = self.hparams.batch_size  
-        ploader = DataLoader(dataset, collate_fn=c_collate, batch_size=batch_size, shuffle=False)                  
-        res = [(patient_label, torch.argmax(self.network.predict(inputs=x), dim=1))
-                for i, (totensor(x), patient_label, patient_name) in tqdm(enumerate(ploader))] # classification multiclasse d'ou le argmax
+        ploader = DataLoader(dataset, collate_fn=c_collate, batch_size=batch_size, shuffle=False)  
+        res = [(patient_label, torch.argmax(self.network.predict(inputs=x)[0], dim=1))
+                for i, (x, patient_label, patient_name) in tqdm(enumerate(ploader))] # classification multiclasse d'ou le argmax
+        # ici le self predict retourne plusieurs sortie: donc juste calculer les metrics sur la tache principale de classification d'ou le [0] rajoouté
         target_data, preds = map(list, zip(*res))
         target_data = to_numpy(target_data)
         preds = to_numpy(preds)
