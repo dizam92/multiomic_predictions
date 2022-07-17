@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import ReduceLROnPlateau, CyclicLR, CosineAnnealingWarmRestarts
 
 from pytorch_lightning.tuner.tuning import Tuner
-from pytorch_lightning.loggers import TestTubeLogger
+from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning import Trainer, LightningModule
 # from pytorch_lightning.core.step_result import EvalResult, TrainResult
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
@@ -21,8 +21,8 @@ from multiomic_modeling.models.utils import c_collate
 from multiomic_modeling.loss_and_metrics import SeqCrossEntropyLoss, SeqLabelSmoothingLoss, _adjust_shapes
 from multiomic_modeling.data.structs import Sequence
 
-import optuna
-from optuna.study import StudyDirection
+# import optuna
+# from optuna.study import StudyDirection
 logger = logging.create_logger(__name__)
 
 
@@ -81,12 +81,16 @@ class BaseTrainer(LightningModule):
 
         if isinstance(hparams, dict):
             self.batch_size = hparams.pop('batch_size', 32)
-            self.hparams = Namespace(**hparams)
+            # self.hparams = Namespace(**hparams)
+            # hparams = vars(hparams)
+            self.hparams.update(hparams)
 
         if isinstance(hparams, Namespace):
             self.batch_size = hparams.batch_size if hasattr(hparams, 'batch_size') else 32
-            self.hparams = hparams
+            # self.hparams = hparams
+            # self.hparams.update(dict(hparams))
             hparams = vars(hparams)
+            self.hparams.update(hparams)
 
         self.lr = hparams.pop('lr', 1e-3)
         self.opt = hparams.pop('optimizer', 'Adam')
@@ -100,7 +104,7 @@ class BaseTrainer(LightningModule):
         self.auto_scale_batch_size = hparams.pop('auto_scale_batch_size', None)
         self.accumulate_grad_batches = hparams.pop('accumulate_grad_batches', 1)
         self.amp_backend = hparams.pop('amp_backend', 'native')
-        self.amp_level = hparams.pop('amp_level', '02')
+        self.amp_level = hparams.pop('amp_level', None)
         self.auto_lr_find = hparams.pop('auto_lr_find', False)
         self.min_batch_size = hparams.pop('min_batch_size', 32)
         self.max_batch_size = hparams.pop('max_batch_size', 2048)
@@ -178,12 +182,12 @@ class BaseTrainer(LightningModule):
         self._train_dataset, self._valid_dataset = train_dataset, valid_dataset
 
         def get_trainer():
-            callbacks = [EarlyStopping(patience=10)] if self.early_stopping else []
+            callbacks = [EarlyStopping(monitor='val_ce', patience=10)] if self.early_stopping else []
             if artifact_dir is not None:
-                logger = TestTubeLogger(save_dir=artifact_dir, name='logs', version=1)
+                logger = TensorBoardLogger(save_dir=artifact_dir, name='logs', version=1)
                 checkpoint = ModelCheckpoint(filename='{epoch}--{val_loss:.2f}', monitor="checkpoint_on",
                                              dirpath=os.path.join(artifact_dir, 'checkpoints'),
-                                             verbose=False, mode='min', save_top_k=nb_ckpts, prefix='', save_last=False)
+                                             verbose=False, mode='min', save_top_k=nb_ckpts, save_last=False)
                 callbacks.append(checkpoint)
             else:
                 logger = verbose > 0
@@ -228,34 +232,34 @@ class BaseTrainer(LightningModule):
         return np.concatenate(res, axis=0)
 
 
-class PatientPruner(optuna.pruners.BasePruner):
-    def __init__(self, patience=3):
-        self._patience = patience
+# class PatientPruner(optuna.pruners.BasePruner):
+#     def __init__(self, patience=3):
+#         self._patience = patience
 
-    def prune(self, study, trial):
-        intermediate_values = trial.intermediate_values
+#     def prune(self, study, trial):
+#         intermediate_values = trial.intermediate_values
 
-        steps = np.asarray(list(intermediate_values.keys()))
+#         steps = np.asarray(list(intermediate_values.keys()))
 
-        # Do not prune if number of step to determine are insufficient.
-        if steps.size < self._patience + 1:
-            return False
+#         # Do not prune if number of step to determine are insufficient.
+#         if steps.size < self._patience + 1:
+#             return False
 
-        # Prune based on if the values are monotically decreasing/increasing.
-        steps.sort()
-        patience_steps = steps[-self._patience - 1 :]
+#         # Prune based on if the values are monotically decreasing/increasing.
+#         steps.sort()
+#         patience_steps = steps[-self._patience - 1 :]
 
-        patience_values = np.asarray(list(intermediate_values[step] for step in patience_steps))
+#         patience_values = np.asarray(list(intermediate_values[step] for step in patience_steps))
 
-        diffs = np.diff(patience_values)
+#         diffs = np.diff(patience_values)
 
-        direction = study.direction
-        if direction == StudyDirection.MINIMIZE:
-            promising_diffs = diffs <= 0
-        elif direction == StudyDirection.MAXIMIZE:
-            promising_diffs = diffs >= 0
-        else:
-            assert False
+#         direction = study.direction
+#         if direction == StudyDirection.MINIMIZE:
+#             promising_diffs = diffs <= 0
+#         elif direction == StudyDirection.MAXIMIZE:
+#             promising_diffs = diffs >= 0
+#         else:
+#             assert False
 
-        return not promising_diffs.any()
+#         return not promising_diffs.any()
     

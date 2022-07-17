@@ -8,7 +8,8 @@ import optuna
 from optuna.study import StudyDirection
 from packaging import version
 from multiomic_modeling.models.trainer import MultiomicTrainer
-from multiomic_modeling.models.base import PatientPruner
+# from multiomic_modeling.models.base import PatientPruner
+from optuna.pruners import PatientPruner, MedianPruner
 
 import pytorch_lightning as pl
 import torch
@@ -74,7 +75,8 @@ def objective(trial: optuna.trial.Trial,
 
     model = MultiomicTrainer.run_experiment(**training_params, output_path=output_path)
     # return model.trainer.callback_metrics["val_multi_acc"].item()
-    return model.trainer.callback_metrics["val_ce"].item()
+    retour = model.trainer.callback_metrics["val_ce"].item()
+    return retour
 
 
 if __name__ == "__main__":
@@ -90,10 +92,6 @@ if __name__ == "__main__":
     assert args.d_input_enc == args.data_size, 'must be the same size'
     if os.path.exists(args.output_path): pass
     else: os.mkdir(args.output_path)
-    # pruning = True
-    # pruner: optuna.pruners.BasePruner = (
-    #     optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=8000) if args.pruning else optuna.pruners.NopPruner()
-    # ) # i checked this so the MedianPruner is ok but i should add the minimum step parameter
     
     storage_db = optuna.storages.RDBStorage(
                 url=f"sqlite:///{args.output_path}/{args.db_name}_{args.seed}.db" # url="sqlite:///:memory:" quand le lien est relatif
@@ -101,7 +99,8 @@ if __name__ == "__main__":
     study = optuna.create_study(study_name=args.study_name, 
                                 storage=storage_db, 
                                 direction="minimize", # direction="maximize", 
-                                pruner=PatientPruner(patience=10), 
+                                # pruner=PatientPruner(patience=5), 
+                                pruner=PatientPruner(MedianPruner(), patience=5), 
                                 load_if_exists=True)
     study.optimize(lambda trial: objective(trial, 
                                            args.d_input_enc, 
@@ -109,7 +108,7 @@ if __name__ == "__main__":
                                            args.data_size, 
                                            args.output_path,
                                            args.seed), 
-                   n_trials=10, timeout=43200) # 12h
+                   n_trials=80, timeout=43200) # 12h
     
     print("Number of finished trials: {}".format(len(study.trials)))
 

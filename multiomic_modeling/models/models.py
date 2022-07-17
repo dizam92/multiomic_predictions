@@ -67,7 +67,7 @@ class MultiomicPredictionModelMultiModal(Model):
     def forward(self, inputs) -> torch.Tensor:
         enc_res = self.encoder(inputs)
         output = self.decoder(enc_res)
-        output_views = self.decoder_views(enc_res)
+        output_views = self.decoder_views(enc_res) # TODO: potentially put the gradient of this at 0 to check the ablation intent
         return output, output_views
     
     def predict(self, inputs):

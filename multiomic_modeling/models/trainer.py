@@ -173,7 +173,6 @@ class MultiomicTrainer(BaseTrainer):
             raise ValueError(f'The experiment type {exp_type} is not a valid option: choose between [normal and data_aug]')
         logger.info("Training")
         model = MultiomicTrainer(Namespace(**model_params))
-        # Temp: Test the  
         model.fit(train_dataset=train, valid_dataset=valid, **fit_params)
         logger.info("Testing....")
         preds_fname = os.path.join(out_prefix, "naive_predictions.txt")
@@ -281,6 +280,7 @@ class MultiomicTrainerMultiModal(BaseTrainer):
         res = [(patient_label, torch.argmax(self.network.predict(inputs=x)[0], dim=1))
                 for i, (x, patient_label, patient_name) in tqdm(enumerate(ploader))] # classification multiclasse d'ou le argmax
         # ici le self predict retourne plusieurs sortie: donc juste calculer les metrics sur la tache principale de classification d'ou le [0] rajoouté
+        # TODO: rajouter les metriques de regression sur la prediction de vue
         target_data, preds = map(list, zip(*res))
         target_data = to_numpy(target_data)
         preds = to_numpy(preds)

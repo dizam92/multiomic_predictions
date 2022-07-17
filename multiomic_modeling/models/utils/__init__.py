@@ -7,7 +7,10 @@ from multiomic_modeling.torch_utils import get_activation
 from multiomic_modeling import logging
 from torch import nn
 from torch.nn.init import xavier_uniform_, xavier_normal_
-from torch._six import int_classes, string_classes, container_abcs
+# from torch._six import int_classes, string_classes, container_abcs
+from torch._six import string_classes
+int_classes = int
+import collections.abc as container_abcs
 
 from multiomic_modeling.utilities import flatten_dict
 

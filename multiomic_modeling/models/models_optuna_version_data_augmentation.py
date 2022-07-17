@@ -8,13 +8,15 @@ import optuna
 from optuna.study import StudyDirection
 from packaging import version
 from multiomic_modeling.models.trainer import MultiomicTrainer
-from multiomic_modeling.models.base import PatientPruner
+# from multiomic_modeling.models.base import PatientPruner
+from optuna.pruners import PatientPruner, MedianPruner
 
 import pytorch_lightning as pl
 import torch
 
 if version.parse(pl.__version__) < version.parse("1.0.2"):
     raise RuntimeError("PyTorch Lightning>=1.0.2 is required for this example.")
+
 
 
 def objective(trial: optuna.trial.Trial, 
@@ -91,10 +93,6 @@ if __name__ == "__main__":
     assert args.d_input_enc == args.data_size, 'must be the same size'
     if os.path.exists(args.output_path): pass
     else: os.mkdir(args.output_path)
-    # pruning = True
-    # pruner: optuna.pruners.BasePruner = (
-    #     optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=8000) if args.pruning else optuna.pruners.NopPruner()
-    # ) # i checked this so the MedianPruner is ok but i should add the minimum step parameter
     
     storage_db = optuna.storages.RDBStorage(
                 url=f"sqlite:///{args.output_path}/{args.db_name}_{args.seed}.db" # url="sqlite:///:memory:" quand le lien est relatif
@@ -102,7 +100,8 @@ if __name__ == "__main__":
     study = optuna.create_study(study_name=args.study_name, 
                                 storage=storage_db, 
                                 direction="minimize", # direction="maximize", 
-                                pruner=PatientPruner(patience=10), 
+                                # pruner=PatientPruner(patience=5), 
+                                pruner=PatientPruner(MedianPruner(), patience=5), 
                                 load_if_exists=True)
     study.optimize(lambda trial: objective(trial, 
                                            args.d_input_enc, 
@@ -110,7 +109,7 @@ if __name__ == "__main__":
                                            args.data_size, 
                                            args.output_path,
                                            args.seed), 
-                   n_trials=20, timeout=86400) #12h  #24h
+                   n_trials=80, timeout=43200) #12h 43200 #24h  86400
     
     print("Number of finished trials: {}".format(len(study.trials)))
 
