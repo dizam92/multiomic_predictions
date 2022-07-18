@@ -128,4 +128,4 @@ results/*
 
 .vscode/
 notebook_dir/.ipynb_checkpoints/
-multiomic_predictions/dispatch_folder/*.out
+dispatch_folder/*.out
