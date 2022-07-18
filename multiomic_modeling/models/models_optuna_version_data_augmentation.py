@@ -37,7 +37,7 @@ def objective(trial: optuna.trial.Trial,
         "optimizer": "Adam",
         "lr_scheduler": "cosine_with_restarts",
         "loss": "ce",
-        "n_epochs": 300, # augmenter ca since i have more data
+        "n_epochs": 500, # augmenter ca since i have more data
         "batch_size": 256,
         # "batch_size": trial.suggest_categorical("batch_size", [256, 512]), # [128, 256, 512]
         "class_weights":[4.03557312, 0.85154295, 0.30184775, 1.18997669, 8.25050505,
@@ -47,9 +47,9 @@ def objective(trial: optuna.trial.Trial,
                 1.89424861, 1.98541565, 0.65595888, 2.05123054, 1.37001006,
                 0.77509964, 0.76393565, 2.67102681, 0.64012539, 2.94660895,
                 0.64012539, 6.51355662, 4.64090909],
-        "d_model_enc_dec": trial.suggest_categorical("d_model_enc_dec", [128, 256, 512]), # [32, 64, 128, 256, 512]
+        "d_model_enc_dec": trial.suggest_categorical("d_model_enc_dec", [32, 64, 128, 256, 512]), # [32, 64, 128, 256, 512]
         "n_heads_enc_dec": 8, # fixed heads
-        "n_layers_enc": trial.suggest_categorical("n_layers_enc", [6, 8, 10]), # [2, 4, 6, 8, 10, 12]
+        "n_layers_enc": trial.suggest_categorical("n_layers_enc", [2, 4, 6, 8, 10]), # [2, 4, 6, 8, 10, 12]
         "n_layers_dec": trial.suggest_categorical("n_layers_dec", [1, 2, 4, 6]) # [1, 2, 4, 6]
     }
     d_ff_enc_dec_value = model_params["d_model_enc_dec"] * 4
@@ -109,7 +109,7 @@ if __name__ == "__main__":
                                            args.data_size, 
                                            args.output_path,
                                            args.seed), 
-                   n_trials=80, timeout=43200) #12h 43200 #24h  86400
+                   n_trials=100, timeout=43200) #12h 43200 #24h  86400
     
     print("Number of finished trials: {}".format(len(study.trials)))
 
