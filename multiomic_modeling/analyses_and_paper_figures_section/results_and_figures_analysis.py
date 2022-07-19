@@ -4,7 +4,7 @@ import json
 import argparse
 import sys
 import numpy as np
-from scipy.stats import sem
+# from scipy.stats import sem
 import pandas as pd
 from glob import glob
 import seaborn as sns
@@ -99,18 +99,12 @@ class ResultsAnalysis:
             best_metrics, best_metrics_repo_name = ResultsAnalysis().read_each_optuna_repo(directory=repo)
             results_dict[rs] = [best_metrics, best_metrics_repo_name]
             os.chdir('../')
-        # Debug
-        print('results_dict')
-        print(results_dict)
         test_metrics = [results_dict[k][0] for k in results_dict]
         best_idx = np.argmax(np.array(test_metrics)[:, 0], axis=0)
         best_rs = list(results_dict.keys())[best_idx]
-        # Debug
-        print('test_metrics')
-        print(test_metrics)
         test_metrics_mean = np.round(np.mean(np.array((test_metrics)), axis=0), 2)
         # test_metrics_std = np.round(np.std(np.array((test_metrics)), axis=0) / / np.sqrt(test_metrics), 2)  
-        test_metrics_sem = np.round(sem(np.array(test_metrics), axis=0), 2)
+        test_metrics_sem = np.round((np.std(np.array((test_metrics)) , axis=0) / np.sqrt(test_metrics.shape[0])), 2)
         real_output_file = output_file.replace('.md', f'_{best_rs}.md')
         real_output_file = f'{home_path}/{real_output_file}'
         with open(real_output_file, 'w') as fd:
