@@ -104,7 +104,7 @@ class ResultsAnalysis:
         best_rs = list(results_dict.keys())[best_idx]
         test_metrics_mean = np.round(np.mean(np.array((test_metrics)), axis=0), 2)
         # test_metrics_std = np.round(np.std(np.array((test_metrics)), axis=0) / / np.sqrt(test_metrics), 2)  
-        test_metrics_sem = np.round((np.std(np.array((test_metrics)) , axis=0) / np.sqrt(test_metrics.shape[0])), 2)
+        test_metrics_sem = np.round((np.std(np.array((test_metrics)) , axis=0) / np.sqrt(np.array(test_metrics).shape[0])), 2)
         real_output_file = output_file.replace('.md', f'_{best_rs}.md')
         real_output_file = f'{home_path}/{real_output_file}'
         with open(real_output_file, 'w') as fd:
