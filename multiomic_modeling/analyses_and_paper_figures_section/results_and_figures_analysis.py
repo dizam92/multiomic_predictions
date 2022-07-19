@@ -88,7 +88,7 @@ class ResultsAnalysis:
         
     @staticmethod
     def optuna_analysis_reports(directory: str = '/home/maoss2/scratch/optuna_data_aug_repo/',
-                                output_file: str = 'data_aug_optuna_reports.md' ):
+                                output_file: str = '/home/maoss2/PycharmProjects/multiomic_predictions/reports_dir/data_aug_optuna_reports.md' ):
         os.chdir(directory)
         repo_list = os.listdir()
         results_dict = {}
@@ -685,7 +685,7 @@ def main_compute_new_diverging_stacked_bar_chart():
  
 if __name__ ==  '__main__':
     # Baselines
-    ResultsAnalysis().baselines_analysis3_reports()
+    ResultsAnalysis().baselines_analysis_reports()
     # Optuna ModelAug
     ResultsAnalysis().optuna_analysis_reports()
     # Build figures

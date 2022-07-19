@@ -46,7 +46,7 @@ def objective(trial: optuna.trial.Trial,
                 0.77509964, 0.76393565, 2.67102681, 0.64012539, 2.94660895,
                 0.64012539, 6.51355662, 4.64090909],
         "d_model_enc_dec": trial.suggest_categorical("d_model_enc_dec", [32, 64, 128, 256, 512]), # [32, 64, 128, 256, 512]
-        "n_heads_enc_dec": 8, # fixed heads
+        "n_heads_enc_dec": trial.suggest_categorical("n_heads_enc_dec", [8, 16]), # fixed heads
         "n_layers_enc": trial.suggest_categorical("n_layers_enc", [2, 4, 6, 8, 10]), # [2, 4, 6, 8, 10, 12]
         "n_layers_dec": trial.suggest_categorical("n_layers_dec", [1, 2, 4, 6]) # [1, 2, 4, 6]
     }
@@ -108,7 +108,7 @@ if __name__ == "__main__":
                                            args.data_size, 
                                            args.output_path,
                                            args.seed), 
-                   n_trials=100, timeout=43200) # 12h
+                   n_trials=100, timeout=43200, catch=(ReferenceError,)) # 12h # add the catching of the reference error
     
     print("Number of finished trials: {}".format(len(study.trials)))
 

@@ -8,13 +8,14 @@ import optuna
 from optuna.study import StudyDirection
 from packaging import version
 from multiomic_modeling.models.trainer import MultiomicTrainerMultiModal
-from multiomic_modeling.models.base import PatientPruner
+from optuna.pruners import PatientPruner, MedianPruner
 
 import pytorch_lightning as pl
 import torch
 
 if version.parse(pl.__version__) < version.parse("1.0.2"):
     raise RuntimeError("PyTorch Lightning>=1.0.2 is required for this example.")
+
 
 
 def objective(trial: optuna.trial.Trial, 
@@ -29,13 +30,13 @@ def objective(trial: optuna.trial.Trial,
         "lr": trial.suggest_float("lr", 1e-3, 1e-2, log=True),
         "nb_classes_dec": 33,
         "early_stopping": True,
-        "dropout": trial.suggest_float("dropout", 0.1, 0.5), # 0.1, 0.5
+        "dropout": trial.suggest_float("dropout", 0.2, 0.5), # 0.1, 0.5
         "weight_decay": trial.suggest_float("weight_decay", 1e-8, 1e-2, log=True), # 1e-8, 1e-2
         "activation": "relu",
         "optimizer": "Adam",
         "lr_scheduler": "cosine_with_restarts",
         "loss": "ce",
-        "n_epochs": 300, # augmenter ca since i have more data
+        "n_epochs": 500, # augmenter ca since i have more data
         "batch_size": 256,
         # "batch_size": trial.suggest_categorical("batch_size", [256, 512]), # [128, 256, 512]
         "class_weights":[4.03557312, 0.85154295, 0.30184775, 1.18997669, 8.25050505,
@@ -45,9 +46,9 @@ def objective(trial: optuna.trial.Trial,
                 1.89424861, 1.98541565, 0.65595888, 2.05123054, 1.37001006,
                 0.77509964, 0.76393565, 2.67102681, 0.64012539, 2.94660895,
                 0.64012539, 6.51355662, 4.64090909],
-        "d_model_enc_dec": trial.suggest_categorical("d_model_enc_dec", [128, 256, 512]), # [32, 64, 128, 256, 512]
-        "n_heads_enc_dec": 8, # fixed heads
-        "n_layers_enc": trial.suggest_categorical("n_layers_enc", [6, 8, 10]), # [2, 4, 6, 8, 10, 12]
+        "d_model_enc_dec": trial.suggest_categorical("d_model_enc_dec", [32, 64, 128, 256, 512]), # [32, 64, 128, 256, 512]
+        "n_heads_enc_dec": trial.suggest_categorical("n_heads_enc_dec", [8, 16]), # fixed heads
+        "n_layers_enc": trial.suggest_categorical("n_layers_enc", [2, 4, 6, 8, 10]), # [2, 4, 6, 8, 10, 12]
         "n_layers_dec": trial.suggest_categorical("n_layers_dec", [1, 2, 4, 6]) # [1, 2, 4, 6]
     }
     d_ff_enc_dec_value = model_params["d_model_enc_dec"] * 4
@@ -74,8 +75,8 @@ def objective(trial: optuna.trial.Trial,
     }
 
     model = MultiomicTrainerMultiModal.run_experiment(**training_params, output_path=output_path)
-    return model.trainer.callback_metrics["combined_loss"].item()
-    # return model.trainer.callback_metrics["val_ce"].item()
+    retour = model.trainer.callback_metrics["val_combined_loss"].item()
+    return retour
 
 
 if __name__ == "__main__":
@@ -91,10 +92,6 @@ if __name__ == "__main__":
     assert args.d_input_enc == args.data_size, 'must be the same size'
     if os.path.exists(args.output_path): pass
     else: os.mkdir(args.output_path)
-    # pruning = True
-    # pruner: optuna.pruners.BasePruner = (
-    #     optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=8000) if args.pruning else optuna.pruners.NopPruner()
-    # ) # i checked this so the MedianPruner is ok but i should add the minimum step parameter
     
     storage_db = optuna.storages.RDBStorage(
                 url=f"sqlite:///{args.output_path}/{args.db_name}_{args.seed}.db" # url="sqlite:///:memory:" quand le lien est relatif
@@ -102,7 +99,8 @@ if __name__ == "__main__":
     study = optuna.create_study(study_name=args.study_name, 
                                 storage=storage_db, 
                                 direction="minimize", # direction="maximize", 
-                                pruner=PatientPruner(patience=10), 
+                                # pruner=PatientPruner(patience=5), 
+                                pruner=PatientPruner(MedianPruner(), patience=5), 
                                 load_if_exists=True)
     study.optimize(lambda trial: objective(trial, 
                                            args.d_input_enc, 
@@ -110,7 +108,7 @@ if __name__ == "__main__":
                                            args.data_size, 
                                            args.output_path,
                                            args.seed), 
-                   n_trials=25, timeout=86400) #12h  #24h
+                   n_trials=100, timeout=43200, catch=(ReferenceError)) #12h 43200 #24h  86400
     
     print("Number of finished trials: {}".format(len(study.trials)))
 
@@ -121,3 +119,4 @@ if __name__ == "__main__":
     print("  Params: ")
     for key, value in best_trial.params.items():
         print("    {}: {}".format(key, value))
+
