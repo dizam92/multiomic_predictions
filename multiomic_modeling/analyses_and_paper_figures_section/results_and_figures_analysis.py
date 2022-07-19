@@ -4,6 +4,7 @@ import json
 import argparse
 import sys
 import numpy as np
+from scipy.stats import sem
 import pandas as pd
 from glob import glob
 import seaborn as sns
@@ -20,7 +21,8 @@ from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
 from sklearn.manifold import TSNE
 import seaborn as sns
 sns.set_theme()
-home_path = '/home/maoss2/scratch'
+# home_path = '/home/maoss2/scratch'
+home_path = '/home/maoss2/PycharmProjects/multiomic_predictions/reports_dir'
 # results_order are always in this order 'acc', 'prec', 'rec', 'f1_score', 'mcc_score'
 best_config_file_path_normal_data_aug_2000 = '/scratch/maoss2/optuna_data_aug_output_2000/64c01d9cc9220b7fb39c2740272c1a02faff77e0/config.json' # 96.042
 best_config_file_path_normal_normal_2000 = '/scratch/maoss2/optuna_normal_output_2000/ec18a0b2ca27de64e673e9dc9dfb9596970c130d/config.json' # 91.595
@@ -58,7 +60,7 @@ class ResultsAnalysis:
         svm_metrics_std = np.round(np.std(np.array((svm_test_metrics)), axis=0), 2)
         
         with open(real_output_file, 'w') as fd:
-            fd.write('results_order are always in this order acc, prec, rec, f1_score, mcc_score')
+            fd.write('results_order are always in this order acc, prec, rec, f1_score, mcc_score\n')
             fd.write('| Algo| Mean | Std|\n')
             fd.write('| ------------- | ------------- |  -------------:|\n')
             fd.write(f'| DT | {dt_metrics_mean}  | {dt_metrics_std}|\n')
@@ -88,7 +90,7 @@ class ResultsAnalysis:
         
     @staticmethod
     def optuna_analysis_reports(directory: str = '/home/maoss2/scratch/optuna_data_aug_repo/',
-                                output_file: str = '/home/maoss2/PycharmProjects/multiomic_predictions/reports_dir/data_aug_optuna_reports.md' ):
+                                output_file: str ='data_aug_optuna_reports.md' ):
         os.chdir(directory)
         repo_list = os.listdir()
         results_dict = {}
@@ -97,20 +99,27 @@ class ResultsAnalysis:
             best_metrics, best_metrics_repo_name = ResultsAnalysis().read_each_optuna_repo(directory=repo)
             results_dict[rs] = [best_metrics, best_metrics_repo_name]
             os.chdir('../')
+        # Debug
+        print('results_dict')
+        print(results_dict)
         test_metrics = [results_dict[k][0] for k in results_dict]
         best_idx = np.argmax(np.array(test_metrics)[:, 0], axis=0)
         best_rs = list(results_dict.keys())[best_idx]
+        # Debug
+        print('test_metrics')
+        print(test_metrics)
         test_metrics_mean = np.round(np.mean(np.array((test_metrics)), axis=0), 2)
-        test_metrics_std = np.round(np.std(np.array((test_metrics)), axis=0), 2)        
+        # test_metrics_std = np.round(np.std(np.array((test_metrics)), axis=0) / / np.sqrt(test_metrics), 2)  
+        test_metrics_sem = np.round(sem(np.array(test_metrics), axis=0), 2)
         real_output_file = output_file.replace('.md', f'_{best_rs}.md')
         real_output_file = f'{home_path}/{real_output_file}'
         with open(real_output_file, 'w') as fd:
-            fd.write('results_order are always in this order acc, prec, rec, f1_score, mcc_score')
+            fd.write('results_order are always in this order acc, prec, rec, f1_score, mcc_score\n')
             fd.write('| Best Seed | FIle Name| Best Value | - |\n')
             fd.write('| ------------- | ------------- |------------- |  -------------:|\n')
             fd.write(f'| {best_rs} | {results_dict[best_rs][-1]} | {results_dict[best_rs][0]}  | - |\n')
             fd.write('| - | - | Mean | Std |\n')
-            fd.write(f'| - | - | {test_metrics_mean} | {test_metrics_std} |\n')
+            fd.write(f'| - | - | {test_metrics_mean} | {test_metrics_sem} |\n')
     
 class FiguresArticles:
     def __init__(self, data_size: int = 2000, dataset_views_to_consider: str = 'all'):
