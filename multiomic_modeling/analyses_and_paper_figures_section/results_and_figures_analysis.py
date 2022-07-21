@@ -690,7 +690,11 @@ if __name__ ==  '__main__':
     # Baselines
     ResultsAnalysis().baselines_analysis_reports()
     # Optuna ModelAug
-    ResultsAnalysis().optuna_analysis_reports()
+    # ResultsAnalysis().optuna_analysis_reports()
+    ResultsAnalysis().optuna_analysis_reports(directory='optuna_normal_3_main_omics_repo/', output_file='normal_3_main_omics_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='optuna_normal_all_repo/', output_file='normal_all_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='optuna_data_aug_3_main_omics_repo/', output_file='data_aug_3_main_omics_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='optuna_data_aug_all_repo/', output_file='data_augl_all_reports.md')
     # Build figures
     fig_article = FiguresArticles(data_size=2000, dataset_views_to_consider='all')
     fig_article.figure_1()
