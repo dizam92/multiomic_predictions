@@ -8,7 +8,7 @@
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
-#SBATCH --time=10:00:00
+#SBATCH --time=5:00:00
 
 # random_seed_list = [42, 78, 433, 966, 699]
 date

@@ -118,14 +118,9 @@ class MultiomicTrainerMultiModal(BaseMultiModalTrainer):
         self.load_average_weights(ckpt_fnames)
         batch_size = self.hparams.batch_size  
         ploader = DataLoader(dataset, collate_fn=c_collate, batch_size=batch_size, shuffle=False)  
-        # Classification part
+        # Classification part: on the 1st part of the return of the predict
         res = [(patient_label, torch.argmax(self.network.predict(inputs=x)[0], dim=1))
                 for i, (x, patient_label, patient_name) in tqdm(enumerate(ploader))] # classification multiclasse d'ou le argmax
-        # ici le self predict retourne plusieurs sortie: donc juste calculer les metrics sur la tache principale de classification d'ou le [0] rajoouté
-        # TODO: rajouter les metriques de regression sur la prediction de vue
-        reg_res = [(patient_label, self.network.predict(inputs=x)[1])
-                for i, (x, patient_label, patient_name) in tqdm(enumerate(ploader))] 
-        # TODO: revenir ici
         target_data, preds = map(list, zip(*res))
         target_data = to_numpy(target_data)
         preds = to_numpy(preds)
@@ -150,6 +145,25 @@ class MultiomicTrainerMultiModal(BaseMultiModalTrainer):
                 json.dump(clf_report, fd)
             with open(confusion_matrix_fname, 'w') as fd:
                 json.dump(confusion_matrix_dumped, fd)
+        
+        # TODO: Regression part: on the 2nd part of the return of the predict. Hum normalement recuperer le x et partir de là mais would it work? 
+#         reg_res = [(x[0], self.network.predict(inputs=x)[1])
+#               for i, (x, patient_label, patient_name) in tqdm(enumerate(ploader))] 
+#         reg_target_data, reg_preds = map(list, zip(*reg_res))
+#         reg_target_data = to_numpy(reg_target_data)
+#         reg_preds = to_numpy(reg_preds)
+#         new_reg_preds = []
+#         for reg_pred_batch in reg_preds:
+#             new_reg_preds.extend(reg_pred_batch)
+#         new_reg_target_data = []
+#         for reg_target_data_batch in reg_target_data:
+#             new_reg_target_data.extend(reg_target_data_batch)
+#         reg_scores = RegMetrics().score(y_test=new_target_data, y_pred=new_preds)
+#         if scores_fname is not None:
+#             reg_report_fname = f'{scores_fname[:-5]}_reg_report.json'
+#             with open(scores_fname, 'w') as fd:
+#                 json.dump(reg_scores, fd)
+#         print(reg_scores)
         return scores
     
     @staticmethod

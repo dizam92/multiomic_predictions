@@ -3,7 +3,7 @@ from torch import nn
 import torch.nn.functional as F
 import numpy as np
 import json
-from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score, confusion_matrix, classification_report, matthews_corrcoef
+from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score, confusion_matrix, classification_report, matthews_corrcoef, mean_absolute_error, mean_squared_error, r2_score
 
 def _adjust_shapes(pred, real, pad_token):
     if real.shape[1] > pred.shape[1]:
@@ -131,6 +131,16 @@ class ClfMetrics:
     @staticmethod
     def confusion_matric_report(y_test, y_pred):
         return confusion_matrix(y_true=y_test, y_pred=y_pred)
+
+class RegMetrics:
+    @staticmethod
+    def score(y_test, y_pred):
+        return {
+            'r2': np.round(r2_score(y_test, y_pred) * 100, 3),
+            'mse': np.round(mean_squared_error(y_test, y_pred) * 100, 3),
+            'mae': np.round(mean_absolute_error(y_test, y_pred) * 100, 3)
+        }
+    
     
 class NumpyEncoder(json.JSONEncoder):
     """ Special json encoder for numpy types """
