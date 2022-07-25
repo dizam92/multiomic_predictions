@@ -65,7 +65,7 @@ class TorchSeqTransformerDecoderViews(nn.Module):
         init_params_xavier_uniform(self)
         
     def forward(self, enc_state: EncoderState):
-        target = torch.zeros((5, enc_state.memory.shape[1], self.d_model), device=enc_state.memory.device)
+        target = torch.zeros((3, enc_state.memory.shape[1], self.d_model), device=enc_state.memory.device) # change this to 5 or 3 
         
         x = self.decoder(
             target,

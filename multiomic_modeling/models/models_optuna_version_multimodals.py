@@ -7,7 +7,7 @@ from argparse import Namespace
 import optuna
 from optuna.study import StudyDirection
 from packaging import version
-from multiomic_modeling.models.trainer import MultiomicTrainerMultiModal
+from multiomic_modeling.models.trainer_multimodal import MultiomicTrainerMultiModal
 from optuna.pruners import PatientPruner, MedianPruner
 
 import pytorch_lightning as pl
@@ -108,7 +108,7 @@ if __name__ == "__main__":
                                            args.data_size, 
                                            args.output_path,
                                            args.seed), 
-                   n_trials=100, timeout=43200, catch=(ReferenceError)) #12h 43200 #24h  86400
+                   n_trials=100, timeout=43200, catch=(ReferenceError,)) #12h 43200 #24h  86400
     
     print("Number of finished trials: {}".format(len(study.trials)))
 
