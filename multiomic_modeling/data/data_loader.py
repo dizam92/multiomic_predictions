@@ -151,6 +151,60 @@ class FilterPatientsDataset:
         # print('final len is', len(list(sample_to_labels_copy.keys())))
         return sample_to_labels_copy
 
+    def filter_patients_without_missing_views(self, views: list, sample_to_labels: dict) -> dict:
+        sample_to_labels_copy = deepcopy(sample_to_labels)
+        lenght_views = len(views)
+        for name in sample_to_labels.keys():
+            cpt_name = 0
+            for view in views:
+                if name in view['patient_names']: cpt_name += 1
+            if cpt_name != lenght_views: pass # we will only keep the example that have all the omics available
+            else: sample_to_labels_copy.pop(name)
+        return sample_to_labels_copy
+    
+    
+class MultiomicDatasetWithoutMissingViews(Dataset):
+    def __init__(self, data_size: int = 2000, views_to_consider: str = 'all'):
+        super(MultiomicDatasetWithoutMissingViews, self).__init__()
+        
+        self.views = BuildViews(data_size=data_size, view_name=views_to_consider).views
+        if views_to_consider == 'mirna': self.nb_features = data_size
+        else: self.nb_features = np.max([view['data'].shape[1] for view in self.views])
+        self.feature_names  = []
+        for view in self.views:
+            self.feature_names.extend(list(view['feature_names']))        
+        self.survival_data = ReadFiles().read_pandas_csv(fichier=FichierPath.survival_file)
+        self.sample_to_labels = {self.survival_data['sample'].values[idx]: self.survival_data['cancer type abbreviation'].values[idx] 
+                                 for idx, _ in enumerate(self.survival_data['sample'].values)}
+        # TODO: We modify this line to just focus on the example without missing omics
+        self.sample_to_labels = FilterPatientsDataset().filter_patients_without_missing_views(views=self.views, sample_to_labels=self.sample_to_labels)
+        # TODO: Fancy encapsulation to know where to go for debug
+        self.all_patient_names = np.asarray(list(self.sample_to_labels.keys()))
+        self.all_patient_labels = np.asarray(list(self.sample_to_labels.values()))
+        self.label_encoder = LabelEncoder() # i will need this to inverse_tranform afterward i think for the analysis downstream
+        self.all_patient_labels = self.label_encoder.fit_transform(self.all_patient_labels)
+        self.class_weights = compute_class_weight(class_weight='balanced',
+                                                  classes=np.unique(self.all_patient_labels),
+                                                  y=self.all_patient_labels) 
+        self.data_len_original = len(self.all_patient_names)
+
+    def __getitem__(self, idx): 
+        patient_name = self.all_patient_names[idx]
+        patient_label = self.all_patient_labels[idx]
+        data = np.zeros((len(self.views), self.nb_features)) # nombre_views X nombre_features
+        for i, view in enumerate(self.views):
+            if patient_name in view['patient_names']:
+                try:
+                    data[i] = view['data'][view['patient_names'].get(patient_name, 0)]
+                except ValueError:
+                    data[i][:view['data'][view['patient_names'].get(patient_name, 0)].shape[0]] = view['data'][view['patient_names'].get(patient_name, 0)]
+        mask = np.array([(patient_name in view['patient_names']) for view in self.views])
+        original_data = data.astype(float)
+        return (original_data, mask), patient_label, patient_name # i add the patient_name because we need it for an analysis downstream
+    
+    def __len__(self):
+        return len(self.all_patient_names) 
+    
 class MultiomicDatasetNormal(Dataset):
     def __init__(self, data_size: int = 2000, views_to_consider: str = 'all'):
         super(MultiomicDatasetNormal, self).__init__()

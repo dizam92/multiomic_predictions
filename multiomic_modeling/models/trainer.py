@@ -8,7 +8,7 @@ import pandas as pd
 from tqdm import tqdm
 from argparse import Namespace
 from multiomic_modeling.models.base import BaseTrainer
-from multiomic_modeling.data.data_loader import MultiomicDatasetDataAug, MultiomicDatasetNormal, MultiomicDatasetBuilder, SubsetRandomSampler
+from multiomic_modeling.data.data_loader import MultiomicDatasetDataAug, MultiomicDatasetNormal, MultiomicDatasetBuilder, SubsetRandomSampler, MultiomicDatasetWithoutMissingViews
 from multiomic_modeling.models.models import MultiomicPredictionModel
 from multiomic_modeling.models.utils import expt_params_formatter, c_collate
 from multiomic_modeling.loss_and_metrics import ClfMetrics, NumpyEncoder
@@ -156,7 +156,7 @@ class MultiomicTrainer(BaseTrainer):
             json.dump(all_params, fd, sort_keys=True, indent=2)
         # data_size = 2000; dataset_views_to_consider = 'all'; seed = 42
         if exp_type == 'normal':
-            dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
+            dataset = MultiomicDatasetWithoutMissingViews(data_size=data_size, views_to_consider=dataset_views_to_consider)
             train, test, valid = MultiomicDatasetBuilder().multiomic_data_normal_builder(dataset=dataset, 
                                                                                          test_size=0.2, 
                                                                                          valid_size=0.1, 
