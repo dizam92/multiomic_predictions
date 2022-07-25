@@ -32,7 +32,7 @@ class TorchSeqTransformerEncoder(nn.Module):
         
         x = self.embedding(inputs)
         x = x.transpose(0, 1)
-        x = self.pos_encoding(x)
+        # x = self.pos_encoding(x)
         # print(x.device, self.embedding.lut.weight.device)
 
         memory = self.net(x, src_key_padding_mask=mask_padding_x)
