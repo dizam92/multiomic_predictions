@@ -115,6 +115,23 @@ class ResultsAnalysis:
             fd.write('| - | - | Mean | Std |\n')
             fd.write(f'| - | - | {test_metrics_mean} | {test_metrics_sem} |\n')
     
+    # TODO: IT's not done/finish yet: must go back here to complete it
+    @staticmethod
+    def build_reports_on_dataset(data_size: int = data_size, dataset_views_to_consider: str = '3_main_omics'):
+        dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
+        train, test, valid = MultiomicDatasetBuilder().multiomic_data_normal_builder(dataset=dataset, 
+                                                                                         test_size=0.2, 
+                                                                                         valid_size=0.1, 
+                                                                                         random_state=seed)
+        dataset_augmented = MultiomicDatasetDataAug(train_dataset=train, data_size=data_size, views_to_consider=dataset_views_to_consider)
+        train_augmented = MultiomicDatasetBuilder.multiomic_data_aug_builder(augmented_dataset=dataset_augmented)
+        train_data_loader = MultiomicDatasetBuilder().multiomic_dataset_loader(dataset=train, batch_size=len(train))
+        train_augmented_data_loader = MultiomicDatasetBuilder().multiomic_dataset_loader(dataset=train_augmented, batch_size=len(train_augmented))
+        test_data_loader = MultiomicDatasetBuilder().multiomic_dataset_loader(dataset=test, batch_size=len(test))
+        valid_data_loader = MultiomicDatasetBuilder().multiomic_dataset_loader(dataset=valid, batch_size=len(valid))
+        
+        
+        
 class FiguresArticles:
     def __init__(self, data_size: int = 2000, dataset_views_to_consider: str = 'all'):
         super(FiguresArticles, self).__init__()
