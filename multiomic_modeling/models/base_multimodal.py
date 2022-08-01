@@ -179,7 +179,7 @@ class BaseMultiModalTrainer(LightningModule):
         self._train_dataset, self._valid_dataset = train_dataset, valid_dataset
 
         def get_trainer():
-            callbacks = [EarlyStopping(monitor='val_combined_loss', patience=10)] if self.early_stopping else []
+            callbacks = [EarlyStopping(monitor='val_combined_loss', patience=20)] if self.early_stopping else []
             if artifact_dir is not None:
                 logger = TensorBoardLogger(save_dir=artifact_dir, name='logs', version=1)
                 checkpoint = ModelCheckpoint(filename='{epoch}--{val_loss:.2f}', monitor="checkpoint_on",
@@ -194,7 +194,8 @@ class BaseMultiModalTrainer(LightningModule):
                           # profiler="advanced",
                           logger=logger,
                           default_root_dir=artifact_dir,
-                          progress_bar_refresh_rate=int(verbose > 0),
+                          enable_progress_bar = False,
+                          # progress_bar_refresh_rate=int(verbose > 0),
                           accumulate_grad_batches=self.accumulate_grad_batches,
                           # checkpoint_callback=checkpoint,
                           callbacks=callbacks,

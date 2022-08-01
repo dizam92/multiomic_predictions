@@ -214,6 +214,8 @@ class MultiomicDatasetDataAug(MultiomicDatasetNormal):
         self.label_encoder = LabelEncoder() # i will need this to inverse_tranform afterward i think for the analysis downstream
         self.all_patient_labels = self.label_encoder.fit_transform(self.all_patient_labels)
         self.data_len_original = len(self.all_patient_names)
+        # Added The 29th of july
+        self.augmented_factor_number = int(np.sqrt(math.factorial(len(self.views))))
         
     def __getitem__(self, idx): 
         idx = idx % self.data_len_original  # pour contrer le fait que la longueur du dataset pourrait etre supérieure à l'idx samplé
@@ -244,8 +246,8 @@ class MultiomicDatasetDataAug(MultiomicDatasetNormal):
     def __len__(self):
         # Estimation de la longueur du dataset equivaut à factorial(nbre_de_vues)
         # return len(self.all_patient_names) 
-        # return len(self.train_patient_names) * int(np.sqrt(math.factorial(len(self.views)))) 
-        return len(self.train_patient_names) * 3
+        return len(self.train_patient_names) * int(np.sqrt(math.factorial(len(self.views)))) 
+        # return len(self.train_patient_names) * 3
                               
 class MultiomicDatasetBuilder:
     @staticmethod
@@ -253,8 +255,8 @@ class MultiomicDatasetBuilder:
         labels = [augmented_dataset[i][-1] for i in augmented_dataset.train_indices]
         # It's taking an astronomical much of time so i choose 3 to accelerate the code and see the results. 
         # It's supposed to be 10 for the next opération
-        # nb_of_times_len_data_was_multiplied = int(np.sqrt(math.factorial(len(augmented_dataset.views)))) 
-        nb_of_times_len_data_was_multiplied = 3
+        nb_of_times_len_data_was_multiplied = int(np.sqrt(math.factorial(len(augmented_dataset.views)))) 
+        # nb_of_times_len_data_was_multiplied = 3
         new_labels = []
         for _ in range(nb_of_times_len_data_was_multiplied): new_labels.extend(labels)
         labels = new_labels
