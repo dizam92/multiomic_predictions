@@ -1,5 +1,6 @@
 import argparse
 import sys
+import os
 from collections import defaultdict
 from itertools import combinations
 from typing import Tuple
@@ -15,7 +16,8 @@ import numpy as np
 from copy import deepcopy
 import seaborn as sns
 sns.set_theme()
-            
+home_path = '/home/maoss2/PycharmProjects/multiomic_predictions/reports_dir'
+
 class TurnOffViewsDatasetNormal(MultiomicDatasetNormal):
     """ This class create a test dataset specialize for the experiment of testing the model of views turned off. 
         It just change the mask boolean to False for the omics to be turned off. 
@@ -118,7 +120,8 @@ class TestMOTOnSamplesWithAllExamples:
                                           artifact_dir=self.all_params['fit_params']['output_path'], 
                                           nb_ckpts=self.all_params['predict_params'].get('nb_ckpts', 1), 
                                           scores_fname=scores_fname)    
-
+        os.system(f'cp {scores_fname} {home_path}')
+        
 def main_test_MOT_on_samples_with_all_examples():
     data_aug_model_test = TestMOTOnSamplesWithAllExamples(number_of_view_to_consider=5)
     data_aug_model_test.initialisation(config_file=best_config_file_path_normal_data_aug_2000,
@@ -169,7 +172,8 @@ class TestMOTOnEachCancerWithSpecificOmicsTurnedOff():
                                           artifact_dir=self.all_params['fit_params']['output_path'], 
                                           nb_ckpts=self.all_params['predict_params'].get('nb_ckpts', 1), 
                                           scores_fname=scores_fname)    
-
+        os.system(f'cp {scores_fname} {home_path}')
+        
 def main_test_MOT_on_each_cancer_with_specific_omics_turned_off():
     data_aug_model_test = TestMOTOnEachCancerWithSpecificOmicsTurnedOff()
     data_aug_model_test.initialisation(config_file=best_config_file_path_normal_data_aug_2000,
@@ -265,12 +269,14 @@ class TestMOTOnOnlyThe3MainOMics():
                                           artifact_dir=self.all_params['fit_params']['output_path'], 
                                           nb_ckpts=self.all_params['predict_params'].get('nb_ckpts', 1), 
                                           scores_fname=scores_fname)    
+        os.system(f'cp {scores_fname} {home_path}')
         # test on subset with the possibility to have some missing omics views in the 3 omics stuff
         scores_fname = os.path.join(self.all_params['fit_params']['output_path'], f'{save_file_name}_{views_to_consider}_comparison_with_OMIVAE_with_MISSING_Values.txt')
         scores = self.trainer_model.score(dataset=self.test, 
                                           artifact_dir=self.all_params['fit_params']['output_path'], 
                                           nb_ckpts=self.all_params['predict_params'].get('nb_ckpts', 1), 
-                                          scores_fname=scores_fname)    
+                                          scores_fname=scores_fname)
+        os.system(f'cp {scores_fname} {home_path}')
         # test on subset with only RNA available (There is no possibility of missing omics here)
         test_dataset = DatasetWithOnlyRNAWithMissingOmics(data_size=data_size, views_to_consider=views_to_consider)
         self.new_test_set = Subset(self.test, indices=self.samples_idx_with_only_rna_omic)
@@ -279,7 +285,8 @@ class TestMOTOnOnlyThe3MainOMics():
                                           artifact_dir=self.all_params['fit_params']['output_path'], 
                                           nb_ckpts=self.all_params['predict_params'].get('nb_ckpts', 1), 
                                           scores_fname=scores_fname)    
-
+        os.system(f'cp {scores_fname} {home_path}')
+        
 def main_test_MOT_on_only_3_omics():
     data_aug_model_test = TestMOTOnOnlyThe3MainOMics()
     data_aug_model_test.initialisation(config_file=best_config_file_path_normal_data_aug_2000,

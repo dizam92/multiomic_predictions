@@ -4,7 +4,6 @@ import json
 import argparse
 import sys
 import numpy as np
-# from scipy.stats import sem
 import pandas as pd
 from glob import glob
 import seaborn as sns
@@ -24,8 +23,8 @@ sns.set_theme()
 # home_path = '/home/maoss2/scratch'
 home_path = '/home/maoss2/PycharmProjects/multiomic_predictions/reports_dir'
 # results_order are always in this order 'acc', 'prec', 'rec', 'f1_score', 'mcc_score'
-best_config_file_path_normal_data_aug_2000 = '/scratch/maoss2/optuna_data_aug_output_2000/64c01d9cc9220b7fb39c2740272c1a02faff77e0/config.json' # 96.042
-best_config_file_path_normal_normal_2000 = '/scratch/maoss2/optuna_normal_output_2000/ec18a0b2ca27de64e673e9dc9dfb9596970c130d/config.json' # 91.595
+# best_config_file_path_normal_data_aug_2000 = '/scratch/maoss2/optuna_data_aug_output_2000/64c01d9cc9220b7fb39c2740272c1a02faff77e0/config.json' # 96.042
+# best_config_file_path_normal_normal_2000 = '/scratch/maoss2/optuna_normal_output_2000/ec18a0b2ca27de64e673e9dc9dfb9596970c130d/config.json' # 91.595
 
 class ResultsAnalysis:
     
@@ -117,7 +116,10 @@ class ResultsAnalysis:
     
     # TODO: IT's not done/finish yet: must go back here to complete it
     @staticmethod
-    def build_reports_on_dataset(data_size: int = data_size, dataset_views_to_consider: str = '3_main_omics'):
+    def build_reports_on_dataset(data_size: int = 2000, 
+                                 dataset_views_to_consider: str = '3_main_omics',
+                                 seed: int = 42,
+                                 output_file: str = 'datasets_reports'): # use the best seed to have the reports for this seed
         dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
         train, test, valid = MultiomicDatasetBuilder().multiomic_data_normal_builder(dataset=dataset, 
                                                                                          test_size=0.2, 
@@ -130,13 +132,172 @@ class ResultsAnalysis:
         test_data_loader = MultiomicDatasetBuilder().multiomic_dataset_loader(dataset=test, batch_size=len(test))
         valid_data_loader = MultiomicDatasetBuilder().multiomic_dataset_loader(dataset=valid, batch_size=len(valid))
         
+        train_masks = next(iter(train_data_loader))[0][1].numpy()
+        train_augmented_masks = next(iter(train_augmented_data_loader))[0][1].numpy()
+        valid_masks = next(iter(valid_data_loader))[0][1].numpy()
+        test_masks = next(iter(test_data_loader))[0][1].numpy()
         
+        samples_of_train_with_at_least_1_missing_views = 0; samples_of_train_with_1_missing_views = 0; samples_of_train_with_2_missing_views = 0; samples_of_train_with_3_missing_views = 0; samples_of_train_with_4_missing_views = 0
+        samples_of_valid_with_at_least_1_missing_views = 0; samples_of_valid_with_1_missing_views = 0; samples_of_valid_with_2_missing_views = 0; samples_of_valid_with_3_missing_views = 0; samples_of_valid_with_4_missing_views = 0
+        samples_of_test_with_at_least_1_missing_views = 0; samples_of_test_with_1_missing_views = 0; samples_of_test_with_2_missing_views = 0; samples_of_test_with_3_missing_views = 0; samples_of_test_with_4_missing_views = 0
         
+        samples_of_train_with_missing_views_methyl = 0; samples_of_valid_with_missing_views_methyl = 0; samples_of_test_with_missing_views_methyl = 0
+        samples_of_train_with_missing_views_mirna = 0; samples_of_valid_with_missing_views_mirna = 0; samples_of_test_with_missing_views_mirna = 0 
+        samples_of_train_with_missing_views_rna = 0; samples_of_valid_with_missing_views_rna = 0; samples_of_test_with_missing_views_rna = 0 
+        samples_of_train_with_missing_views_cnv = 0; samples_of_valid_with_missing_views_cnv = 0; samples_of_test_with_missing_views_cnv = 0
+        samples_of_train_with_missing_views_protein = 0; samples_of_valid_with_missing_views_protein = 0; samples_of_test_with_missing_views_protein = 0 
+        
+        samples_of_train_with_all_views = 0; samples_of_valid_with_all_views = 0; samples_of_test_with_all_views = 0; 
+        if dataset_views_to_consider == '3_main_omics':
+            for list_mask in train_masks:
+                position_false = np.where(list_mask==False)[0]
+                if len(position_false) == 1: 
+                    samples_of_train_with_at_least_1_missing_views += 1
+                    samples_of_train_with_1_missing_views +=1 
+                elif len(position_false) == 2: 
+                    samples_of_train_with_at_least_1_missing_views += 1
+                    samples_of_train_with_2_missing_views += 1
+                else:
+                    samples_of_train_with_all_views += 1 
+                for el in position_false:
+                    if el == 0: samples_of_train_with_missing_views_methyl += 1
+                    if el == 1: samples_of_train_with_missing_views_mirna += 1
+                    if el == 2: samples_of_train_with_missing_views_rna += 1
+            
+            for list_mask in valid_masks:
+                position_false = np.where(list_mask==False)[0]
+                if len(position_false) == 1: 
+                    samples_of_valid_with_at_least_1_missing_views += 1
+                    samples_of_valid_with_1_missing_views +=1 
+                elif len(position_false) == 2: 
+                    samples_of_valid_with_at_least_1_missing_views += 1
+                    samples_of_valid_with_2_missing_views += 1
+                else:
+                    samples_of_valid_with_all_views += 1 
+                for el in position_false:
+                    if el == 0: samples_of_valid_with_missing_views_methyl += 1
+                    if el == 1: samples_of_valid_with_missing_views_mirna += 1
+                    if el == 2: samples_of_valid_with_missing_views_rna += 1
+                    
+            for list_mask in test_masks:
+                position_false = np.where(list_mask==False)[0]
+                if len(position_false) == 1: 
+                    samples_of_test_with_at_least_1_missing_views += 1
+                    samples_of_test_with_1_missing_views +=1 
+                elif len(position_false) == 2: 
+                    samples_of_test_with_at_least_1_missing_views += 1
+                    samples_of_test_with_2_missing_views += 1
+                else:
+                    samples_of_test_with_all_views += 1 
+                for el in position_false:
+                    if el == 0: samples_of_test_with_missing_views_methyl += 1
+                    if el == 1: samples_of_test_with_missing_views_mirna += 1
+                    if el == 2: samples_of_test_with_missing_views_rna += 1
+
+            real_output_file = f'{home_path}/{output_file}'
+            with open(f'{real_output_file}_{dataset_views_to_consider}_{seed}.md', 'w') as fd:
+                fd.write('| | Train | Valid| Test| \n')
+                fd.write('| ------------- | ------------- | ------------- | -------------:|\n')
+                fd.write(f'|Samples with at least ONE missing views|{samples_of_train_with_at_least_1_missing_views}|{samples_of_valid_with_at_least_1_missing_views}|{samples_of_test_with_at_least_1_missing_views}\n')
+                fd.write(f'|Samples with ONE missing views|{samples_of_train_with_1_missing_views}|{samples_of_valid_with_1_missing_views}|{samples_of_test_with_1_missing_views}\n')
+                fd.write(f'|Samples with TWO missing views|{samples_of_train_with_2_missing_views}|{samples_of_valid_with_2_missing_views}|{samples_of_test_with_2_missing_views}\n')
+                fd.write(f'|Samples without missing views|{samples_of_train_with_all_views}|{samples_of_valid_with_all_views}|{samples_of_test_with_all_views}\n')
+                fd.write(f'|Samples with missing MEthyl|{samples_of_train_with_missing_views_methyl}|{samples_of_valid_with_missing_views_methyl}|{samples_of_test_with_missing_views_methyl}\n')
+                fd.write(f'|Samples with missing MIRna|{samples_of_train_with_missing_views_mirna}|{samples_of_valid_with_missing_views_mirna}|{samples_of_test_with_missing_views_mirna}\n')
+                fd.write(f'|Samples with missing RNA|{samples_of_train_with_missing_views_rna}|{samples_of_valid_with_missing_views_rna}|{samples_of_test_with_missing_views_rna}\n')
+                
+        else:
+            for list_mask in train_masks:
+                position_false = np.where(list_mask==False)[0]
+                if len(position_false) == 1: 
+                    samples_of_train_with_at_least_1_missing_views += 1
+                    samples_of_train_with_1_missing_views +=1 
+                elif len(position_false) == 2: 
+                    samples_of_train_with_at_least_1_missing_views += 1
+                    samples_of_train_with_2_missing_views += 1
+                elif len(position_false) == 3: 
+                    samples_of_train_with_at_least_1_missing_views += 1
+                    samples_of_train_with_3_missing_views += 1
+                elif len(position_false) == 4: 
+                    samples_of_train_with_at_least_1_missing_views += 1
+                    samples_of_train_with_4_missing_views += 1    
+                else:
+                    samples_of_train_with_all_views += 1
+                for el in position_false:
+                    if el == 0: samples_of_train_with_missing_views_cnv += 1
+                    if el == 1: samples_of_train_with_missing_views_methyl += 1
+                    if el == 2: samples_of_train_with_missing_views_mirna += 1
+                    if el == 3: samples_of_train_with_missing_views_rna += 1
+                    if el == 4: samples_of_train_with_missing_views_protein += 1
+                    
+            for list_mask in valid_masks:
+                position_false = np.where(list_mask==False)[0]
+                if len(position_false) == 1: 
+                    samples_of_valid_with_at_least_1_missing_views += 1
+                    samples_of_valid_with_1_missing_views +=1 
+                elif len(position_false) == 2: 
+                    samples_of_valid_with_at_least_1_missing_views += 1
+                    samples_of_valid_with_2_missing_views += 1
+                elif len(position_false) == 3: 
+                    samples_of_valid_with_at_least_1_missing_views += 1
+                    samples_of_valid_with_3_missing_views += 1
+                elif len(position_false) == 4: 
+                    samples_of_valid_with_at_least_1_missing_views += 1
+                    samples_of_valid_with_4_missing_views += 1    
+                else:
+                    samples_of_valid_with_all_views += 1
+                for el in position_false:
+                    if el == 0: samples_of_valid_with_missing_views_cnv += 1
+                    if el == 1: samples_of_valid_with_missing_views_methyl += 1
+                    if el == 2: samples_of_valid_with_missing_views_mirna += 1
+                    if el == 3: samples_of_valid_with_missing_views_rna += 1
+                    if el == 4: samples_of_valid_with_missing_views_protein += 1
+            
+            for list_mask in test_masks:
+                position_false = np.where(list_mask==False)[0]
+                if len(position_false) == 1: 
+                    samples_of_test_with_at_least_1_missing_views += 1
+                    samples_of_test_with_1_missing_views +=1 
+                elif len(position_false) == 2: 
+                    samples_of_test_with_at_least_1_missing_views += 1
+                    samples_of_test_with_2_missing_views += 1
+                elif len(position_false) == 3: 
+                    samples_of_test_with_at_least_1_missing_views += 1
+                    samples_of_test_with_3_missing_views += 1
+                elif len(position_false) == 4: 
+                    samples_of_test_with_at_least_1_missing_views += 1
+                    samples_of_test_with_4_missing_views += 1    
+                else:
+                    samples_of_test_with_all_views += 1
+                for el in position_false:
+                    if el == 0: samples_of_test_with_missing_views_cnv += 1
+                    if el == 1: samples_of_test_with_missing_views_methyl += 1
+                    if el == 2: samples_of_test_with_missing_views_mirna += 1
+                    if el == 3: samples_of_test_with_missing_views_rna += 1
+                    if el == 4: samples_of_test_with_missing_views_protein += 1
+        
+            real_output_file = f'{home_path}/{output_file}'
+            with open(f'{real_output_file}_{dataset_views_to_consider}_{seed}.md', 'w') as fd:
+                fd.write('| | Train | Valid| Test| \n')
+                fd.write('| ------------- | ------------- | ------------- | -------------:|\n')
+                fd.write(f'|Samples with at least ONE missing views|{samples_of_train_with_at_least_1_missing_views}|{samples_of_valid_with_at_least_1_missing_views}|{samples_of_test_with_at_least_1_missing_views}\n')
+                fd.write(f'|Samples with ONE missing views|{samples_of_train_with_1_missing_views}|{samples_of_valid_with_1_missing_views}|{samples_of_test_with_1_missing_views}\n')
+                fd.write(f'|Samples with TWO missing views|{samples_of_train_with_2_missing_views}|{samples_of_valid_with_2_missing_views}|{samples_of_test_with_2_missing_views}\n')
+                fd.write(f'|Samples with THREE missing views|{samples_of_train_with_3_missing_views}|{samples_of_valid_with_3_missing_views}|{samples_of_test_with_3_missing_views}\n')
+                fd.write(f'|Samples with FOUR missing views|{samples_of_train_with_4_missing_views}|{samples_of_valid_with_4_missing_views}|{samples_of_test_with_4_missing_views}\n')
+                fd.write(f'|Samples without missing views|{samples_of_train_with_all_views}|{samples_of_valid_with_all_views}|{samples_of_test_with_all_views}\n')
+                fd.write(f'|Samples with missing MEthyl|{samples_of_train_with_missing_views_methyl}|{samples_of_valid_with_missing_views_methyl}|{samples_of_test_with_missing_views_methyl}\n')
+                fd.write(f'|Samples with missing MIRna|{samples_of_train_with_missing_views_mirna}|{samples_of_valid_with_missing_views_mirna}|{samples_of_test_with_missing_views_mirna}\n')
+                fd.write(f'|Samples with missing RNA|{samples_of_train_with_missing_views_rna}|{samples_of_valid_with_missing_views_rna}|{samples_of_test_with_missing_views_rna}\n')
+                fd.write(f'|Samples with missing CNV|{samples_of_train_with_missing_views_cnv}|{samples_of_valid_with_missing_views_cnv}|{samples_of_test_with_missing_views_cnv}\n')
+                fd.write(f'|Samples with missing Protein|{samples_of_train_with_missing_views_protein}|{samples_of_valid_with_missing_views_protein}|{samples_of_test_with_missing_views_protein}\n')
+                
 class FiguresArticles:
     def __init__(self, data_size: int = 2000, dataset_views_to_consider: str = 'all'):
         super(FiguresArticles, self).__init__()
         self.dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
-    
+        self.dataset_views_to_consider = dataset_views_to_consider
+        
     @staticmethod
     def figure_1():
         print('The data augmentation process. See readme: It was done on another site')
@@ -172,12 +333,19 @@ class FiguresArticles:
         temporaire_dict = defaultdict(dict)
         for patient_name in self.dataset.all_patient_names:
             cpt = 0; list_of_omics_per_patients = []
-            if patient_name in self.dataset.views[0]['patient_names']: cpt+=1; list_of_omics_per_patients.append('c')
-            if patient_name in self.dataset.views[1]['patient_names']: cpt+=1; list_of_omics_per_patients.append('me')
-            if patient_name in self.dataset.views[2]['patient_names']: cpt+=1; list_of_omics_per_patients.append('mi')
-            if patient_name in self.dataset.views[3]['patient_names']: cpt+=1; list_of_omics_per_patients.append('r')
-            if patient_name in self.dataset.views[4]['patient_names']: cpt+=1; list_of_omics_per_patients.append('p')
-            temporaire_dict[patient_name] = [cpt, list_of_omics_per_patients]
+            if self.dataset_views_to_consider == 'all':
+                if patient_name in self.dataset.views[0]['patient_names']: cpt+=1; list_of_omics_per_patients.append('c')
+                if patient_name in self.dataset.views[1]['patient_names']: cpt+=1; list_of_omics_per_patients.append('me')
+                if patient_name in self.dataset.views[2]['patient_names']: cpt+=1; list_of_omics_per_patients.append('mi')
+                if patient_name in self.dataset.views[3]['patient_names']: cpt+=1; list_of_omics_per_patients.append('r')
+                if patient_name in self.dataset.views[4]['patient_names']: cpt+=1; list_of_omics_per_patients.append('p')
+                temporaire_dict[patient_name] = [cpt, list_of_omics_per_patients]
+            else:
+                if patient_name in self.dataset.views[0]['patient_names']: cpt+=1; list_of_omics_per_patients.append('me')
+                if patient_name in self.dataset.views[1]['patient_names']: cpt+=1; list_of_omics_per_patients.append('mi')
+                if patient_name in self.dataset.views[2]['patient_names']: cpt+=1; list_of_omics_per_patients.append('r')
+                temporaire_dict[patient_name] = [cpt, list_of_omics_per_patients]
+                
         values_temporaire_dict = np.asarray(list(temporaire_dict.values()))
         comptes = values_temporaire_dict[:,0]
         comptes_list_of_omics_per_patients = values_temporaire_dict[:,1]
@@ -703,6 +871,19 @@ def main_compute_new_diverging_stacked_bar_chart():
                                                                       output_path='./', 
                                                                       write_on_bars=True)    
  
+def new_main():
+    # Datasets Reports
+    ResultsAnalysis().build_reports_on_dataset(data_size=2000, dataset_views_to_consider='3_main_omics', seed=42, output_file='datasets_reports')
+    # call a node to test this because of the memory 
+    ResultsAnalysis().build_reports_on_dataset(data_size=2000, dataset_views_to_consider='all', seed=42, output_file='datasets_reports') 
+    
+    # Results Analysis
+    ResultsAnalysis().optuna_analysis_reports(directory='optuna_normal_3_main_omics_repo/', output_file='normal_3_main_omics_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='optuna_normal_all_repo/', output_file='normal_all_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='optuna_data_aug_3_main_omics_repo/', output_file='data_aug_3_main_omics_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='optuna_data_aug_all_repo/', output_file='data_aug_all_reports.md')
+    # Build Figures 
+    
 if __name__ ==  '__main__':
     # Baselines
     ResultsAnalysis().baselines_analysis_reports()
