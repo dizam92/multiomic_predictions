@@ -19,12 +19,13 @@ from multiomic_modeling.torch_utils import to_numpy
 from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
 from sklearn.manifold import TSNE
 import seaborn as sns
+import torch.utils.data as data_utils
 sns.set_theme()
 # home_path = '/home/maoss2/scratch'
 home_path = '/home/maoss2/PycharmProjects/multiomic_predictions/reports_dir'
 # results_order are always in this order 'acc', 'prec', 'rec', 'f1_score', 'mcc_score'
-# best_config_file_path_normal_data_aug_2000 = '/scratch/maoss2/optuna_data_aug_output_2000/64c01d9cc9220b7fb39c2740272c1a02faff77e0/config.json' # 96.042
-# best_config_file_path_normal_normal_2000 = '/scratch/maoss2/optuna_normal_output_2000/ec18a0b2ca27de64e673e9dc9dfb9596970c130d/config.json' # 91.595
+best_config_file_path_normal_data_aug_2000 = '/home/maoss2/scratch/normal_output_2000_all_699/cdc7d218e2bdc3bc54394e8a002692e31fb7f1f7/config.json' 
+best_config_file_path_normal_normal_2000 = '/home/maoss2/scratch/data_aug_output_2000_all_699/31c120a9ff2e9020902ad5a62eb9ea8cb857573f/config.json'
 
 class ResultsAnalysis:
     
@@ -631,7 +632,10 @@ class AttentionWeightsAnalysis:
         original_data = torch.Tensor([np.asarray(el[0]) for el in inputs_list_copy]).float()
         mask = torch.Tensor([np.asarray(el[1]) for el in inputs_list_copy]).bool()
         inputs = [original_data, mask]
-       
+        
+        # dataloader = data_utils.DataLoader(inputs_list_copy, batch_size=len(inputs_list_copy))
+        Ù# batch = next(iter(dataloader))
+        
         res = []
         for layer in range(trainer.network.encoder.n_layers):
             try:
@@ -644,7 +648,7 @@ class AttentionWeightsAnalysis:
                 )
             with Inspect(attention_module, "forward") as returned:
                 trainer.network(inputs)
-                temp = returned.get()[-1]
+                temp = returned.get()[-1] # fonctionne bien avec le model quand il il y a un pos encoding! Mais pas du tout en absence de cela.
                 # print(temp.shape)
                 # print(type(temp))
                 res.append(temp)
@@ -873,15 +877,15 @@ def main_compute_new_diverging_stacked_bar_chart():
  
 def new_main():
     # Datasets Reports
-    ResultsAnalysis().build_reports_on_dataset(data_size=2000, dataset_views_to_consider='3_main_omics', seed=42, output_file='datasets_reports')
+    ResultsAnalysis().build_reports_on_dataset(data_size=2000, dataset_views_to_consider='3_main_omics', seed=966, output_file='datasets_reports')
     # call a node to test this because of the memory 
-    ResultsAnalysis().build_reports_on_dataset(data_size=2000, dataset_views_to_consider='all', seed=42, output_file='datasets_reports') 
+    ResultsAnalysis().build_reports_on_dataset(data_size=2000, dataset_views_to_consider='all', seed=699, output_file='datasets_reports') 
     
     # Results Analysis
-    ResultsAnalysis().optuna_analysis_reports(directory='optuna_normal_3_main_omics_repo/', output_file='normal_3_main_omics_reports.md')
-    ResultsAnalysis().optuna_analysis_reports(directory='optuna_normal_all_repo/', output_file='normal_all_reports.md')
-    ResultsAnalysis().optuna_analysis_reports(directory='optuna_data_aug_3_main_omics_repo/', output_file='data_aug_3_main_omics_reports.md')
-    ResultsAnalysis().optuna_analysis_reports(directory='optuna_data_aug_all_repo/', output_file='data_aug_all_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='normal_3_main_omics/', output_file='normal_3_main_omics_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='normal_all/', output_file='normal_all_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='data_aug_3_main_omics/', output_file='data_aug_3_main_omics_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='data_aug_all/', output_file='data_aug_all_reports.md')
     # Build Figures 
     
 if __name__ ==  '__main__':

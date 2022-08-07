@@ -9,7 +9,7 @@ from torch.utils.data import Dataset, random_split, Subset, DataLoader, SubsetRa
 from multiomic_modeling.models.trainer import *
 from multiomic_modeling.data.data_loader import MultiomicDatasetDataAug, MultiomicDatasetNormal, MultiomicDatasetBuilder, SubsetRandomSampler
 from multiomic_modeling.torch_utils import to_numpy
-from multiomic_modeling.results_and_figures_analysis import best_config_file_path_normal_data_aug_2000, best_config_file_path_normal_normal_2000
+from multiomic_modeling.analyses_and_paper_figures_section.results_and_figures_analysis import best_config_file_path_normal_data_aug_2000, best_config_file_path_normal_normal_2000
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 import numpy as np
