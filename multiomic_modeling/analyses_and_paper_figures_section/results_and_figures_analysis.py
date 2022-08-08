@@ -23,8 +23,8 @@ sns.set_theme()
 # home_path = '/home/maoss2/scratch'
 home_path = '/home/maoss2/PycharmProjects/multiomic_predictions/reports_dir'
 # results_order are always in this order 'acc', 'prec', 'rec', 'f1_score', 'mcc_score'
-best_config_file_path_normal_data_aug_2000 = '/home/maoss2/scratch/normal_output_2000_all_699/cdc7d218e2bdc3bc54394e8a002692e31fb7f1f7/config.json' 
-best_config_file_path_normal_normal_2000 = '/home/maoss2/scratch/data_aug_output_2000_all_699/31c120a9ff2e9020902ad5a62eb9ea8cb857573f/config.json'
+best_config_file_path_normal_normal_2000 = '/home/maoss2/scratch/normal_output_2000_all_699/cdc7d218e2bdc3bc54394e8a002692e31fb7f1f7/config.json' 
+best_config_file_path_normal_data_aug_2000 = '/home/maoss2/scratch/data_aug_output_2000_all_699/31c120a9ff2e9020902ad5a62eb9ea8cb857573f/config.json'
 
 class ResultsAnalysis:
     
