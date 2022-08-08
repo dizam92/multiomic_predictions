@@ -19,7 +19,6 @@ from multiomic_modeling.torch_utils import to_numpy
 from sklearn.model_selection import train_test_split, StratifiedShuffleSplit
 from sklearn.manifold import TSNE
 import seaborn as sns
-import torch.utils.data as data_utils
 sns.set_theme()
 # home_path = '/home/maoss2/scratch'
 home_path = '/home/maoss2/PycharmProjects/multiomic_predictions/reports_dir'
@@ -115,7 +114,6 @@ class ResultsAnalysis:
             fd.write('| - | - | Mean | Std |\n')
             fd.write(f'| - | - | {test_metrics_mean} | {test_metrics_sem} |\n')
     
-    # TODO: IT's not done/finish yet: must go back here to complete it
     @staticmethod
     def build_reports_on_dataset(data_size: int = 2000, 
                                  dataset_views_to_consider: str = '3_main_omics',
@@ -632,28 +630,21 @@ class AttentionWeightsAnalysis:
         original_data = torch.Tensor([np.asarray(el[0]) for el in inputs_list_copy]).float()
         mask = torch.Tensor([np.asarray(el[1]) for el in inputs_list_copy]).bool()
         inputs = [original_data, mask]
-        
-        # dataloader = data_utils.DataLoader(inputs_list_copy, batch_size=len(inputs_list_copy))
-        Ù# batch = next(iter(dataloader))
-        
-        res = []
+        stacked_layers_res = []
         for layer in range(trainer.network.encoder.n_layers):
             try:
-                attention_module = trainer.network.encoder.net.layers[layer].self_attn  # type: ignore
+                attention_module = trainer.network.encoder.net.layers[layer].self_attn 
+                x = trainer.network.encoder.embedding(inputs[0].float())
+                x = x.transpose(0, 1)
+                attn, attn_weights = attention_module(x, x, x,  key_padding_mask=~inputs[1], need_weights=True)
+                stacked_layers_res.append(attn_weights)                
             except Exception as e:
                 raise ValueError(
                     f"Model {trainer.__name__} "
                     + "has no attention module or can't use the default function implementation.",
                     e,
                 )
-            with Inspect(attention_module, "forward") as returned:
-                trainer.network(inputs)
-                temp = returned.get()[-1] # fonctionne bien avec le model quand il il y a un pos encoding! Mais pas du tout en absence de cela.
-                # print(temp.shape)
-                # print(type(temp))
-                res.append(temp)
-        # print(len(res))
-        return torch.stack(res, dim=0) # return [number_of_layer * batch_size * number_of_views * number_of_views]
+        return torch.stack(stacked_layers_res, dim=0) # return [number_of_layer * batch_size * number_of_views * number_of_views]
 
     @staticmethod
     def plot_attentions_weights_per_cancer(cancer_weights, 
@@ -665,7 +656,7 @@ class AttentionWeightsAnalysis:
         np.random.seed(42)
         final_array = to_numpy(torch.nn.functional.softmax(cancer_weights * 100, dim=-1).mean(dim=0))
         final_array = np.round(final_array, 3)
-        print(final_array)
+        # print(final_array)
         fig, axes = plt.subplots(figsize=(11.69, 8.27))
         sns.heatmap(final_array, vmin=0, vmax=1, annot=True, linewidths=0.1, 
                         xticklabels=columns_names, yticklabels=columns_names)
@@ -740,7 +731,7 @@ class AttentionWeightsAnalysis:
 def main_attention_weights_plot(config_file: str, 
                                 algo_type: str = 'normal', 
                                 exp_type: str = 'normal', 
-                                output_path: str = './', 
+                                output_path: str = home_path, 
                                 data_size: int = 2000):
     list_of_examples_per_cancer, list_of_cancer_names = AttentionWeightsAnalysis.build_examples_per_cancer(data_size=int(data_size)) # length of 33
     with open(config_file, 'r') as f:
@@ -754,7 +745,8 @@ def main_attention_weights_plot(config_file: str,
     
     for idx, cancer_list in enumerate(list_of_examples_per_cancer):
         cancer_name = list_of_cancer_names[idx]
-        if not os.path.exists(f'/scratch/maoss2/{output_path}/{cancer_name}_{exp_type}.pdf'):
+        # if not os.path.exists(f'/scratch/maoss2/{output_path}/{cancer_name}_{exp_type}.pdf'):
+        if not os.path.exists(f'{output_path}/{cancer_name}_{exp_type}.pdf'):
             attention_weights_per_layer_for_cancer_list = AttentionWeightsAnalysis.get_attention_weights(trainer=trainer_model, inputs_list=cancer_list)
             # Here we could just extract the last layer information and plot the figure with that?
             # examples_weigths_per_cancer = attention_weights_per_layer_for_cancer_list 
@@ -877,15 +869,15 @@ def main_compute_new_diverging_stacked_bar_chart():
  
 def new_main():
     # Datasets Reports
-    ResultsAnalysis().build_reports_on_dataset(data_size=2000, dataset_views_to_consider='3_main_omics', seed=966, output_file='datasets_reports')
+    ResultsAnalysis().build_reports_on_dataset(data_size=2000, dataset_views_to_consider='3_main_omics', seed=42, output_file='datasets_reports')
     # call a node to test this because of the memory 
-    ResultsAnalysis().build_reports_on_dataset(data_size=2000, dataset_views_to_consider='all', seed=699, output_file='datasets_reports') 
+    ResultsAnalysis().build_reports_on_dataset(data_size=2000, dataset_views_to_consider='all', seed=42, output_file='datasets_reports') 
     
     # Results Analysis
-    ResultsAnalysis().optuna_analysis_reports(directory='normal_3_main_omics/', output_file='normal_3_main_omics_reports.md')
-    ResultsAnalysis().optuna_analysis_reports(directory='normal_all/', output_file='normal_all_reports.md')
-    ResultsAnalysis().optuna_analysis_reports(directory='data_aug_3_main_omics/', output_file='data_aug_3_main_omics_reports.md')
-    ResultsAnalysis().optuna_analysis_reports(directory='data_aug_all/', output_file='data_aug_all_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='optuna_normal_3_main_omics_repo/', output_file='normal_3_main_omics_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='optuna_normal_all_repo/', output_file='normal_all_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='optuna_data_aug_3_main_omics_repo/', output_file='data_aug_3_main_omics_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='optuna_data_aug_all_repo/', output_file='data_aug_all_reports.md')
     # Build Figures 
     
 if __name__ ==  '__main__':
