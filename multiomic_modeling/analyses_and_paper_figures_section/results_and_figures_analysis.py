@@ -879,7 +879,18 @@ def new_main():
     ResultsAnalysis().optuna_analysis_reports(directory='optuna_data_aug_3_main_omics_repo/', output_file='data_aug_3_main_omics_reports.md')
     ResultsAnalysis().optuna_analysis_reports(directory='optuna_data_aug_all_repo/', output_file='data_aug_all_reports.md')
     # Build Figures 
-    
+    # attention Weight Plot
+    # to run this: salloc --time=03:00:00 --nodes=1  --ntasks-per-node=16 --mem=64G --account=rrg-corbeilj-ac
+    main_attention_weights_plot(config_file=best_config_file_path_normal_normal_2000, 
+                                algo_type='normal', 
+                                exp_type='normal', 
+                                output_path=home_path, 
+                                data_size=2000)
+    main_attention_weights_plot(config_file=best_config_file_path_normal_data_aug_2000, 
+                            algo_type='normal', 
+                            exp_type='data_aug', 
+                            output_path=home_path, 
+                            data_size=2000)
 if __name__ ==  '__main__':
     # Baselines
     ResultsAnalysis().baselines_analysis_reports()
@@ -894,16 +905,6 @@ if __name__ ==  '__main__':
     fig_article.figure_1()
     fig_article.figure_2()
     fig_article.build_supplementary_figures()
-    # attention Weight Plot
-    # to run this: salloc --time=03:00:00 --nodes=1  --ntasks-per-node=16 --mem=64G --account=rrg-corbeilj-ac
-    main_attention_weights_plot(config_file=best_config_file_path_normal_normal_2000, 
-                                algo_type='normal', 
-                                exp_type='normal', 
-                                output_path=best_config_file_path_normal_normal_2000[:-12], 
-                                data_size=2000)
-    main_attention_weights_plot(config_file=best_config_file_path_normal_data_aug_2000, 
-                                algo_type='normal', 
-                                exp_type='data_aug', 
-                                output_path=best_config_file_path_normal_data_aug_2000[:-12], 
-                                data_size=2000)
+
+
     
