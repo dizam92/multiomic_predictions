@@ -1,5 +1,6 @@
 import argparse
 import sys
+import os
 from collections import defaultdict
 from itertools import combinations
 from typing import Tuple
@@ -8,13 +9,14 @@ from torch.utils.data import Dataset, random_split, Subset, DataLoader, SubsetRa
 from multiomic_modeling.models.trainer import *
 from multiomic_modeling.data.data_loader import MultiomicDatasetDataAug, MultiomicDatasetNormal, MultiomicDatasetBuilder, SubsetRandomSampler
 from multiomic_modeling.torch_utils import to_numpy
-from multiomic_modeling.analyses_and_paper_figures_section.attention_weights_analysis import best_config_file_path_normal_data_aug_2000, best_config_file_path_normal_normal_2000
+from multiomic_modeling.analyses_and_paper_figures_section.results_and_figures_analysis import best_config_file_path_normal_data_aug_2000, best_config_file_path_normal_normal_2000
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 import numpy as np
 from copy import deepcopy
 import seaborn as sns
 sns.set_theme()
+home_path = '/home/maoss2/PycharmProjects/multiomic_predictions/reports_dir'
              
 class TurnOffViewsDatasetNormal(MultiomicDatasetNormal):
     """ This class create a test dataset specialize for the experiment of testing the model of views turned off. 
@@ -125,12 +127,13 @@ class TestModels:
         name_of_view_to_be_turned_off = '_'.join(view_to_turn_off) 
         with open(f'{save_file_name}.md', 'a+') as fd:
             fd.write(f'|__{name_of_view_to_be_turned_off}__| {scores} |\n')
-
+        os.system(f'cp {save_file_name} {home_path}')
+        
 if __name__ == "__main__":
     list_of_views_to_turn_off = ['protein', 'methyl', 'mirna', 'rna', 'cnv']
-    list_of_views_to_turn_off_copy = deepcopy(list_of_views_to_turn_off)
-    for i in range(2, 5):
-        list_of_views_to_turn_off.extend(list(combinations(list_of_views_to_turn_off_copy, i)))
+    # list_of_views_to_turn_off_copy = deepcopy(list_of_views_to_turn_off)
+    # for i in range(2, 5):
+    #     list_of_views_to_turn_off.extend(list(combinations(list_of_views_to_turn_off_copy, i)))
     list_of_views_to_turn_off.insert(0, 'none')
     list_of_views_to_turn_off = [[el] if type(el) == str else list(el) for el in list_of_views_to_turn_off]
 
