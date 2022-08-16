@@ -32,7 +32,10 @@ class DNNDatasetBuilder:
         return train_dataset, test_dataset, valid_dataset
     
 class DNNDataset(Dataset):
-    def __init__(self, data_size: int = 2000, views_to_consider: str = 'all', random_state: int = 42):
+    def __init__(self, 
+                 data_size: int = 2000, 
+                 views_to_consider: str = 'all', 
+                 random_state: int = 42):
         super().__init__()
         x_train, y_train, x_test, y_test, feature_names = BaseAlgoTemplate.reload_dataset(data_size=data_size, 
                                                                                           dataset_views_to_consider=views_to_consider,

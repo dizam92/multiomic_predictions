@@ -41,16 +41,16 @@ class ResultsAnalysis:
         os.chdir(directory) 
         real_output_file = f'{home_path}/{output_file}'
         repo_list = os.listdir()
-        dt_repo_list = [repo for repo in repo_list if repo.startswith('dt')]
+        # dt_repo_list = [repo for repo in repo_list if repo.startswith('dt')]
         rf_repo_list = [repo for repo in repo_list if repo.startswith('rf')]
         svm_repo_list = [repo for repo in repo_list if repo.startswith('svm')]
         
-        dt_test_metrics = [list(ResultsAnalysis().read_baselines_pickle_files(fichier=f)[0].values()) for f in dt_repo_list]
+        # dt_test_metrics = [list(ResultsAnalysis().read_baselines_pickle_files(fichier=f)[0].values()) for f in dt_repo_list]
         rf_test_metrics = [list(ResultsAnalysis().read_baselines_pickle_files(fichier=f)[0].values()) for f in rf_repo_list]
         svm_test_metrics = [list(ResultsAnalysis().read_baselines_pickle_files(fichier=f)[0].values()) for f in svm_repo_list]
         
-        dt_metrics_mean = np.round(np.mean(np.array((dt_test_metrics)), axis=0), 2)
-        dt_metrics_std = np.round(np.std(np.array((dt_test_metrics)), axis=0), 2)
+        # dt_metrics_mean = np.round(np.mean(np.array((dt_test_metrics)), axis=0), 2)
+        # dt_metrics_std = np.round(np.std(np.array((dt_test_metrics)), axis=0), 2)
         
         rf_metrics_mean = np.round(np.mean(np.array((rf_test_metrics)), axis=0), 2)
         rf_metrics_std = np.round(np.std(np.array((rf_test_metrics)), axis=0), 2)
@@ -62,7 +62,7 @@ class ResultsAnalysis:
             fd.write('results_order are always in this order acc, prec, rec, f1_score, mcc_score\n')
             fd.write('| Algo| Mean | Std|\n')
             fd.write('| ------------- | ------------- |  -------------:|\n')
-            fd.write(f'| DT | {dt_metrics_mean}  | {dt_metrics_std}|\n')
+            # fd.write(f'| DT | {dt_metrics_mean}  | {dt_metrics_std}|\n')
             fd.write(f'| RF | {rf_metrics_mean}  | {rf_metrics_std}|\n')
             fd.write(f'| SVM | {svm_metrics_mean}  | {svm_metrics_std}|\n')
         

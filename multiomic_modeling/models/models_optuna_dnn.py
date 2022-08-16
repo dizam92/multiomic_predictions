@@ -8,7 +8,8 @@ import optuna
 from optuna.study import StudyDirection
 from packaging import version
 from multiomic_modeling.models.dnn_model import DNNTrainer
-from multiomic_modeling.models.base import PatientPruner
+# from multiomic_modeling.models.base import PatientPruner
+from optuna.pruners import PatientPruner, MedianPruner
 
 import pytorch_lightning as pl
 import torch
@@ -26,16 +27,16 @@ def objective(trial: optuna.trial.Trial,
     """ Main fonction to poptimize with Optuna """
     model_params = {
         "input_size": int(input_size), 
-        "lr": trial.suggest_float("lr", 1e-3, 1e-2, log=True),
+        "lr": trial.suggest_float("lr", 1e-4, 1e-2, log=True),
         "output_size": 33,
         "early_stopping": True,
-        "dropout": trial.suggest_float("dropout", 0.2, 0.5), # 0.1, 0.5
-        "weight_decay": trial.suggest_float("weight_decay", 1e-8, 1e-2, log=True), # 1e-8, 1e-2
+        "dropout": trial.suggest_float("dropout", 0.1, 0.5), # 0.1, 0.5
+        "weight_decay": trial.suggest_float("weight_decay", 1e-8, 1e-1, log=True), # 1e-8, 1e-2
         "activation": "relu",
         "optimizer": "Adam",
         "lr_scheduler": "cosine_with_restarts",
         "loss": "ce",
-        "n_epochs": 300,
+        "n_epochs": 500,
         "batch_size": 256,
         # "batch_size": trial.suggest_categorical("batch_size", [256, 512]),
         "class_weights":[4.03557312, 0.85154295, 0.30184775, 1.18997669, 8.25050505,
@@ -69,11 +70,12 @@ def objective(trial: optuna.trial.Trial,
         "predict_params": predict_params,
         "data_size": int(data_size),
         "dataset_views_to_consider": dataset_views_to_consider,
+	"exp_type": "normal",
         "seed": int(random_seed)
     }
 
     model = DNNTrainer.run_experiment(**training_params, output_path=output_path)
-    return model.trainer.callback_metrics["val_multi_acc"].item()
+    return model.trainer.callback_metrics["val_ce"].item()
 
 
 if __name__ == "__main__":
@@ -99,8 +101,8 @@ if __name__ == "__main__":
             )
     study = optuna.create_study(study_name=args.study_name, 
                                 storage=storage_db, 
-                                direction="maximize", 
-                                pruner=PatientPruner(patience=10), 
+                                direction="minimize", 
+                                pruner=PatientPruner(MedianPruner(), patience=10), 
                                 load_if_exists=True)
     study.optimize(lambda trial: objective(trial, 
                                            args.input_size, 
@@ -108,7 +110,7 @@ if __name__ == "__main__":
                                            args.data_size, 
                                            args.output_path,
                                            args.seed), 
-                   n_trials=5, timeout=10800) # 5h: 18000; 3h: 10800; 4h: 14400
+                   n_trials=100, timeout=43200) # 5h: 18000; 3h: 10800; 4h: 14400
     
     print("Number of finished trials: {}".format(len(study.trials)))
 

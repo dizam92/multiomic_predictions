@@ -37,9 +37,9 @@ parameters_rf = {'max_depth': np.arange(1, 5),
                  'n_estimators': [25, 50, 75, 100]
                  }
 parameters_svm = {
-    # 'kernel': ['poly', 'rbf'],
+    'kernel': ['poly', 'rbf'],
     'C': np.logspace(0.001, 1.0, 5),
-    # 'degree': [2, 3]
+    'degree': [2, 3]
 }
 
 balanced_weights = {0: 4.03557312, 1: 0.85154295, 2: 0.30184775, 3: 1.18997669, 
@@ -101,19 +101,6 @@ class BaseAlgoTemplate():
         self.saving_dict['train_metrics'] = train_scores
         self.saving_dict['cv_results'] = self.gs_clf.cv_results_
         self.saving_dict['best_params'] = self.gs_clf.best_params_
-        # self.saving_dict['importances'] = []
-            # self.saving_dict['rules'] = []
-            # self.saving_dict['rules_str'] = []
-            # importances = self.gs_clf.best_estimator_.feature_importances_
-            # indices = np.argsort(importances)[::-1]
-            # for f in range(100):
-            #     if importances[indices[f]] > 0:
-            #         logger.info("%d. feature %d (%f) %s" % (f + 1, indices[f], importances[indices[f]],
-            #                                             feature_names[indices[f]]))
-            # self.saving_dict['importances'].append(importances)
-            # self.saving_dict['rules'] = [(f + 1, indices[f], importances[indices[f]], feature_names[indices[f]]) for f in
-            #                     range(100) if importances[indices[f]] > 0]
-        
         with open(saving_file, 'wb') as fd:
             pickle.dump(self.saving_dict, fd)
 
@@ -121,8 +108,8 @@ class BaseAlgoTemplate():
     def reload_dataset(data_size=2000, dataset_views_to_consider='all', random_state=42): 
         dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider='all')
         train_dataset, test_dataset, valid_dataset = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset, 
-                                                                                                           test_size=0.2, 
-                                                                                                           valid_size=0.1,
+                                                                                                           test_size=0.2,
+                                                                                                           valid_size=0.1, 
                                                                                                            random_state=random_state)
         train_loader = DataLoader(train_dataset, batch_size=len(train_dataset))
         train_dataset_array = next(iter(train_loader))[0][0].numpy()
@@ -159,7 +146,10 @@ class BaseAlgoTemplate():
         
 
 class RunExperiments:
-    def __init__(self, data_size: int = 2000, dataset_views_to_consider: str = 'all', random_state: int = 42):
+    def __init__(self, 
+                 data_size: int = 2000, 
+                 dataset_views_to_consider: str = 'all', 
+                 random_state: int = 42):
         super().__init__()
         self.dataset_views_to_consider = dataset_views_to_consider
         self.data_size = data_size
@@ -209,9 +199,10 @@ if __name__ == "__main__":
     # torch.manual_seed(seed)
     # np.random.seed(seed)
     # random.sample(range(0, 1000), 4)
-    random_seed_list = [42, 78, 433, 966, 699] # that was randomly generate from the precedent code and we add the magic number 42
+    # random_seed_list = [42, 78, 433, 966, 699] # that was randomly generate from the precedent code and we add the magic number 42
+    random_seed_list = [699]
     for r_s in random_seed_list:
         run_expe_obj = RunExperiments(data_size=data_size, dataset_views_to_consider=view, random_state=r_s)
         if not os.path.exists(f'/home/maoss2/scratch/rf_{view}_data_{data_size}_randomState_{r_s}_scores.pck'): run_expe_obj.run_rf()
-        if not os.path.exists(f'/home/maoss2/scratch/dt_{view}_data_{data_size}_randomState_{r_s}_scores.pck'): run_expe_obj.run_dt()
+        # if not os.path.exists(f'/home/maoss2/scratch/dt_{view}_data_{data_size}_randomState_{r_s}_scores.pck'): run_expe_obj.run_dt()
         if not os.path.exists(f'/home/maoss2/scratch/svm_{view}_data_{data_size}_randomState_{r_s}_scores.pck'): run_expe_obj.run_svm()
