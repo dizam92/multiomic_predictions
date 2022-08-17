@@ -141,13 +141,15 @@ if __name__ == "__main__":
     data_aug_model_test = TestModels(number_of_view_to_consider=5)
     data_aug_model_test.initialisation(config_file=best_config_file_path_normal_data_aug_2000,
                                        data_size=2000, 
-                                       dataset_views_to_consider='all')
+                                       dataset_views_to_consider='all', 
+                                       random_state=42)
     for view_off in list_of_views_to_turn_off:
         print(f'view to be off is: {view_off}')
         data_aug_model_test.test_scores(save_file_name='naive_scores_temp_data_aug', 
                                         data_size=2000, 
                                         views_to_consider='all', 
-                                        view_to_turn_off=view_off)
+                                        view_to_turn_off=view_off, 
+                                        random_state=42)
         
     print('---------------Begining the Normal data exp---------------------------\n')
     

@@ -29,12 +29,39 @@ class TurnOffViewsDatasetNormal(MultiomicDatasetNormal):
         super().__init__(data_size=data_size, views_to_consider=views_to_consider)
         # self.cancer_targeted = cancer_targeted
         self._dict_of_the_combinations = {'cnv': 0, 'methyl': 1, 'mirna': 2, 'rna': 3, 'protein': 4}
-        self.dict_cancer_to_views = {0:['cnv','rna'], 1:['rna'], 2:['rna'],  3:['rna'], 4:['rna'], 5:['rna'], 
-                            6:['rna'], 7:['rna'], 8:['cnv','rna'], 9:['rna'], 10:['mirna','rna'], 
-                            11:['methyl','rna'], 12:['rna'], 13:['cnv','rna'], 14:['rna'], 15:['rna'], 
-                            16:['rna'], 17:['rna'], 18:['rna'], 19:['cnv','mirna','rna'],
-                            20:['rna'], 21:['rna'], 22:['rna'], 23:['rna'], 24:['rna'], 25:['rna'], 
-                            26:['rna'], 27:['rna'], 28:['rna'], 29:['rna'], 30:['rna'], 31:['rna'], 32:['rna']
+        self.dict_cancer_to_views = {0:['cnv','rna'], 
+                                     1:['rna'], 
+                                     2:['rna'],  
+                                     3:['rna'], 
+                                     4:['rna'], 
+                                     5:['rna'], 
+                                     6:['mirna', 'rna'], 
+                                     7:['rna'], 
+                                     8:['cnv','rna'], 
+                                     9:['rna'], 
+                                     10:['mirna','rna'],
+                                     11:['methyl','rna'], 
+                                     12:['rna'], 
+                                     13:['mirna', 'rna'], 
+                                     14:['rna'], 
+                                     15:['mirna', 'rna'], 
+                                     16:['mirna', 'rna'], 
+                                     17:['mirna', 'rna'], 
+                                     18:['mirna', 'rna'], 
+                                     19:['cnv','mirna','rna', 'protein'],
+                                     20:['rna'], 
+                                     21:['mirna', 'rna'], 
+                                     22:['mirna', 'rna'], 
+                                     23:['rna'], 
+                                     24:['mirna', 'rna'], 
+                                     25:['mirna', 'rna'], 
+                                     26:['mirna', 'rna'], 
+                                     27:['mirna', 'rna'], 
+                                     28:['rna'], 
+                                     29:['rna'], 
+                                     30:['rna'], 
+                                     31:['rna'], 
+                                     32:['mirna', 'rna']
                             }
     def __getitem__(self, idx): 
         patient_name = self.all_patient_names[idx]
@@ -301,10 +328,10 @@ class TestMOTOnOnlyThe3MainOMics():
         os.system(f'cp {scores_fname} {home_path}')
         
 def main_test_MOT_on_only_3_omics(seed):
-    data_aug_model_test = TestMOTOnOnlyThe3MainOMics()
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
+    data_aug_model_test = TestMOTOnOnlyThe3MainOMics()
     data_aug_model_test.initialisation(config_file=best_config_file_path_normal_data_aug_2000,
                                     data_size=2000, 
                                     dataset_views_to_consider='all',
@@ -321,6 +348,6 @@ cancer_labels=['ACC', 'BLCA', 'BRCA', 'CESC', 'CHOL', 'COAD', 'DLBC', 'ESCA', 'G
                'TGCT', 'THCA', 'THYM', 'UCEC', 'UCS', 'UVM']
 
 if __name__ == "__main__":
-    main_test_MOT_on_samples_with_all_examples(seed=699)
-    main_test_MOT_on_each_cancer_with_specific_omics_turned_off(seed=699)
-    main_test_MOT_on_only_3_omics(seed=699)
+    main_test_MOT_on_samples_with_all_examples(seed=42)
+    main_test_MOT_on_each_cancer_with_specific_omics_turned_off(seed=42)
+    main_test_MOT_on_only_3_omics(seed=42) 
