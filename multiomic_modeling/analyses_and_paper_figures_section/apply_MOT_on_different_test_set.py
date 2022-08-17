@@ -85,9 +85,10 @@ class TestMOTOnSamplesWithAllExamples:
     def initialisation(self, 
                        config_file: str = '', 
                        data_size: int = 2000, 
-                       dataset_views_to_consider: str = 'all'):
+                       dataset_views_to_consider: str = 'all',
+                       random_state: int = 42):
         self.dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
-        _, new_test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=self.dataset, test_size=0.2, valid_size=0.1)
+        _, new_test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=self.dataset, test_size=0.2, valid_size=0.1, random_state=random_state)
         self.list_patients_with_nb_views = self.build_set_of_potential_patients_targets(nb_views_per_patients=self.number_of_view_to_consider)
         position_test_set_indices_to_retain = []
         patients_name_to_retain = []
@@ -122,11 +123,15 @@ class TestMOTOnSamplesWithAllExamples:
                                           scores_fname=scores_fname)    
         os.system(f'cp {scores_fname} {home_path}')
         
-def main_test_MOT_on_samples_with_all_examples():
+def main_test_MOT_on_samples_with_all_examples(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
     data_aug_model_test = TestMOTOnSamplesWithAllExamples(number_of_view_to_consider=5)
     data_aug_model_test.initialisation(config_file=best_config_file_path_normal_data_aug_2000,
                                        data_size=2000, 
-                                       dataset_views_to_consider='all')
+                                       dataset_views_to_consider='all',
+                                       random_state=seed)
     data_aug_model_test.test_scores(save_file_name='mot_data_aug_result_on_test_set_with_all_5_omics', 
                                     data_size=2000, 
                                     views_to_consider='all')
@@ -145,9 +150,10 @@ class TestMOTOnEachCancerWithSpecificOmicsTurnedOff():
     def initialisation(self, 
                        config_file: str = '', 
                        data_size: int = 2000, 
-                       dataset_views_to_consider: str = 'all'):
+                       dataset_views_to_consider: str = 'all',
+                       random_state: int = 42):
         self.dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
-        _, self.new_test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=self.dataset, test_size=0.2, valid_size=0.1)
+        _, self.new_test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=self.dataset, test_size=0.2, valid_size=0.1, random_state=random_state)
 
         assert config_file != '', 'must have a config file (from the best model ultimately)'
         with open(config_file, 'r') as f:
@@ -160,13 +166,13 @@ class TestMOTOnEachCancerWithSpecificOmicsTurnedOff():
     def test_scores(self, 
                     save_file_name: str = 'naive_scores', 
                     data_size: int = 2000, 
-                    views_to_consider: str = 'all'
+                    views_to_consider: str = 'all',
+                    random_state: int = 42
                     ):
         test_dataset = TurnOffViewsDatasetNormal(data_size=data_size,
-                                                 views_to_consider=views_to_consider,
-                                                 # cancer_targeted=targeted_cancer
+                                                 views_to_consider=views_to_consider
                                                  )
-        _, self.test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=test_dataset, test_size=0.2, valid_size=0.1)
+        _, self.test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=test_dataset, test_size=0.2, valid_size=0.1, random_state=random_state)
         scores_fname = os.path.join(self.all_params['fit_params']['output_path'], f'{save_file_name}_{views_to_consider}.txt')
         scores = self.trainer_model.score(dataset=self.new_test, 
                                           artifact_dir=self.all_params['fit_params']['output_path'], 
@@ -174,14 +180,19 @@ class TestMOTOnEachCancerWithSpecificOmicsTurnedOff():
                                           scores_fname=scores_fname)    
         os.system(f'cp {scores_fname} {home_path}')
         
-def main_test_MOT_on_each_cancer_with_specific_omics_turned_off():
+def main_test_MOT_on_each_cancer_with_specific_omics_turned_off(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
     data_aug_model_test = TestMOTOnEachCancerWithSpecificOmicsTurnedOff()
     data_aug_model_test.initialisation(config_file=best_config_file_path_normal_data_aug_2000,
                                     data_size=2000, 
-                                    dataset_views_to_consider='all')
+                                    dataset_views_to_consider='all',
+                                    random_state=seed)
     data_aug_model_test.test_scores(save_file_name='scores_all_together', 
                                     data_size=2000, 
-                                    views_to_consider='all'
+                                    views_to_consider='all',
+                                    random_state=seed
                                     )
 
 class DatasetWithOnly3omicsWithMissingOmics(MultiomicDatasetNormal):
@@ -234,9 +245,10 @@ class TestMOTOnOnlyThe3MainOMics():
     def initialisation(self, 
                        config_file: str = '', 
                        data_size: int = 2000, 
-                       dataset_views_to_consider: str = 'all'):
+                       dataset_views_to_consider: str = 'all',
+                       random_state: int = 42):
         dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
-        _, new_test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
+        _, new_test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=dataset, test_size=0.2, valid_size=0.1, random_state=random_state)
 
         assert config_file != '', 'must have a config file (from the best model ultimately)'
         with open(config_file, 'r') as f:
@@ -258,10 +270,11 @@ class TestMOTOnOnlyThe3MainOMics():
     def test_scores(self, 
                     save_file_name: str = 'naive_scores', 
                     data_size: int = 2000, 
-                    views_to_consider: str = 'all'
+                    views_to_consider: str = 'all',
+                    random_state: int = 42
                     ):
         test_dataset = DatasetWithOnly3omicsWithMissingOmics(data_size=data_size, views_to_consider=views_to_consider)
-        _, self.test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=test_dataset, test_size=0.2, valid_size=0.1)
+        _, self.test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=test_dataset, test_size=0.2, valid_size=0.1, random_state=random_state)
         # test on subset with only all 3 omics views are available [True, True, True] i.e the indexes retrieved in samples_idx_with_all_3_omics
         self.new_test_set = Subset(self.test, indices=self.samples_idx_with_all_3_omics)
         scores_fname = os.path.join(self.all_params['fit_params']['output_path'], f'{save_file_name}_{views_to_consider}_comparison_with_OMIVAE.txt')
@@ -287,14 +300,19 @@ class TestMOTOnOnlyThe3MainOMics():
                                           scores_fname=scores_fname)    
         os.system(f'cp {scores_fname} {home_path}')
         
-def main_test_MOT_on_only_3_omics():
+def main_test_MOT_on_only_3_omics(seed):
     data_aug_model_test = TestMOTOnOnlyThe3MainOMics()
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
     data_aug_model_test.initialisation(config_file=best_config_file_path_normal_data_aug_2000,
                                     data_size=2000, 
-                                    dataset_views_to_consider='all')
+                                    dataset_views_to_consider='all',
+                                    )
     data_aug_model_test.test_scores(save_file_name='scores_3_omics_only', 
                                     data_size=2000, 
-                                    views_to_consider='all'
+                                    views_to_consider='all',
+                                    random_state=seed
                                     )
     
 cancer_labels=['ACC', 'BLCA', 'BRCA', 'CESC', 'CHOL', 'COAD', 'DLBC', 'ESCA', 'GBM', 
@@ -303,6 +321,6 @@ cancer_labels=['ACC', 'BLCA', 'BRCA', 'CESC', 'CHOL', 'COAD', 'DLBC', 'ESCA', 'G
                'TGCT', 'THCA', 'THYM', 'UCEC', 'UCS', 'UVM']
 
 if __name__ == "__main__":
-    main_test_MOT_on_samples_with_all_examples()
-    main_test_MOT_on_each_cancer_with_specific_omics_turned_off()
-    main_test_MOT_on_only_3_omics()
+    main_test_MOT_on_samples_with_all_examples(seed=699)
+    main_test_MOT_on_each_cancer_with_specific_omics_turned_off(seed=699)
+    main_test_MOT_on_only_3_omics(seed=699)

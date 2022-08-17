@@ -601,9 +601,9 @@ class Inspect(object):
 
 class AttentionWeightsAnalysis:    
     @staticmethod
-    def build_examples_per_cancer(data_size: int = 2000) -> Tuple[list, list]:
+    def build_examples_per_cancer(data_size: int = 2000, random_state: int = 42) -> Tuple[list, list]:
         dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider='all')
-        _, test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=dataset, test_size=0.2, valid_size=0.1)
+        _, test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=dataset, test_size=0.2, valid_size=0.1, random_state=random_state)
         
         test_data_loader =  MultiomicDatasetBuilder.multiomic_dataset_loader(dataset=test, batch_size=32, nb_cpus=2)
         list_of_cancer_names = [test.dataset.label_encoder.inverse_transform([i])[0] for i in range(33)]
@@ -869,9 +869,9 @@ def main_compute_new_diverging_stacked_bar_chart():
  
 def new_main():
     # Datasets Reports
-    ResultsAnalysis().build_reports_on_dataset(data_size=2000, dataset_views_to_consider='3_main_omics', seed=42, output_file='datasets_reports')
+    ResultsAnalysis().build_reports_on_dataset(data_size=2000, dataset_views_to_consider='3_main_omics', seed=699, output_file='datasets_reports')
     # call a node to test this because of the memory 
-    ResultsAnalysis().build_reports_on_dataset(data_size=2000, dataset_views_to_consider='all', seed=42, output_file='datasets_reports') 
+    ResultsAnalysis().build_reports_on_dataset(data_size=2000, dataset_views_to_consider='all', seed=699, output_file='datasets_reports') 
     
     # Results Analysis
     ResultsAnalysis().optuna_analysis_reports(directory='optuna_normal_3_main_omics_repo/', output_file='normal_3_main_omics_reports.md')

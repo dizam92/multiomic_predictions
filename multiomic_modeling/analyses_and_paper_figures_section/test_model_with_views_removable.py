@@ -79,9 +79,10 @@ class TestModels:
     def initialisation(self, 
                        config_file: str = '', 
                        data_size: int = 2000, 
-                       dataset_views_to_consider: str = 'all'):
+                       dataset_views_to_consider: str = 'all',
+                       random_state: int = 42):
         self.dataset = MultiomicDatasetNormal(data_size=data_size, views_to_consider=dataset_views_to_consider)
-        _, new_test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=self.dataset, test_size=0.2, valid_size=0.1)
+        _, new_test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=self.dataset, test_size=0.2, valid_size=0.1, random_state=random_state)
         self.list_patients_with_nb_views = self.build_set_of_potential_patients_targets(nb_views_per_patients=self.number_of_view_to_consider)
         position_test_set_indices_to_retain = []
         patients_name_to_retain = []
@@ -106,12 +107,13 @@ class TestModels:
                     save_file_name: str = 'naive_scores', 
                     data_size: int = 2000, 
                     views_to_consider: str = 'all', 
-                    view_to_turn_off: list = ['none']):
+                    view_to_turn_off: list = ['none'], 
+                    random_state: int = 42):
         # assert view_to_turn_off in ['none', 'protein', 'methyl', 'mirna', 'rna', 'cnv'], f'the value {view_to_turn_off} is not defined and must be in [protein, methyl, mirna, rna, cnv]'
         test_dataset = TurnOffViewsDatasetNormal(data_size=data_size,
                                                  views_to_consider=views_to_consider,
                                                  view_to_turn_off=view_to_turn_off)
-        _, self.test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=test_dataset, test_size=0.2, valid_size=0.1)
+        _, self.test, _ = MultiomicDatasetBuilder.multiomic_data_normal_builder(dataset=test_dataset, test_size=0.2, valid_size=0.1, random_state=random_state)
 
         self.test.indices = self.new_test_indices
         scores_fname = os.path.join(self.all_params['fit_params']['output_path'], f'{save_file_name}_{views_to_consider}.txt')
@@ -127,7 +129,6 @@ class TestModels:
         name_of_view_to_be_turned_off = '_'.join(view_to_turn_off) 
         with open(f'{save_file_name}.md', 'a+') as fd:
             fd.write(f'|__{name_of_view_to_be_turned_off}__| {scores} |\n')
-        os.system(f'cp {save_file_name} {home_path}')
         
 if __name__ == "__main__":
     list_of_views_to_turn_off = ['protein', 'methyl', 'mirna', 'rna', 'cnv']
