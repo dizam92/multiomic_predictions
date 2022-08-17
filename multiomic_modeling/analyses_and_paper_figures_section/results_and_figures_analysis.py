@@ -23,8 +23,8 @@ sns.set_theme()
 # home_path = '/home/maoss2/scratch'
 home_path = '/home/maoss2/PycharmProjects/multiomic_predictions/reports_dir'
 # results_order are always in this order 'acc', 'prec', 'rec', 'f1_score', 'mcc_score'
-best_config_file_path_normal_normal_2000 = '/home/maoss2/scratch/normal_output_2000_all_699/cdc7d218e2bdc3bc54394e8a002692e31fb7f1f7/config.json' 
-best_config_file_path_normal_data_aug_2000 = '/home/maoss2/scratch/data_aug_output_2000_all_699/31c120a9ff2e9020902ad5a62eb9ea8cb857573f/config.json'
+best_config_file_path_normal_normal_2000 = '/home/maoss2/scratch/normal_output_2000_all_42/2f19a008b3a56af1bd72b435281d035baf6f5f0b/config.json' 
+best_config_file_path_normal_data_aug_2000 = '/home/maoss2/scratch/data_aug_output_2000_all_42/32e1b1b1c2e01ae2487c250246bc404a4b086ac3/config.json'
 
 class ResultsAnalysis:
     
@@ -97,6 +97,9 @@ class ResultsAnalysis:
             rs = repo.split('_')[-1]
             best_metrics, best_metrics_repo_name = ResultsAnalysis().read_each_optuna_repo(directory=repo)
             results_dict[rs] = [best_metrics, best_metrics_repo_name]
+            print('Debug\n')
+            print(results_dict)
+            print('------------------------\n')
             os.chdir('../')
         test_metrics = [results_dict[k][0] for k in results_dict]
         best_idx = np.argmax(np.array(test_metrics)[:, 0], axis=0)
@@ -651,9 +654,10 @@ class AttentionWeightsAnalysis:
                                            output_path: str = './', 
                                            fig_name: str = 'cancer', 
                                            columns_names: list = ['cnv', 'methyl', 'mirna', 'rna', 'protein'], 
-                                           exp_type: str = 'normal'):
-        torch.manual_seed(42)
-        np.random.seed(42)
+                                           exp_type: str = 'normal', 
+                                           seed: int = 42):
+        torch.manual_seed(seed)
+        np.random.seed(seed)
         final_array = to_numpy(torch.nn.functional.softmax(cancer_weights * 100, dim=-1).mean(dim=0))
         final_array = np.round(final_array, 3)
         # print(final_array)
@@ -732,8 +736,9 @@ def main_attention_weights_plot(config_file: str,
                                 algo_type: str = 'normal', 
                                 exp_type: str = 'normal', 
                                 output_path: str = home_path, 
-                                data_size: int = 2000):
-    list_of_examples_per_cancer, list_of_cancer_names = AttentionWeightsAnalysis.build_examples_per_cancer(data_size=int(data_size)) # length of 33
+                                data_size: int = 2000,
+                                seed: int = 42):
+    list_of_examples_per_cancer, list_of_cancer_names = AttentionWeightsAnalysis.build_examples_per_cancer(data_size=int(data_size), random_state=seed) # length of 33
     with open(config_file, 'r') as f:
         all_params = json.load(f)
     random.seed(all_params['seed'])
@@ -759,7 +764,8 @@ def main_attention_weights_plot(config_file: str,
                                                                         output_path=output_path, 
                                                                         fig_name=cancer_name, 
                                                                         columns_names=['cnv', 'methyl', 'mirna', 'rna', 'protein'],
-                                                                        exp_type=exp_type)
+                                                                        exp_type=exp_type,
+                                                                        seed=seed)
     AttentionWeightsAnalysis.plot_tsne(list_of_examples_per_cancer=list_of_examples_per_cancer,
                                       list_of_cancer_names=list_of_cancer_names,
                                       trainer_model=trainer_model,
@@ -874,10 +880,10 @@ def new_main():
     ResultsAnalysis().build_reports_on_dataset(data_size=2000, dataset_views_to_consider='all', seed=699, output_file='datasets_reports') 
     
     # Results Analysis
-    ResultsAnalysis().optuna_analysis_reports(directory='optuna_normal_3_main_omics_repo/', output_file='normal_3_main_omics_reports.md')
-    ResultsAnalysis().optuna_analysis_reports(directory='optuna_normal_all_repo/', output_file='normal_all_reports.md')
-    ResultsAnalysis().optuna_analysis_reports(directory='optuna_data_aug_3_main_omics_repo/', output_file='data_aug_3_main_omics_reports.md')
-    ResultsAnalysis().optuna_analysis_reports(directory='optuna_data_aug_all_repo/', output_file='data_aug_all_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='normal_3_main_omics/', output_file='normal_3_main_omics_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='normal_all/', output_file='normal_all_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='data_aug_3_main_omics/', output_file='data_aug_3_main_omics_reports.md')
+    ResultsAnalysis().optuna_analysis_reports(directory='data_aug_all/', output_file='data_aug_all_reports.md')
     # Build Figures 
     # attention Weight Plot
     # to run this: salloc --time=03:00:00 --nodes=1  --ntasks-per-node=16 --mem=64G --account=rrg-corbeilj-ac
@@ -885,26 +891,24 @@ def new_main():
                                 algo_type='normal', 
                                 exp_type='normal', 
                                 output_path=home_path, 
-                                data_size=2000)
+                                data_size=2000,
+                                seed=42)
     main_attention_weights_plot(config_file=best_config_file_path_normal_data_aug_2000, 
                             algo_type='normal', 
                             exp_type='data_aug', 
                             output_path=home_path, 
-                            data_size=2000)
-if __name__ ==  '__main__':
-    # Baselines
-    ResultsAnalysis().baselines_analysis_reports()
-    # Optuna ModelAug
-    # ResultsAnalysis().optuna_analysis_reports()
-    ResultsAnalysis().optuna_analysis_reports(directory='optuna_normal_3_main_omics_repo/', output_file='normal_3_main_omics_reports.md')
-    ResultsAnalysis().optuna_analysis_reports(directory='optuna_normal_all_repo/', output_file='normal_all_reports.md')
-    ResultsAnalysis().optuna_analysis_reports(directory='optuna_data_aug_3_main_omics_repo/', output_file='data_aug_3_main_omics_reports.md')
-    ResultsAnalysis().optuna_analysis_reports(directory='optuna_data_aug_all_repo/', output_file='data_augl_all_reports.md')
+                            data_size=2000,
+                            seed=42)
+
     # Build figures
     fig_article = FiguresArticles(data_size=2000, dataset_views_to_consider='all')
     fig_article.figure_1()
     fig_article.figure_2()
     fig_article.build_supplementary_figures()
+    
+if __name__ ==  '__main__':
+    new_main()
+
 
 
     
