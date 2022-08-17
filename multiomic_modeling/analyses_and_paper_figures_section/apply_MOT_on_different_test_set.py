@@ -29,12 +29,12 @@ class TurnOffViewsDatasetNormal(MultiomicDatasetNormal):
         super().__init__(data_size=data_size, views_to_consider=views_to_consider)
         # self.cancer_targeted = cancer_targeted
         self._dict_of_the_combinations = {'cnv': 0, 'methyl': 1, 'mirna': 2, 'rna': 3, 'protein': 4}
-        self.dict_cancer_to_views = {0:['cnv','rna'], 1:['rna'], 2:['rna'],  3:['cnv', 'rna'], 4:['rna'], 5:['rna'], 
-                            6:['mirna','rna'], 7:['rna'], 8:['cnv'], 9:['cnv','rna'], 10:['mirna','rna'], 
-                            11:['methyl','rna'], 12:['mirna','rna'], 13:['mirna','rna'], 14:['rna'], 15:['cnv','mirna','rna'], 
-                            16:['cnv','mirna','rna'], 17:['cnv','mirna','rna'], 18:['cnv','rna'], 19:['cnv','mirna','rna'],
-                            20:['cnv','rna'], 21:['mirna','rna'], 22:['rna'], 23:['cnv','rna'], 24:['rna'], 25:['rna'], 
-                            26:['rna'], 27:['mirna','rna'], 28:['rna'], 29:['mirna','rna'], 30:['rna'], 31:['rna'], 32:['cnv','mirna','rna']
+        self.dict_cancer_to_views = {0:['cnv','rna'], 1:['rna'], 2:['rna'],  3:['rna'], 4:['rna'], 5:['rna'], 
+                            6:['rna'], 7:['rna'], 8:['cnv','rna'], 9:['rna'], 10:['mirna','rna'], 
+                            11:['methyl','rna'], 12:['rna'], 13:['cnv','rna'], 14:['rna'], 15:['rna'], 
+                            16:['rna'], 17:['rna'], 18:['rna'], 19:['cnv','mirna','rna'],
+                            20:['rna'], 21:['rna'], 22:['rna'], 23:['rna'], 24:['rna'], 25:['rna'], 
+                            26:['rna'], 27:['rna'], 28:['rna'], 29:['rna'], 30:['rna'], 31:['rna'], 32:['rna']
                             }
     def __getitem__(self, idx): 
         patient_name = self.all_patient_names[idx]
