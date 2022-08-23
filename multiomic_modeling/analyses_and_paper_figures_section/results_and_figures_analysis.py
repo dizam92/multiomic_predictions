@@ -388,8 +388,12 @@ class BuildMetricsComparisonBar:
                                                 output_path: str = './', 
                                                 write_on_bars : bool = True):
         # f1_scores
-        modified_values = [0.20,0.98,0.98,0.94,0.88,0.64,0.93,0.80,0.63,0.95,0.82,0.84,0.86,0.95,0.93,0.99,0.83,0.72,1.00,0.78,1.00,0.96,0.99,0.37,0.97,1.00,0.92,0.98,0.99,1.00,0.95,0.74,1.00]
-        original_values = [0.89,0.98,1.00,0.96,0.92,0.89,1.00,0.94,0.93,0.99,0.98,0.98,0.94,0.97,0.98,0.99,0.93,0.92,0.96,0.96,0.99,0.97,1.00,0.54,0.97,0.99,0.98,1.00,1.00,0.98,0.95,0.67,1.00]
+        # modified_values = [0.20,0.98,0.98,0.94,0.88,0.64,0.93,0.80,0.63,0.95,0.82,0.84,0.86,0.95,0.93,0.99,0.83,0.72,1.00,0.78,1.00,0.96,0.99,0.37,0.97,1.00,0.92,0.98,0.99,1.00,0.95,0.74,1.00]
+        # original_values = [0.89,0.98,1.00,0.96,0.92,0.89,1.00,0.94,0.93,0.99,0.98,0.98,0.94,0.97,0.98,0.99,0.93,0.92,0.96,0.96,0.99,0.97,1.00,0.54,0.97,0.99,0.98,1.00,1.00,0.98,0.95,0.67,1.00]
+        
+        modified_values = [0.13,0.92,0.92,0.47,0.33,0.68,0.92,0.50,0.15,0.67,0.74,0.89,0.69,0.24,0.00,0.99,0.57,0.56,0.82,0.50,0.69,0.96,0.97,0.37, 0.77,0.96,0.75,0.70,0.75,0.74,0.70,0.67,1.00]
+        original_values = [0.94,0.97,1.00,0.93,0.92,0.89,1.00,0.97,0.95,0.99,0.98,0.98,0.95,0.93,0.99,0.99,0.95,0.95,0.96,0.96,0.99,0.99,1.00,0.61,0.97,0.99,0.99,1.00,1.00,1.00,0.97,0.88,1.00]
+        
         modified_values = np.asarray(modified_values) * 100
         original_values = np.asarray(original_values) * 100
         # recall (most of the time it's equal accuracy here)
@@ -404,7 +408,7 @@ class BuildMetricsComparisonBar:
                'TGCT', 'THCA', 'THYM', 'UCEC', 'UCS', 'UVM']
         values_to_plot = modified_values - original_values
         classes = cancer_labels
-        fig, axes = plt.subplots(figsize=(16, 5))
+        fig, axes = plt.subplots(figsize=(16, 8))
         # self.colors = [color_palette()[0]] * len(self.colors)
         axes = sns.barplot(x=values_to_plot, y=classes, palette=sns.color_palette(n_colors = 33))
         axes.set_xlabel(f'Scores variation', loc="center") 
@@ -413,7 +417,7 @@ class BuildMetricsComparisonBar:
         axes.legend(labels=cancer_labels, labelcolor=sns.color_palette(n_colors = 33), fontsize='xx-small') # , labelcolor='linecolor'
         if write_on_bars: 
             axes.bar_label(axes.containers[0]) 
-        axes.set_xlim([-80, 10])
+        axes.set_xlim([-100, 1])
         if title != '': axes.set_title(f'{title}', size=10, fontweight="bold")
         fig.savefig(f'{output_path}/{fig_name}') if fig_name.endswith('pdf') else fig.savefig(f'{output_path}/{fig_name}.pdf')
         plt.close(fig)
@@ -869,7 +873,7 @@ def main_plot_all_metrics_together():
 
 def main_compute_new_diverging_stacked_bar_chart():
     BuildMetricsComparisonBar.compute_new_diverging_stacked_bar_chart(title='F1 score score variations after important views removal', 
-                                                                      fig_name='new_fig_f1_score.pdf', 
+                                                                      fig_name='new_fig_f1_score_test.pdf', 
                                                                       output_path='./', 
                                                                       write_on_bars=True)    
  
