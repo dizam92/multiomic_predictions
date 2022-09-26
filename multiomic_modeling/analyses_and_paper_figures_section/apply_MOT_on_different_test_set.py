@@ -44,7 +44,8 @@ class TurnOffViewsDatasetNormal(MultiomicDatasetNormal):
                                      12:['methyl', 'mirna','rna'], 
                                      13:['methyl', 'mirna','rna'], 
                                      14:['methyl', 'mirna','rna', 'protein'], 
-                                     15:['methyl', 'rna'], 
+                                    #  15:['methyl', 'rna'], 
+                                     15:['methyl', 'mirna', 'rna'], 
                                      16:['methyl', 'mirna','rna'], 
                                      17:['methyl', 'mirna','rna'], 
                                      18:['methyl', 'mirna','rna'], 
@@ -61,7 +62,8 @@ class TurnOffViewsDatasetNormal(MultiomicDatasetNormal):
                                      29:['methyl', 'mirna','rna'], 
                                      30:['methyl', 'mirna','rna'], 
                                      31:['methyl', 'mirna','rna'], 
-                                     32:['methyl', 'rna']
+                                    #  32:['methyl', 'rna']
+                                     32:['methyl', 'mirna', 'rna']
                             }
     def __getitem__(self, idx): 
         patient_name = self.all_patient_names[idx]
